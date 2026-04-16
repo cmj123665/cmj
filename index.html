@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <title>游戏大厅</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #f7f7f7;
+            color: #333;
+            min-height: 100vh;
+            padding-bottom: 0;
+            padding-top: 44px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 微信小程序顶部导航栏 */
+        .mp-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 44px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #eee;
+            z-index: 9999;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .mp-navbar .title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        /* 可爱动态背景图案 - 移动端优化 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ffe8f0 0%, #e8f4ff 50%, #fff0f8 100%);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        /* 页面容器 */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 背景装饰 - 简化移动端 */
+        .bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: linear-gradient(135deg, #ffe8f0 0%, #e8f4ff 50%, #fff0f8 100%);
+            opacity: 0.3;
+        }
+
+        /* 漂浮的可爱元素 */
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floating-elements::before,
+        .floating-elements::after {
+            content: '✿';
+            position: absolute;
+            font-size: 24px;
+            color: rgba(255, 182, 193, 0.3);
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .floating-elements::before {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-elements::after {
+            top: 60%;
+            right: 15%;
+            animation-delay: 5s;
+            content: '☁️';
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-30px) rotate(10deg); opacity: 0.6; }
+        }
+
+        /* 主容器 */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 12px;
+        }
+
+        /* 移除浮动元素 - 移动端简化 */
+        .floating-elements {
+            display: none;
+        }
+
+        /* 标题 - 小程序风格 */
+        .banner {
+            text-align: center;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff9ecd, #b794f6, #94c5f9);
+        }
+
+        .banner h1 {
+            font-size: 22px;
+            margin-bottom: 4px;
+            background: linear-gradient(90deg, #ff9ecd, #b794f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .banner p {
+            opacity: 0.7;
+            font-size: 13px;
+            color: #999;
+        }
+
+        /* 统计卡片 - 小程序风格 */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s;
+        }
+
+        .stat-card:active {
+            transform: scale(0.96);
+            background: #f8f8f8;
+        }
+
+        .stat-card .icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff6b9d;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 2px;
+            color: #999;
+        }
+
+        /* 分类标签 - 小程序风格 */
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding: 4px 0;
+            scrollbar-width: none;
+        }
+
+        .category-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-tab {
+            padding: 8px 16px;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-weight: 500;
+            color: #666;
+            flex-shrink: 0;
+        }
+
+        .category-tab:active {
+            transform: scale(0.95);
+        }
+
+        .category-tab.active {
+            background: linear-gradient(135deg, #ff9ecd 0%, #b794f6 100%);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        /* 游戏网格 - 小程序风格 */
+        .games-section {
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #333;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .game-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #f0f0f0;
+            text-decoration: none;
+            color: #333;
+            display: block;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            position: relative;
+        }
+
+        .game-card:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-cover {
+            position: relative;
+            height: 100px;
+            background: linear-gradient(135deg, #ffe8f0 0%, #e8f4ff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-icon {
+            font-size: 40px;
+        }
+
+        .game-info {
+            padding: 10px;
+        }
+
+        .game-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .game-desc {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-bottom: 8px;
+            color: #999;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-tag {
+            padding: 3px 8px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 10px;
+            color: #999;
+        }
+
+        .hot-badge {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+        }
+
+        /* 排行榜 - 小程序风格 */
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .rank-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .rank-item:nth-child(1) .rank-number {
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        }
+
+        .rank-item:nth-child(2) .rank-number {
+            background: linear-gradient(135deg, #c0c0c0 0%, #a0a0a0 100%);
+        }
+
+        .rank-item:nth-child(3) .rank-number {
+            background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+        }
+
+        .rank-item:nth-child(n+4) .rank-number {
+            background: #f0f0f0;
+            color: #999;
+        }
+
+        .rank-avatar {
+            font-size: 28px;
+        }
+
+        .rank-info {
+            flex: 1;
+        }
+
+        .rank-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .rank-level {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .rank-score {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff6b9d;
+        }
+
+        /* 个人中心 - 小程序风格 */
+        .profile-header {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .profile-avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .profile-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #ff9ecd 0%, #b794f6 100%);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3);
+            border: 3px solid #fff;
+            object-fit: cover;
+        }
+
+        .avatar-upload-btn {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 26px;
+            height: 26px;
+            background: #fff;
+            border: 2px solid #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #avatarInput {
+            display: none;
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .edit-name-btn {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .profile-level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .level-badge {
+            background: linear-gradient(135deg, #ff9ecd 0%, #b794f6 100%);
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            color: white;
+            font-size: 13px;
+        }
+
+        .exp-bar-container {
+            width: 120px;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .exp-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9ecd, #b794f6);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-box .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ff6b9d;
+        }
+
+        .stat-box .label {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* 游戏历史 - 小程序风格 */
+        .history-section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .history-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f8f8;
+            border-radius: 12px;
+        }
+
+        .history-icon {
+            font-size: 28px;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .history-score {
+            font-weight: 700;
+            color: #ff6b9d;
+            font-size: 14px;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .empty-history::before {
+            content: '🎮';
+            display: block;
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        /* 商店 - 小程序风格 */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .shop-item {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .shop-item:active {
+            transform: scale(0.95);
+            background: #f8f8f8;
+        }
+
+        .shop-item .icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .shop-item .name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .shop-item .price {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #ffe8f0 0%, #f0e8ff 100%);
+            border-radius: 10px;
+            color: #ff6b9d;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* 底部导航 - 小程序风格 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #eee;
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: space-around;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        .nav-item .icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .nav-item .label {
+            font-size: 10px;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .nav-item.active .icon {
+            opacity: 1;
+            color: #ff6b9d;
+        }
+
+        .nav-item.active .label {
+            color: #ff6b9d;
+        }
+
+        /* 浮动添加按钮 - 小程序风格 */
+        .floating-add-btn {
+            position: fixed;
+            bottom: 70px;
+            right: 16px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(255, 107, 157, 0.4);
+            transition: all 0.2s;
+            border: 3px solid #fff;
+        }
+
+        .floating-add-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* 弹窗 - 小程序风格 */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            color: #333;
+            max-width: 300px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-content h2 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #666;
+            font-size: 14px;
+            white-space: pre-line;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e5e5e5;
+            border-radius: 10px;
+            font-size: 15px;
+            margin-bottom: 16px;
+            background: #f8f8f8;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #ff6b9d;
+            background: #fff;
+        }
+
+        .modal-input[type="url"] {
+            direction: ltr;
+            text-align: left;
+        }
+
+        select.modal-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        /* 删除游戏按钮 */
+        .delete-game-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 107, 157, 0.9);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .modal-btn {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 4px;
+            transition: all 0.2s;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.95);
+        }
+
+        .modal-btn.secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .game-cover {
+                height: 100px;
+            }
+
+            .game-icon {
+                font-size: 40px;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* 针对小屏手机优化 */
+        @media (max-width: 375px) {
+            .stats-bar {
+                gap: 6px;
+            }
+
+            .stat-card {
+                padding: 10px 6px;
+            }
+
+            .stat-card .value {
+                font-size: 14px;
+            }
+
+            .stat-card .label {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+
+    <!-- 小程序顶部导航栏 -->
+    <div class="mp-navbar">
+        <div class="title">游戏大厅</div>
+    </div>
+
+    <!-- ========== 首页 ========== -->
+    <div class="page active" id="homePage">
+        <div class="main-container">
+            <div class="banner">
+                <h1>游戏大厅</h1>
+                <p>精选15款小游戏，随时随地畅玩</p>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="icon">🏆</div>
+                    <div class="value" id="totalScore">0</div>
+                    <div class="label">总积分</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🎮</div>
+                    <div class="value" id="totalGames">0</div>
+                    <div class="label">游戏局数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">⏱️</div>
+                    <div class="value" id="totalTime">0m</div>
+                    <div class="label">游戏时长</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🔥</div>
+                    <div class="value" id="winRate">0%</div>
+                    <div class="label">通关率</div>
+                </div>
+            </div>
+
+            <div class="category-tabs">
+                <div class="category-tab active" data-category="all">全部</div>
+                <div class="category-tab" data-category="casual">休闲</div>
+                <div class="category-tab" data-category="puzzle">益智</div>
+                <div class="category-tab" data-category="action">动作</div>
+                <div class="category-tab" data-category="arcade">街机</div>
+                <div class="category-tab" data-category="strategy">策略</div>
+            </div>
+
+            <div class="games-section">
+                <div class="section-header">
+                    <h2 class="section-title">热门推荐</h2>
+                </div>
+                <div class="games-grid" id="hotGames"></div>
+            </div>
+
+            <div class="games-section">
+                <div class="section-header">
+                    <h2 class="section-title">全部游戏</h2>
+                </div>
+                <div class="games-grid" id="allGames"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 排行榜 ========== -->
+    <div class="page" id="rankPage">
+        <div class="main-container">
+            <div class="banner">
+                <h1>排行榜</h1>
+                <p>看看谁是最强玩家</p>
+            </div>
+            <div class="rank-list" id="rankList"></div>
+        </div>
+    </div>
+
+    <!-- ========== 商店 ========== -->
+    <div class="page" id="shopPage">
+        <div class="main-container">
+            <div class="banner">
+                <h1>商店</h1>
+                <p>使用积分购买头像和道具</p>
+            </div>
+            <div class="shop-grid" id="shopGrid"></div>
+        </div>
+    </div>
+
+    <!-- ========== 我的 ========== -->
+    <div class="page" id="profilePage">
+        <div class="main-container">
+            <div class="profile-header">
+                <div class="profile-avatar-container">
+                    <img class="profile-avatar" id="profileAvatar" src="" alt="头像" style="display: none;">
+                    <div class="profile-avatar" id="profileAvatarEmoji">🎮</div>
+                    <label class="avatar-upload-btn" for="avatarInput">📷</label>
+                    <input type="file" id="avatarInput" accept="image/*" onchange="uploadAvatar(event)">
+                </div>
+                <div class="profile-name">
+                    <span id="profileName">玩家</span>
+                    <button class="edit-name-btn" onclick="editName()">✏️</button>
+                </div>
+                <div class="profile-level">
+                    <span class="level-badge">Lv.<span id="profileLevel">1</span></span>
+                    <div class="exp-bar-container">
+                        <div class="exp-bar" id="expBar" style="width: 20%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="value" id="statTotalScore">0</div>
+                    <div class="label">总积分</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value" id="statGamesPlayed">0</div>
+                    <div class="label">游戏局数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value" id="statHighScore">0</div>
+                    <div class="label">最高分</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value" id="statPlayTime">0分钟</div>
+                    <div class="label">游戏时长</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value" id="statLevels">0</div>
+                    <div class="label">通关数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value" id="statWinRate">0%</div>
+                    <div class="label">通关率</div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <div class="history-title">游戏历史</div>
+                <div class="history-list" id="historyList">
+                    <div class="empty-history">还没有游戏记录，快去玩游戏吧！</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-page="home">
+            <div class="icon">🏠</div>
+            <div class="label">首页</div>
+        </div>
+        <div class="nav-item" data-page="rank">
+            <div class="icon">🏆</div>
+            <div class="label">排行</div>
+        </div>
+        <div class="nav-item" data-page="shop">
+            <div class="icon">🎁</div>
+            <div class="label">商店</div>
+        </div>
+        <div class="nav-item" data-page="profile">
+            <div class="icon">👤</div>
+            <div class="label">我的</div>
+        </div>
+    </div>
+
+    <!-- 浮动添加按钮 -->
+    <div class="floating-add-btn" id="addGameBtn">＋</div>
+
+    <!-- 弹窗 -->
+    <div class="modal" id="infoModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">提示</h2>
+            <p id="modalMessage"></p>
+            <button class="modal-btn" onclick="closeModal()">确定</button>
+        </div>
+    </div>
+
+    <!-- 改名弹窗 -->
+    <div class="modal" id="nameModal">
+        <div class="modal-content">
+            <h2>修改昵称</h2>
+            <input type="text" class="modal-input" id="nameInput" placeholder="输入你的新昵称" maxlength="10">
+            <button class="modal-btn" onclick="saveName()">保存</button>
+            <button class="modal-btn secondary" onclick="closeNameModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 添加游戏弹窗 -->
+    <div class="modal" id="addGameModal">
+        <div class="modal-content">
+            <h2>添加游戏</h2>
+            <input type="text" class="modal-input" id="gameNameInput" placeholder="游戏名称" maxlength="15">
+            <input type="text" class="modal-input" id="gameIconInput" placeholder="游戏图标（emoji）">
+            <input type="url" class="modal-input" id="gameUrlInput" placeholder="游戏链接（网址）">
+            <input type="text" class="modal-input" id="gameDescInput" placeholder="游戏描述" maxlength="20">
+            <select class="modal-input" id="gameCategoryInput">
+                <option value="casual">休闲</option>
+                <option value="puzzle">益智</option>
+                <option value="action">动作</option>
+                <option value="arcade">街机</option>
+                <option value="strategy">策略</option>
+            </select>
+            <button class="modal-btn" onclick="saveCustomGame()">添加</button>
+            <button class="modal-btn secondary" onclick="closeAddGameModal()">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== 游戏列表 ==========
+        const games = [
+            { id: 'snake', name: '贪吃蛇大作战', icon: '🐍', desc: '999关+道具+穿墙', category: 'casual', hot: true, url: 'snake-game/index.html' },
+            { id: '2048', name: '2048进化版', icon: '🔢', desc: '数字合并挑战', category: 'puzzle', url: '2048/index.html' },
+            { id: 'runner', name: '跑酷大冒险', icon: '🏃', desc: '二段跳+动漫角色', category: 'action', hot: true, url: 'runner-game/index.html' },
+            { id: 'shooter', name: '太空射击', icon: '🚀', desc: '热血射击+波次系统', category: 'action', url: 'space-shooter/index.html' },
+            { id: 'pong', name: '弹球挑战', icon: '🏓', desc: '经典弹球升级', category: 'arcade', url: 'pong-game/index.html' },
+            { id: 'breakout', name: '打砖块', icon: '🧱', desc: '999关随机布局', category: 'arcade', url: 'breakout/index.html' },
+            { id: 'tile', name: '消消大作战', icon: '🍎', desc: '三消玩法', category: 'puzzle', url: 'tile-game/index.html' },
+            { id: 'memory', name: '记忆翻牌', icon: '🃏', desc: '记忆力挑战', category: 'puzzle', url: 'memory/index.html' },
+            { id: 'minesweeper', name: '扫雷', icon: '💣', desc: '经典扫雷+三难度', category: 'puzzle', url: 'minesweeper/index.html' },
+            { id: 'gomoku', name: '五子棋', icon: '⚫', desc: '人机对战AI', category: 'puzzle', url: 'gomoku/index.html' },
+            { id: 'tetris', name: '俄罗斯方块', icon: '🟦', desc: '经典消除+升级系统', category: 'puzzle', hot: true, url: 'tetris/index.html' },
+            { id: 'whack', name: '打地鼠', icon: '🔨', desc: '反应力挑战+连击', category: 'arcade', url: 'whack-a-mole/index.html' },
+            { id: 'tank', name: '坦克大战', icon: '🎮', desc: '经典坦克+关卡系统', category: 'action', url: 'tank-battle/index.html' },
+            { id: 'puzzle', name: '拼图游戏', icon: '🧩', desc: '多难度+计时挑战', category: 'puzzle', url: 'puzzle/index.html' },
+            { id: 'tower', name: '塔防大战', icon: '🏰', desc: '4种塔+波次系统', category: 'strategy', hot: true, url: 'tower-defense/index.html' }
+        ];
+
+        // 分类名称
+        const categoryNames = {
+            casual: '休闲',
+            puzzle: '益智',
+            action: '动作',
+            arcade: '街机',
+            strategy: '策略'
+        };
+
+        // 玩家数据
+        let playerData = {
+            name: '玩家',
+            avatar: '🎮',
+            avatarImage: '',
+            level: 1,
+            totalScore: 0,
+            gamesPlayed: 0,
+            playTime: 0,
+            levelsCompleted: 0,
+            highScore: 0,
+            gameHistory: []
+        };
+
+        // 加载玩家数据
+        function loadPlayerData() {
+            try {
+                const saved = localStorage.getItem('playerData');
+                if (saved) {
+                    playerData = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('加载玩家数据失败:', e);
+            }
+        }
+
+        // 保存玩家数据
+        function savePlayerData() {
+            localStorage.setItem('playerData', JSON.stringify(playerData));
+        }
+
+        // 更新统计显示
+        function updateStats() {
+            document.getElementById('totalScore').textContent = playerData.totalScore.toLocaleString();
+            document.getElementById('totalGames').textContent = playerData.gamesPlayed;
+
+            const minutes = Math.floor(playerData.playTime / 60000);
+            const hours = Math.floor(minutes / 60);
+            const timeText = hours > 0 ? hours + 'h' + (minutes % 60) + 'm' : minutes + 'm';
+            document.getElementById('totalTime').textContent = timeText;
+
+            const winRate = playerData.gamesPlayed > 0
+                ? Math.round((playerData.levelsCompleted / playerData.gamesPlayed) * 100)
+                : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
+        }
+
+        // 渲染游戏列表
+        function renderGames() {
+            console.log('渲染游戏列表...');
+
+            const hotGamesEl = document.getElementById('hotGames');
+            const allGamesEl = document.getElementById('allGames');
+
+            if (!hotGamesEl || !allGamesEl) {
+                console.error('找不到游戏容器元素!');
+                return;
+            }
+
+            // 获取用户自定义的游戏
+            const customGames = JSON.parse(localStorage.getItem('customGames')) || [];
+
+            // 合并系统游戏和自定义游戏
+            const allGamesList = [...games, ...customGames];
+            const hotGamesList = allGamesList.filter(g => g.hot);
+
+            hotGamesEl.innerHTML = hotGamesList.map(game => createGameCard(game, true)).join('');
+            allGamesEl.innerHTML = allGamesList.map(game => createGameCard(game, false)).join('');
+
+            console.log('游戏列表渲染完成');
+        }
+
+        // 创建游戏卡片
+        function createGameCard(game, isHot) {
+            const deleteBtn = game.isCustom ? `<div class="delete-game-btn" onclick="event.preventDefault(); event.stopPropagation(); deleteCustomGame('${game.id}')">×</div>` : '';
+
+            return `
+                <a href="${game.url}" class="game-card" style="position: relative;">
+                    ${isHot ? '<div class="hot-badge">HOT</div>' : ''}
+                    ${deleteBtn}
+                    <div class="game-cover">
+                        <div class="game-icon">${game.icon}</div>
+                    </div>
+                    <div class="game-info">
+                        <h3 class="game-title">${game.name}</h3>
+                        <p class="game-desc">${game.desc}</p>
+                        <div class="game-meta">
+                            <span class="game-tag">${categoryNames[game.category]}</span>
+                        </div>
+                    </div>
+                </a>
+            `;
+        }
+
+        // 删除自定义游戏
+        function deleteCustomGame(gameId) {
+            if (!confirm('确定要删除这个游戏吗？')) {
+                return;
+            }
+
+            let customGames = JSON.parse(localStorage.getItem('customGames')) || [];
+            customGames = customGames.filter(g => g.id !== gameId);
+            localStorage.setItem('customGames', JSON.stringify(customGames));
+
+            renderGames();
+            showModal('删除成功', '游戏已删除');
+        }
+
+        // 分类筛选
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const category = tab.dataset.category;
+                const filteredGames = category === 'all' ? games : games.filter(g => g.category === category);
+
+                const hotGamesEl = document.getElementById('hotGames');
+                const allGamesEl = document.getElementById('allGames');
+
+                const hotFiltered = filteredGames.filter(g => g.hot);
+                hotGamesEl.innerHTML = hotFiltered.length > 0
+                    ? hotFiltered.map(game => createGameCard(game, true)).join('')
+                    : '<p style="grid-column: 1/-1; text-align: center; padding: 40px; opacity: 0.7;">该分类暂无热门游戏</p>';
+
+                allGamesEl.innerHTML = filteredGames.map(game => createGameCard(game, false)).join('');
+            });
+        });
+
+        // 页面导航
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const pageName = item.dataset.page;
+
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(pageName + 'Page').classList.add('active');
+
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+
+                if (pageName === 'profile') loadProfilePage();
+                if (pageName === 'rank') loadRankPage();
+                if (pageName === 'shop') loadShopPage();
+            });
+        });
+
+        // 加载个人中心页面
+        function loadProfilePage() {
+            // 显示头像
+            const avatarImg = document.getElementById('profileAvatar');
+            const avatarEmoji = document.getElementById('profileAvatarEmoji');
+
+            if (playerData.avatarImage) {
+                avatarImg.src = playerData.avatarImage;
+                avatarImg.style.display = 'block';
+                avatarEmoji.style.display = 'none';
+            } else {
+                avatarImg.style.display = 'none';
+                avatarEmoji.style.display = 'block';
+                avatarEmoji.textContent = playerData.avatar;
+            }
+
+            document.getElementById('profileName').textContent = playerData.name;
+            document.getElementById('profileLevel').textContent = playerData.level;
+
+            document.getElementById('statTotalScore').textContent = playerData.totalScore.toLocaleString();
+            document.getElementById('statGamesPlayed').textContent = playerData.gamesPlayed;
+            document.getElementById('statHighScore').textContent = playerData.highScore || 0;
+
+            const playMinutes = Math.floor(playerData.playTime / 60000);
+            document.getElementById('statPlayTime').textContent = playMinutes + '分钟';
+            document.getElementById('statLevels').textContent = playerData.levelsCompleted;
+
+            const winRate = playerData.gamesPlayed > 0
+                ? Math.round((playerData.levelsCompleted / playerData.gamesPlayed) * 100)
+                : 0;
+            document.getElementById('statWinRate').textContent = winRate + '%';
+
+            // 加载游戏历史
+            loadGameHistory();
+        }
+
+        // 上传头像
+        function uploadAvatar(event) {
+            const file = event.target.files[0];
+            if (file && file.size < 2 * 1024 * 1024) { // 限制2MB
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    playerData.avatarImage = e.target.result;
+                    savePlayerData();
+                    loadProfilePage();
+                    showModal('✅ 上传成功', '你的新头像太可爱了！');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showModal('❌ 上传失败', '图片太大啦，请选择小于2MB的图片');
+            }
+            event.target.value = '';
+        }
+
+        // 编辑名字
+        function editName() {
+            document.getElementById('nameInput').value = playerData.name;
+            document.getElementById('nameModal').classList.add('show');
+            document.getElementById('nameInput').focus();
+        }
+
+        // 保存名字
+        function saveName() {
+            const newName = document.getElementById('nameInput').value.trim();
+            if (newName && newName.length > 0 && newName.length <= 10) {
+                playerData.name = newName;
+                savePlayerData();
+                document.getElementById('profileName').textContent = newName;
+                closeNameModal();
+                showModal('✅ 修改成功', '你的新昵称超可爱！');
+            } else {
+                showModal('❌ 修改失败', '昵称长度要在1-10个字符之间');
+            }
+        }
+
+        // 关闭改名弹窗
+        function closeNameModal() {
+            document.getElementById('nameModal').classList.remove('show');
+        }
+
+        // 加载游戏历史
+        function loadGameHistory() {
+            const historyList = document.getElementById('historyList');
+
+            if (!playerData.gameHistory || playerData.gameHistory.length === 0) {
+                historyList.innerHTML = '<div class="empty-history">还没有游戏记录，快去玩游戏吧！</div>';
+                return;
+            }
+
+            historyList.innerHTML = playerData.gameHistory.slice(0, 20).map(item => {
+                const game = games.find(g => g.id === item.gameId);
+                const gameIcon = game ? game.icon : '🎮';
+                const gameName = game ? game.name : '未知游戏';
+                const time = new Date(item.timestamp).toLocaleString('zh-CN', {
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <div class="history-item">
+                        <div class="history-icon">${gameIcon}</div>
+                        <div class="history-info">
+                            <div class="history-name">${gameName}</div>
+                            <div class="history-time">${time}</div>
+                        </div>
+                        <div class="history-score">+${item.score}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 加载排行榜页面
+        function loadRankPage() {
+            let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+
+            const playerEntry = {
+                name: playerData.name,
+                avatar: playerData.avatar,
+                level: playerData.level,
+                totalScore: playerData.totalScore,
+                gamesPlayed: playerData.gamesPlayed
+            };
+
+            const existingIndex = leaderboard.findIndex(p => p.name === playerData.name);
+            if (existingIndex >= 0) {
+                if (playerData.totalScore > leaderboard[existingIndex].totalScore) {
+                    leaderboard[existingIndex] = playerEntry;
+                }
+            } else {
+                leaderboard.push(playerEntry);
+            }
+
+            leaderboard.sort((a, b) => b.totalScore - a.totalScore);
+            leaderboard = leaderboard.slice(0, 100);
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+
+            const listEl = document.getElementById('rankList');
+            listEl.innerHTML = leaderboard.map((rank, index) => {
+                const isCurrentPlayer = rank.name === playerData.name;
+                return `
+                    <div class="rank-item" ${isCurrentPlayer ? 'style="border-color: #fbbf24;"' : ''}>
+                        <div class="rank-number">${index + 1}</div>
+                        <div class="rank-avatar">${rank.avatar || '👤'}</div>
+                        <div class="rank-info">
+                            <div class="rank-name">${rank.name}${isCurrentPlayer ? ' (你)' : ''}</div>
+                            <div class="rank-level">Lv.${rank.level} · ${rank.gamesPlayed}局</div>
+                        </div>
+                        <div class="rank-score">${rank.totalScore.toLocaleString()}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 加载商店页面
+        function loadShopPage() {
+            const shopItems = [
+                { id: 'avatar1', name: '游戏手柄', icon: '🎮', price: 0 },
+                { id: 'avatar2', name: '像素怪兽', icon: '👾', price: 500 },
+                { id: 'avatar3', name: '火箭', icon: '🚀', price: 800 },
+                { id: 'avatar4', name: '宝剑', icon: '⚔️', price: 1000 },
+                { id: 'avatar5', name: '城堡', icon: '🏰', price: 1500 },
+                { id: 'avatar6', name: '靶心', icon: '🎯', price: 500 },
+                { id: 'avatar7', name: '吉他', icon: '🎸', price: 1200 },
+                { id: 'avatar8', name: '钢琴', icon: '🎹', price: 1200 },
+                { id: 'avatar9', name: '骰子', icon: '🎲', price: 600 },
+                { id: 'avatar10', name: '泰迪熊', icon: '🧸', price: 2000 }
+            ];
+
+            const shopEl = document.getElementById('shopGrid');
+            shopEl.innerHTML = shopItems.map(item => `
+                <div class="shop-item" onclick="purchaseItem('${item.id}', ${item.price})">
+                    <div class="icon">${item.icon}</div>
+                    <div class="name">${item.name}</div>
+                    <div class="price">${item.price}积分</div>
+                </div>
+            `).join('');
+        }
+
+        // 购买道具
+        function purchaseItem(itemId, price) {
+            if (playerData.totalScore >= price) {
+                playerData.totalScore -= price;
+                savePlayerData();
+                updateStats();
+                showModal('购买成功', '您已获得该道具！');
+            } else {
+                showModal('积分不足', '继续努力赚取积分吧！');
+            }
+        }
+
+        // 显示弹窗
+        function showModal(title, message) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('infoModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').classList.remove('show');
+        }
+
+        // 添加游戏按钮
+        document.getElementById('addGameBtn').addEventListener('click', () => {
+            // 清空输入框
+            document.getElementById('gameNameInput').value = '';
+            document.getElementById('gameIconInput').value = '';
+            document.getElementById('gameUrlInput').value = '';
+            document.getElementById('gameDescInput').value = '';
+            document.getElementById('gameCategoryInput').value = 'casual';
+
+            // 显示添加游戏弹窗
+            document.getElementById('addGameModal').classList.add('show');
+        });
+
+        // 关闭添加游戏弹窗
+        function closeAddGameModal() {
+            document.getElementById('addGameModal').classList.remove('show');
+        }
+
+        // 保存自定义游戏
+        function saveCustomGame() {
+            const name = document.getElementById('gameNameInput').value.trim();
+            const icon = document.getElementById('gameIconInput').value.trim() || '🎮';
+            const url = document.getElementById('gameUrlInput').value.trim();
+            const desc = document.getElementById('gameDescInput').value.trim() || '自定义游戏';
+            const category = document.getElementById('gameCategoryInput').value;
+
+            if (!name) {
+                showModal('提示', '请输入游戏名称');
+                return;
+            }
+
+            if (!url) {
+                showModal('提示', '请输入游戏链接');
+                return;
+            }
+
+            // 获取现有的自定义游戏
+            let customGames = JSON.parse(localStorage.getItem('customGames')) || [];
+
+            // 添加新游戏
+            const newGame = {
+                id: 'custom_' + Date.now(),
+                name: name,
+                icon: icon,
+                desc: desc,
+                category: category,
+                url: url,
+                hot: false,
+                isCustom: true
+            };
+
+            customGames.push(newGame);
+            localStorage.setItem('customGames', JSON.stringify(customGames));
+
+            // 重新渲染游戏列表
+            renderGames();
+
+            closeAddGameModal();
+            showModal('添加成功', `已添加游戏：${name}`);
+        }
+
+        // 游戏结束回调
+        window.gameFinished = function(score, level, won) {
+            const startTime = parseInt(sessionStorage.getItem('gameStartTime') || Date.now());
+            const gameId = sessionStorage.getItem('currentGame') || '';
+
+            playerData.totalScore += score || 0;
+            playerData.gamesPlayed += 1;
+            playerData.playTime += Date.now() - startTime;
+
+            if (score > (playerData.highScore || 0)) {
+                playerData.highScore = score;
+            }
+
+            if (won) {
+                playerData.levelsCompleted += 1;
+            }
+
+            // 添加到游戏历史
+            if (!playerData.gameHistory) {
+                playerData.gameHistory = [];
+            }
+
+            playerData.gameHistory.unshift({
+                gameId: gameId,
+                score: score || 0,
+                level: level || 1,
+                won: won,
+                timestamp: Date.now()
+            });
+
+            // 只保留最近50条记录
+            if (playerData.gameHistory.length > 50) {
+                playerData.gameHistory = playerData.gameHistory.slice(0, 50);
+            }
+
+            savePlayerData();
+            updateStats();
+
+            sessionStorage.removeItem('gameStartTime');
+            sessionStorage.removeItem('currentGame');
+        };
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM加载完成');
+            loadPlayerData();
+            renderGames();
+            updateStats();
+            console.log('主页初始化完成');
+        });
+    </script>
+</body>
+</html>
