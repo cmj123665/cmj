@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 游戏大厅 (简化版)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .game-card {
+            background: rgba(138, 43, 226, 0.3);
+            border: 2px solid rgba(138, 43, 226, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+
+        .game-card:hover {
+            border-color: #fbbf24;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        .game-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .game-desc {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .debug {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 600px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .debug h3 {
+            margin-bottom: 10px;
+            color: #fbbf24;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">🏠 返回完整版主页</a>
+
+    <h1>🎮 游戏大厅 <small style="font-size: 1rem;">(简化版)</small></h1>
+
+    <div class="debug">
+        <h3>📋 系统信息</h3>
+        <div id="systemInfo">正在检查...</div>
+    </div>
+
+    <div class="games-grid" id="gamesGrid">
+        <!-- 游戏卡片将通过JavaScript生成 -->
+    </div>
+
+    <script>
+        // 游戏列表
+        const games = [
+            { id: 'snake', name: '贪吃蛇大作战', icon: '🐍', desc: '999关+道具+穿墙', url: 'snake-game/index.html' },
+            { id: '2048', name: '2048进化版', icon: '🔢', desc: '数字合并挑战', url: '2048/index.html' },
+            { id: 'runner', name: '跑酷大冒险', icon: '🏃', desc: '二段跳+动漫角色', url: 'runner-game/index.html' },
+            { id: 'shooter', name: '太空射击', icon: '🚀', desc: '热血射击+波次系统', url: 'space-shooter/index.html' },
+            { id: 'pong', name: '弹球挑战', icon: '🏓', desc: '经典弹球升级', url: 'pong-game/index.html' },
+            { id: 'breakout', name: '打砖块', icon: '🧱', desc: '999关随机布局', url: 'breakout/index.html' },
+            { id: 'tile', name: '消消大作战', icon: '🍎', desc: '三消玩法', url: 'tile-game/index.html' },
+            { id: 'memory', name: '记忆翻牌', icon: '🃏', desc: '记忆力挑战', url: 'memory/index.html' },
+            { id: 'minesweeper', name: '扫雷', icon: '💣', desc: '经典扫雷+三难度', url: 'minesweeper/index.html' },
+            { id: 'gomoku', name: '五子棋', icon: '⚫', desc: '人机对战AI', url: 'gomoku/index.html' },
+            { id: 'tetris', name: '俄罗斯方块', icon: '🟦', desc: '经典消除+升级系统', url: 'tetris/index.html' },
+            { id: 'whack', name: '打地鼠', icon: '🔨', desc: '反应力挑战+连击', url: 'whack-a-mole/index.html' },
+            { id: 'tank', name: '坦克大战', icon: '🎮', desc: '经典坦克+关卡系统', url: 'tank-battle/index.html' },
+            { id: 'puzzle', name: '拼图游戏', icon: '🧩', desc: '多难度+计时挑战', url: 'puzzle/index.html' },
+            { id: 'tower', name: '塔防大战', icon: '🏰', desc: '4种塔+波次系统', url: 'tower-defense/index.html' }
+        ];
+
+        // 渲染游戏列表
+        function renderGames() {
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = games.map(game => `
+                <a href="${game.url}" class="game-card">
+                    <div class="game-icon">${game.icon}</div>
+                    <div class="game-name">${game.name}</div>
+                    <div class="game-desc">${game.desc}</div>
+                </a>
+            `).join('');
+        }
+
+        // 检查系统信息
+        function checkSystem() {
+            const info = document.getElementById('systemInfo');
+            const checks = [];
+
+            // 检查localStorage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                checks.push('✅ LocalStorage 正常');
+            } catch (e) {
+                checks.push('❌ LocalStorage 失败: ' + e.message);
+            }
+
+            // 检查玩家数据
+            try {
+                const playerData = JSON.parse(localStorage.getItem('playerData'));
+                if (playerData) {
+                    checks.push(`✅ 玩家: ${playerData.name} Lv.${playerData.level} 积分:${playerData.totalScore}`);
+                } else {
+                    checks.push('ℹ️ 玩家数据未初始化');
+                }
+            } catch (e) {
+                checks.push('❌ 读取玩家数据失败');
+            }
+
+            info.innerHTML = checks.join('<br>');
+        }
+
+        // 初始化
+        window.onload = function() {
+            console.log('简化版主页加载完成');
+            renderGames();
+            checkSystem();
+        };
+
+        // 错误处理
+        window.onerror = function(msg, url, line) {
+            console.error('错误:', msg, '位置:', url + ':' + line);
+            return true;
+        };
+    </script>
+</body>
+</html>

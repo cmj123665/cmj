@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏰 塔防大战</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+
+        .game-title {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .game-area {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .side-panel {
+            background: rgba(30, 41, 59, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 180px;
+        }
+
+        .side-panel h3 {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .info-box .label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.75rem;
+        }
+
+        .info-box .value {
+            color: #fbbf24;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .tower-shop {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tower-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .tower-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .tower-item.selected {
+            border-color: #fbbf24;
+            background: rgba(251, 191, 36, 0.2);
+        }
+
+        .tower-item .icon {
+            font-size: 1.8rem;
+        }
+
+        .tower-item .name {
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .tower-item .cost {
+            color: #fbbf24;
+            font-size: 0.85rem;
+        }
+
+        .tower-item .desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.7rem;
+        }
+
+        .game-board {
+            background: rgba(30, 41, 59, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 10px;
+        }
+
+        .wave-info {
+            background: rgba(231, 76, 60, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(30, 30, 60, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .modal-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .start-screen {
+            background: rgba(30, 30, 60, 0.9);
+            border-radius: 25px;
+            padding: 40px;
+            color: white;
+        }
+
+        .start-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .start-screen p {
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .start-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .side-panel {
+                order: 2;
+                width: 100%;
+            }
+
+            .tower-shop {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    
+    /* ========== 游戏导航栏 ========== */
+    .game-nav { z-index: 9999 !important; z-index: 9999 !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 12px 20px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 9999 !important;
+    }
+
+    .game-nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .game-nav-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .game-nav-btn:active {
+        transform: scale(0.95);
+    }
+
+    .game-nav-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .game-nav-btn.secondary {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #e0e0e0;
+    }
+
+    .game-nav-btn.tertiary {
+        background: transparent;
+        color: #666;
+    }
+
+    /* 游戏说明弹窗 */
+    .help-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+    }
+
+    .help-modal.show {
+        display: flex;
+    }
+
+    .help-modal-content {
+        background: #fff;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+        color: #333;
+    }
+
+    .help-modal-content h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-align: center;
+        color: #333;
+    }
+
+    .help-modal-content p {
+        font-size: 14px;
+        line-height: 1.8;
+        margin-bottom: 12px;
+        color: #666;
+    }
+
+    .help-modal-content .key {
+        display: inline-block;
+        background: #f5f5f5;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #333;
+        margin: 0 4px;
+    }
+
+    .help-modal-content ul {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    .help-modal-content li {
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    @media (max-width: 768px) {
+        .game-nav { z-index: 9999 !important; z-index: 9999 !important;
+            flex-wrap: wrap;
+            padding: 10px;
+        }
+
+        .game-nav-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+    }
+
+        /* 虚拟方向键 */
+        .d-pad {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+            z-index: 999;
+        }
+        .d-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .d-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+        @media (min-width: 768px) {
+            .d-pad { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="game-title">🏰 塔防大战</h1>
+            <div>
+                <button class="btn" id="homeBtn">🏠 返回</button>
+                <button class="btn" id="restartBtn">🔄 重来</button>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="side-panel">
+                <h3>📊 游戏信息</h3>
+                <div class="info-box">
+                    <div class="label">金币</div>
+                    <div class="value" id="gold">100</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">生命</div>
+                    <div class="value" id="lives">20</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">波次</div>
+                    <div class="value" id="wave">1</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">得分</div>
+                    <div class="value" id="score">0</div>
+                </div>
+
+                <h3>🏗️ 建造塔</h3>
+                <div class="tower-shop" id="towerShop">
+                    <div class="tower-item" data-tower="arrow">
+                        <div class="icon">🏹</div>
+                        <div class="name">箭塔</div>
+                        <div class="cost">💰 50</div>
+                        <div class="desc">快速射击</div>
+                    </div>
+                    <div class="tower-item" data-tower="cannon">
+                        <div class="icon">💣</div>
+                        <div class="name">炮塔</div>
+                        <div class="cost">💰 100</div>
+                        <div class="desc">范围伤害</div>
+                    </div>
+                    <div class="tower-item" data-tower="magic">
+                        <div class="icon">✨</div>
+                        <div class="name">魔塔</div>
+                        <div class="cost">💰 150</div>
+                        <div class="desc">减速敌人</div>
+                    </div>
+                    <div class="tower-item" data-tower="laser">
+                        <div class="icon">⚡</div>
+                        <div class="name">激光塔</div>
+                        <div class="cost">💰 200</div>
+                        <div class="desc">穿透攻击</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-board">
+                <canvas id="gameCanvas" width="600" height="500"></canvas>
+            </div>
+        </div>
+
+        <div class="modal" id="startModal">
+            <div class="start-screen">
+                <h2>🏰 塔防大战</h2>
+                <p>阻止敌人到达终点！</p>
+                <p>选择塔类型，点击地图建造</p>
+                <p>不同塔有不同的效果</p>
+                <p>🏹 箭塔 - 快速单体攻击</p>
+                <p>💣 炮塔 - 范围爆炸伤害</p>
+                <p>✨ 魔塔 - 减速敌人移动</p>
+                <p>⚡ 激光塔 - 穿透多个敌人</p>
+                <button class="start-btn" onclick="startGame()">开始游戏</button>
+            </div>
+        </div>
+
+        <div class="modal" id="gameOverModal">
+            <div class="modal-content">
+                <h2 id="gameOverTitle">游戏结束!</h2>
+                <p>到达波次: <span id="finalWave">1</span></p>
+                <p>最终得分: <span id="finalScore">0</span></p>
+                <button class="modal-btn" onclick="restartGame()">再来一局</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function backToHall() {
+            if (window.parent) {
+                window.parent.location.href = '../index.html';
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let towers = [];
+        let enemies = [];
+        let score = 0;
+        let wave = 1;
+        let gameRunning = false;
+
+        function startGame() {
+            towers = [];
+            enemies = [];
+            score = 100;
+            wave = 1;
+            gameRunning = true;
+            document.getElementById('startModal').classList.remove('show');
+            gameLoop();
+        }
+
+        function spawnEnemy() {
+            if (!gameRunning) return;
+            enemies.push({
+                x: 0,
+                y: 200,
+                width: 20,
+                height: 20,
+                speed: 1 + wave * 0.1,
+                hp: 30
+            });
+            setTimeout(spawnEnemy, 2000 - wave * 100);
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            // 更新敌人
+            enemies.forEach((e, i) => {
+                e.x += e.speed;
+                if (e.x > canvas.width) {
+                    enemies.splice(i, 1);
+                    wave++;
+                    if (wave > 5) {
+                        alert('游戏结束！得分: ' + score);
+                        gameRunning = false;
+                    }
+                }
+            });
+
+            // 塔攻击
+            towers.forEach(t => {
+                t.cooldown = t.cooldown || 0;
+                if (t.cooldown <= 0) {
+                    enemies.forEach(e => {
+                        if (Math.abs(e.x - t.x) < 150) {
+                            e.hp -= 10;
+                            t.cooldown = 30;
+                            if (e.hp <= 0) {
+                                const idx = enemies.indexOf(e);
+                                if (idx > -1) {
+                                    enemies.splice(idx, 1);
+                                    score += 10;
+                                }
+                            }
+                        }
+                    });
+                }
+                if (t.cooldown > 0) t.cooldown--;
+            });
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制塔
+            ctx.fillStyle = '#4ecdc4';
+            towers.forEach(t => {
+                ctx.fillRect(t.x, t.y, 30, 30);
+            });
+
+            // 绘制敌人
+            ctx.fillStyle = '#ff6b6b';
+            enemies.forEach(e => {
+                ctx.fillRect(e.x, e.y, e.width, e.height);
+            });
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            spawnEnemy();
+            update();
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (!gameRunning) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (score >= 50) {
+                towers.push({ x, y });
+                score -= 50;
+            }
+        });
+
+        // 智能重启函数 - 优先调用游戏的restart函数，不存在则重新加载页面
+        function handleRestart() {
+            if (typeof restartGame === 'function') {
+                restartGame();
+            } else if (typeof newGame === 'function') {
+                newGame();
+            } else if (typeof initGame === 'function') {
+                initGame();
+            } else {
+                location.reload();
+            }
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('show');
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

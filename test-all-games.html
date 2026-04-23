@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 { text-align: center; color: #333; }
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .game-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #dee2e6;
+        }
+        .game-card.working {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .game-card.broken {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .game-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .test-btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .status {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 游戏测试工具</h1>
+        <p style="text-align: center;">点击测试按钮来验证每个游戏是否能正常运行</p>
+
+        <div class="game-grid" id="gameGrid"></div>
+    </div>
+
+    <script>
+        const games = [
+            { id: 'snake', name: '🐍 贪吃蛇', url: 'snake-game/index.html' },
+            { id: '2048', name: '🔢 2048', url: '2048/index.html' },
+            { id: 'tetris', name: '🟦 俄罗斯方块', url: 'tetris/index.html' },
+            { id: 'breakout', name: '🧱 打砖块', url: 'breakout/index.html' },
+            { id: 'pong', name: '🏓 弹球', url: 'pong-game/index.html' },
+            { id: 'memory', name: '🃏 记忆翻牌', url: 'memory/index.html' },
+            { id: 'minesweeper', name: '💣 扫雷', url: 'minesweeper/index.html' },
+            { id: 'gomoku', name: '⚫ 五子棋', url: 'gomoku/index.html' },
+            { id: 'tile', name: '🍎 消消乐', url: 'tile-game/index.html' },
+            { id: 'whack', name: '🔨 打地鼠', url: 'whack-a-mole/index.html' },
+            { id: 'tank', name: '🎮 坦克大战', url: 'tank-battle/index.html' },
+            { id: 'puzzle', name: '🧩 拼图', url: 'puzzle/index.html' },
+            { id: 'tower', name: '🏰 塔防', url: 'tower-defense/index.html' },
+            { id: 'runner', name: '🏃 跑酷', url: 'runner-game/index.html' },
+            { id: 'shooter', name: '🚀 太空射击', url: 'space-shooter/index.html' }
+        ];
+
+        const grid = document.getElementById('gameGrid');
+
+        games.forEach(game => {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.id = 'card-' + game.id;
+
+            card.innerHTML = `
+                <div class="game-name">${game.name}</div>
+                <a href="${game.url}" target="_blank" class="test-btn">测试游戏</a>
+                <div class="status" id="status-${game.id}">等待测试...</div>
+            `;
+
+            grid.appendChild(card);
+        });
+
+        // 自动检测localStorage中的问题
+        window.addEventListener('DOMContentLoaded', () => {
+            const customGames = localStorage.getItem('customGames');
+
+            if (customGames) {
+                try {
+                    const games = JSON.parse(customGames);
+                    if (games.length > 0) {
+                        alert(`发现 ${games.length} 个自定义游戏数据！\n\n这可能导致主页显示重复游戏。\n\n建议清除浏览器缓存。`);
+                    }
+                } catch (e) {
+                    alert('localStorage数据损坏！\n\n建议清除浏览器缓存。');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

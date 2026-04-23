@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一键修复游戏问题</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .step { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .step h3 { color: #667eea; margin-bottom: 10px; }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover { transform: translateY(-2px); }
+        .result { padding: 15px; margin: 10px 0; border-radius: 8px; display: none; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 一键修复游戏问题</h1>
+
+        <div class="step">
+            <h3>步骤 1：清除重复数据</h3>
+            <p>点击下面的按钮清除localStorage中的重复游戏数据</p>
+        </div>
+
+        <button onclick="fixAll()">✨ 一键修复所有问题</button>
+
+        <div id="result" class="result"></div>
+
+        <div class="step">
+            <h3>步骤 2：返回主页测试</h3>
+            <button onclick="goHome()">🏠 返回主页</button>
+        </div>
+
+        <div class="step">
+            <h3>手动清除（如果上面的方法不行）</h3>
+            <button onclick="manualClear()" style="background: #f5576c;">⚠️ 强制清除所有数据</button>
+        </div>
+    </div>
+
+    <script>
+        function fixAll() {
+            const resultDiv = document.getElementById('result');
+            let fixed = [];
+
+            try {
+                // 清除自定义游戏
+                const customGames = localStorage.getItem('customGames');
+                if (customGames) {
+                    const count = JSON.parse(customGames).length;
+                    localStorage.removeItem('customGames');
+                    fixed.push(`清除了 ${count} 个自定义游戏`);
+                }
+
+                // 清除游戏历史
+                if (localStorage.getItem('gameHistory')) {
+                    localStorage.removeItem('gameHistory');
+                    fixed.push('清除了游戏历史');
+                }
+
+                // 清除其他可能的数据
+                const keysToRemove = ['favoriteGames', 'checkinData', 'messages'];
+                keysToRemove.forEach(key => {
+                    if (localStorage.getItem(key)) {
+                        localStorage.removeItem(key);
+                        fixed.push(`清除了 ${key}`);
+                    }
+                });
+
+                // 显示结果
+                if (fixed.length > 0) {
+                    resultDiv.className = 'result success';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = '<strong>修复完成！</strong><br>' + fixed.join('<br>');
+                } else {
+                    resultDiv.className = 'result success';
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = '<strong>没有发现问题</strong><br>数据已经是正常的';
+                }
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<strong>修复失败：</strong><br>' + error.message;
+            }
+        }
+
+        function manualClear() {
+            if (confirm('确定要清除所有数据吗？这将删除所有游戏进度和设置！')) {
+                localStorage.clear();
+                document.getElementById('result').className = 'result success';
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('result').innerHTML = '<strong>已清除所有数据！</strong><br>请刷新页面并重新加载主页。';
+            }
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        // 自动检测问题
+        window.addEventListener('DOMContentLoaded', () => {
+            const customGames = localStorage.getItem('customGames');
+            if (customGames) {
+                try {
+                    const games = JSON.parse(customGames);
+                    if (games.length > 0) {
+                        document.getElementById('result').className = 'result error';
+                        document.getElementById('result').style.display = 'block';
+                        document.getElementById('result').innerHTML = `<strong>发现问题：</strong><br>检测到 ${games.length} 个自定义游戏，可能导致重复显示。<br><br>请点击"一键修复所有问题"按钮。`;
+                    }
+                } catch (e) {}
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清除重复游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button.danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 游戏修复工具</h1>
+
+        <div class="info">
+            <p><strong>问题诊断：</strong></p>
+            <ul>
+                <li>主页显示重复游戏</li>
+                <li>部分游戏无法返回主页</li>
+            </ul>
+        </div>
+
+        <div id="result" class="success"></div>
+
+        <button onclick="clearDuplicateGames()">
+            🗑️ 清除重复游戏
+        </button>
+
+        <button onclick="clearAllCache()" class="danger">
+            ⚠️ 清除所有缓存
+        </button>
+
+        <button onclick="goToHome()">
+            🏠 返回主页
+        </button>
+    </div>
+
+    <script>
+        function clearDuplicateGames() {
+            // 清除自定义游戏
+            const customGames = JSON.parse(localStorage.getItem('customGames')) || [];
+            const count = customGames.length;
+
+            localStorage.removeItem('customGames');
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `✅ 已清除 <strong>${count}</strong> 个重复游戏！`;
+        }
+
+        function clearAllCache() {
+            if (confirm('确定要清除所有缓存吗？这将删除游戏进度和设置。')) {
+                // 保存用户数据
+                const userData = localStorage.getItem('userData');
+                const playerData = localStorage.getItem('playerData');
+
+                localStorage.clear();
+
+                // 恢复用户数据
+                if (userData) localStorage.setItem('userData', userData);
+                if (playerData) localStorage.setItem('playerData', playerData);
+
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '✅ 已清除所有缓存！游戏将恢复正常。';
+            }
+        }
+
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+
+        // 自动检查
+        window.addEventListener('DOMContentLoaded', () => {
+            const customGames = JSON.parse(localStorage.getItem('customGames')) || [];
+            if (customGames.length > 0) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `⚠️ 发现 <strong>${customGames.length}</strong> 个重复游戏，建议清除！`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏃 3D跑酷冒险</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+        #world {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform: rotateX(60deg) translateZ(-200px);
+        }
+        .ground {
+            position: absolute;
+            width: 10000px;
+            height: 10000px;
+            background: linear-gradient(45deg, #1a1a2e 25%, #16213e 25%, #16213e 50%, #1a1a2e 50%, #1a1a2e 75%, #16213e 75%);
+            background-size: 100px 100px;
+            transform: rotateX(90deg) translateZ(0px);
+            transform-origin: center;
+        }
+        .track {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 300px;
+            height: 5000px;
+            background: linear-gradient(90deg, #0f3460, #1a1a2e, #0f3460);
+            transform: translateX(-50%) translateY(-50%) rotateX(90deg) translateZ(10px);
+            transform-origin: center;
+            border-left: 5px solid #e94560;
+            border-right: 5px solid #e94560;
+        }
+        .player {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            left: 50%;
+            bottom: 200px;
+            transform-style: preserve-3d;
+            transform: translateX(-50%);
+        }
+        .player-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #e94560, #c73e54);
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.5);
+        }
+        .player-head {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ffd93d;
+            border-radius: 50%;
+            top: -30px;
+            left: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .player-shadow {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            bottom: -10px;
+            left: 0;
+            filter: blur(5px);
+        }
+        .obstacle {
+            position: absolute;
+            width: 80px;
+            height: 40px;
+            background: linear-gradient(180deg, #ff6b6b, #c92a2a);
+            border-radius: 5px;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.5);
+        }
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #ffd93d, #f9ca24);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 217, 61, 0.8);
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+        .hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            display: none;
+            z-index: 2000;
+        }
+        .game-over.show { display: block; }
+        .game-over h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+        .btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #e94560, #c73e54);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .controls {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border: 3px solid rgba(255,255,255,0.4);
+            border-radius: 15px;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+        .control-btn:active {
+            background: rgba(255,255,255,0.4);
+            transform: scale(0.95);
+        }
+
+        /* 游戏导航栏 - 确保可以点击 */
+        .game-nav {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px) !important;
+            padding: 15px 20px !important;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom)) !important;
+            display: flex !important;
+            justify-content: center !important;
+            gap: 15px !important;
+            box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.2) !important;
+            z-index: 9999 !important;
+            pointer-events: auto !important;
+        }
+        .game-nav-btn {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 12px 25px !important;
+            border: none !important;
+            border-radius: 12px !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            transition: transform 0.2s !important;
+        }
+        .game-nav-btn:hover {
+            transform: scale(1.05) !important;
+        }
+        .game-nav-btn.primary {
+            background: linear-gradient(135deg, #e94560, #c73e54) !important;
+            color: white !important;
+        }
+        .game-nav-btn.secondary {
+            background: #f0f0f0 !important;
+            color: #333 !important;
+        }
+
+        @media (min-width: 768px) {
+            .controls { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div class="hud">
+            <div>分数: <span id="score">0</span></div>
+            <div>距离: <span id="distance">0</span>m</div>
+        </div>
+
+        <div id="world">
+            <div class="ground"></div>
+            <div class="track"></div>
+            <div class="player" id="player">
+                <div class="player-shadow"></div>
+                <div class="player-head"></div>
+                <div class="player-body"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="jumpBtn">⬆️</button>
+            <button class="control-btn" id="slideBtn">⬇️</button>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>游戏结束!</h2>
+            <p>你跑了 <span id="finalScore">0</span> 米</p>
+            <button class="btn" onclick="restartGame()">再来一局</button>
+        </div>
+    </div>
+
+    <!-- 游戏导航栏 -->
+    <div class="game-nav">
+        <button class="game-nav-btn primary" onclick="backToHall()">
+            <span>🏠</span><span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="restartGame()">
+            <span>🔄</span><span>重新开始</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="alert('⬆️ 跳跃 | ⬇️ 滑行 | 点击屏幕跳跃')">
+            <span>❓</span><span>游戏说明</span>
+        </button>
+    </div>
+
+    <script>
+        const world = document.getElementById('world');
+        const player = document.getElementById('player');
+        let obstacles = [];
+        let coins = [];
+        let score = 0;
+        let distance = 0;
+        let gameRunning = true;
+        let isJumping = false;
+        let isSliding = false;
+        let gameSpeed = 10;
+
+        // 玩家状态
+        let playerY = 0;
+        let playerVelocity = 0;
+        const gravity = 0.8;
+        const jumpForce = -20;
+
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            obstacle.style.position = 'absolute';
+            obstacle.style.left = '50%';
+            obstacle.style.transform = 'translateX(-50%) rotateX(90deg)';
+            obstacle.style.bottom = (150 + Math.random() * 100) + 'px';
+            obstacle.style.zIndex = '10';
+            world.appendChild(obstacle);
+            obstacles.push({
+                element: obstacle,
+                x: 0,
+                type: 'obstacle'
+            });
+        }
+
+        function createCoin() {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.style.position = 'absolute';
+            coin.style.left = '50%';
+            coin.style.transform = 'translateX(-50%) rotateX(90deg)';
+            coin.style.bottom = (150 + Math.random() * 200) + 'px';
+            coin.style.zIndex = '10';
+            world.appendChild(coin);
+            coins.push({
+                element: coin,
+                x: 0,
+                type: 'coin'
+            });
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            // 更新玩家跳跃
+            if (isJumping) {
+                playerVelocity += gravity;
+                playerY += playerVelocity;
+                if (playerY >= 0) {
+                    playerY = 0;
+                    isJumping = false;
+                    playerVelocity = 0;
+                }
+                player.style.bottom = (200 + playerY) + 'px';
+            }
+
+            // 更新障碍物
+            obstacles.forEach((obs, index) => {
+                obs.x -= gameSpeed;
+                obs.element.style.transform = `translateX(calc(-50% + ${obs.x}px)) rotateX(90deg)`;
+
+                // 碰撞检测
+                if (obs.x < -300 && obs.x > -500) {
+                    if (!isSliding && Math.abs(playerY - (parseInt(obs.element.style.bottom) - 200)) < 50) {
+                        gameOver();
+                    }
+                }
+
+                // 移除屏幕外的障碍物
+                if (obs.x < -1000) {
+                    obs.element.remove();
+                    obstacles.splice(index, 1);
+                }
+            });
+
+            // 更新金币
+            coins.forEach((coin, index) => {
+                coin.x -= gameSpeed;
+                coin.element.style.transform = `translateX(calc(-50% + ${coin.x}px)) rotateX(90deg)`;
+
+                // 收集金币
+                if (coin.x < -300 && coin.x > -500) {
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    coin.element.remove();
+                    coins.splice(index, 1);
+                }
+
+                // 移除屏幕外的金币
+                if (coin.x < -1000) {
+                    coin.element.remove();
+                    coins.splice(index, 1);
+                }
+            });
+
+            // 生成新的障碍物和金币
+            if (Math.random() < 0.02) createObstacle();
+            if (Math.random() < 0.03) createCoin();
+
+            // 更新距离
+            distance += gameSpeed / 10;
+            document.getElementById('distance').textContent = Math.floor(distance);
+
+            // 增加速度
+            gameSpeed = 10 + distance / 100;
+
+            requestAnimationFrame(update);
+        }
+
+        function jump() {
+            if (!isJumping && !isSliding && gameRunning) {
+                isJumping = true;
+                playerVelocity = jumpForce;
+            }
+        }
+
+        function slide() {
+            if (!isJumping && !isSliding && gameRunning) {
+                isSliding = true;
+                player.querySelector('.player-body').style.height = '30px';
+                player.querySelector('.player-head').style.display = 'none';
+                setTimeout(() => {
+                    isSliding = false;
+                    player.querySelector('.player-body').style.height = '80px';
+                    player.querySelector('.player-head').style.display = 'block';
+                }, 500);
+            }
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = Math.floor(distance);
+            document.getElementById('gameOver').classList.add('show');
+        }
+
+        function restartGame() {
+            // 清除所有障碍物和金币
+            obstacles.forEach(obs => obs.element.remove());
+            coins.forEach(coin => coin.element.remove());
+            obstacles = [];
+            coins = [];
+
+            score = 0;
+            distance = 0;
+            gameSpeed = 10;
+            gameRunning = true;
+            playerY = 0;
+            isJumping = false;
+            isSliding = false;
+
+            document.getElementById('score').textContent = '0';
+            document.getElementById('distance').textContent = '0';
+            document.getElementById('gameOver').classList.remove('show');
+
+            update();
+        }
+
+        function backToHall() {
+            window.location.href = '../index.html';
+        }
+
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                e.preventDefault();
+                jump();
+            } else if (e.code === 'ArrowDown') {
+                e.preventDefault();
+                slide();
+            }
+        });
+
+        // 触摸控制
+        document.getElementById('jumpBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jump();
+        });
+
+        document.getElementById('slideBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            slide();
+        });
+
+        // 点击屏幕跳跃
+        document.getElementById('gameContainer').addEventListener('click', jump);
+        document.getElementById('gameContainer').addEventListener('touchstart', (e) => {
+            if (e.target.id !== 'jumpBtn' && e.target.id !== 'slideBtn') {
+                jump();
+            }
+        });
+
+        // 开始游戏
+        update();
+    </script>
+</body>
+</html>

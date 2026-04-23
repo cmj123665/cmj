@@ -1,0 +1,243 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+修复游戏重复问题
+检查并清除localStorage中的重复游戏数据
+"""
+import os
+
+def create_fix_script():
+    """创建修复脚本"""
+    script_content = '''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复游戏问题</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button.danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .info-list li {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 游戏问题修复工具</h1>
+
+        <div id="status"></div>
+
+        <ul class="info-list">
+            <li>✓ 检查并清除重复的游戏数据</li>
+            <li>✓ 修复游戏链接问题</li>
+            <li>✓ 清除损坏的缓存数据</li>
+            <li>✓ 重置游戏设置</li>
+        </ul>
+
+        <div class="button-group">
+            <button onclick="checkAndFix()">
+                🔍 检查并修复问题
+            </button>
+            <button onclick="clearDuplicateGames()">
+                🗑️ 清除重复游戏
+            </button>
+            <button onclick="clearAllCache()" class="danger">
+                ⚠️ 清除所有缓存
+            </button>
+            <button onclick="goToHome()">
+                🏠 返回主页
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 系统游戏ID列表
+        const systemGameIds = [
+            'snake', '2048', 'runner', 'shooter', 'pong',
+            'breakout', 'tile', 'memory', 'minesweeper', 'gomoku',
+            'tetris', 'whack', 'tank', 'puzzle', 'tower'
+        ];
+
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function checkAndFix() {
+            let issues = [];
+            let fixed = [];
+
+            // 检查自定义游戏
+            const customGames = JSON.parse(localStorage.getItem('customGames')) || [];
+            if (customGames.length > 0) {
+                issues.push(`发现 ${customGames.length} 个自定义游戏`);
+
+                // 检查是否有与系统游戏重复的
+                const duplicates = customGames.filter(g =>
+                    systemGameIds.some(id => g.id === id || g.name.includes(g.id))
+                );
+
+                if (duplicates.length > 0) {
+                    issues.push(`发现 ${duplicates.length} 个重复游戏`);
+                    fixed.push('已清除重复游戏');
+                }
+            }
+
+            // 检查localStorage数据
+            const keys = Object.keys(localStorage);
+            const gameKeys = keys.filter(k =>
+                k.includes('game') || k.includes('Game')
+            );
+
+            if (gameKeys.length > 5) {
+                issues.push(`发现 ${gameKeys.length} 个游戏相关数据项`);
+            }
+
+            // 执行修复
+            if (customGames.length > 0) {
+                const cleanCustomGames = customGames.filter(g =>
+                    !systemGameIds.includes(g.id)
+                );
+                localStorage.setItem('customGames', JSON.stringify(cleanCustomGames));
+                fixed.push(`已清除 ${customGames.length - cleanCustomGames.length} 个重复游戏`);
+            }
+
+            if (fixed.length > 0) {
+                showStatus(
+                    `修复完成！<br>• ${fixed.join('<br>• ')}`,
+                    'success'
+                );
+            } else {
+                showStatus('未发现需要修复的问题', 'success');
+            }
+        }
+
+        function clearDuplicateGames() {
+            if (confirm('确定要清除所有自定义游戏吗？这不会删除系统游戏。')) {
+                const customGames = JSON.parse(localStorage.getItem('customGames')) || [];
+                localStorage.removeItem('customGames');
+                showStatus(
+                    `已清除 ${customGames.length} 个自定义游戏。<br>现在只显示15个系统游戏。`,
+                    'success'
+                );
+            }
+        }
+
+        function clearAllCache() {
+            if (confirm('确定要清除所有缓存吗？这将删除：\\n• 游戏进度\\n• 自定义设置\\n• 收藏列表\\n• 签到记录\\n\\n但不会删除游戏文件。')) {
+                // 保留重要数据
+                const userData = localStorage.getItem('userData');
+                const playerData = localStorage.getItem('playerData');
+
+                localStorage.clear();
+
+                // 恢复必要数据
+                if (userData) localStorage.setItem('userData', userData);
+                if (playerData) localStorage.setItem('playerData', playerData);
+
+                showStatus(
+                    '已清除所有缓存数据！<br>游戏将恢复默认设置。',
+                    'warning'
+                );
+            }
+        }
+
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+
+        // 自动检查
+        window.addEventListener('DOMContentLoaded', () => {
+            const customGames = JSON.parse(localStorage.getItem('customGames')) || [];
+
+            if (customGames.length > 0) {
+                showStatus(
+                    `发现 ${customGames.length} 个自定义游戏，可能导致重复显示。`,
+                    'warning'
+                );
+            } else {
+                showStatus('游戏数据正常，无需修复', 'success');
+            }
+        });
+    </script>
+</body>
+</html>'''
+
+    with open('D:\\claudeCode\\cmj\\fix-games.html', 'w', encoding='utf-8') as f:
+        f.write(script_content)
+
+    print("已创建修复工具: fix-games.html")
+    print("请在浏览器中打开此文件来修复游戏问题")
+
+if __name__ == '__main__':
+    create_fix_script()

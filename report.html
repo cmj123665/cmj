@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏问题报告</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 30px; }
+        .game-list {
+            margin: 20px 0;
+        }
+        .game-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        .game-name {
+            flex: 1;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .game-options {
+            display: flex;
+            gap: 10px;
+        }
+        .status-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status-btn.working {
+            background: #28a745;
+            color: white;
+        }
+        .status-btn.broken {
+            background: #dc3545;
+            color: white;
+        }
+        .status-btn.untested {
+            background: #6c757d;
+            color: white;
+        }
+        .problem-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+        .big-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .big-button {
+            flex: 1;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .big-button:hover {
+            background: #0056b3;
+        }
+        .big-button.danger {
+            background: #dc3545;
+        }
+        .big-button.success {
+            background: #28a745;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 游戏问题报告工具</h1>
+
+        <div class="info">
+            <strong>使用说明：</strong><br>
+            1. 点击每个游戏的状态按钮测试游戏<br>
+            2. 如果游戏有问题，点击"有问题"按钮并描述具体问题<br>
+            3. 完成后点击"提交问题报告"<br>
+            4. 我会根据您的反馈修复问题
+        </div>
+
+        <div class="game-list" id="gameList">
+            <!-- 游戏列表将由JavaScript生成 -->
+        </div>
+
+        <div class="problem-input">
+            <label><strong>其他问题描述：</strong></label>
+            <textarea id="otherProblems" placeholder="请描述其他游戏的问题..."></textarea>
+        </div>
+
+        <div class="big-buttons">
+            <button class="big-button success" onclick="submitReport()">
+                ✅ 提交问题报告
+            </button>
+            <button class="big-button danger" onclick="clearAllCache()">
+                🗑️ 清除所有缓存
+            </button>
+            <button class="big-button" onclick="goHome()">
+                🏠 返回主页
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const games = [
+            { id: 'snake', name: '🐍 贪吃蛇' },
+            { id: '2048', name: '🔢 2048' },
+            { id: 'tetris', name: '🟦 俄罗斯方块' },
+            { id: 'breakout', name: '🧱 打砖块' },
+            { id: 'memory', name: '🃏 记忆翻牌' },
+            { id: 'minesweeper', name: '💣 扫雷' },
+            { id: 'gomoku', name: '⚫ 五子棋' },
+            { id: 'pong-game', name: '🏓 弹球' },
+            { id: 'tile-game', name: '🍎 消消乐' },
+            { id: 'whack-a-mole', name: '🔨 打地鼠' },
+            { id: 'runner-game', name: '🏃 跑酷' },
+            { id: 'tank-battle', name: '🎮 坦克' },
+            { id: 'puzzle', name: '🧩 拼图' },
+            { id: 'tower-defense', name: '🏰 塔防' },
+            { id: 'space-shooter', name: '🚀 太空射击' }
+        ];
+
+        const gameResults = {};
+
+        // 初始化游戏列表
+        function initGameList() {
+            const container = document.getElementById('gameList');
+            container.innerHTML = games.map(game => `
+                <div class="game-item" data-game="${game.id}">
+                    <div class="game-name">${game.name}</div>
+                    <div class="game-options">
+                        <button class="status-btn untested" onclick="testGame('${game.id}', this)">
+                            测试
+                        </button>
+                        <button class="status-btn" onclick="setGameStatus('${game.id}', 'broken', this)" style="display:none;">
+                            有问题
+                        </button>
+                        <button class="status-btn working" onclick="setGameStatus('${game.id}', 'working', this)" style="display:none;">
+                            正常
+                        </button>
+                        <button onclick="window.open('${game.id}/index.html', '_blank')" style="padding:5px 10px; margin-left:5px; background:#007bff; color:white; border:none; border-radius:5px; cursor:pointer;">
+                            直接打开
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function testGame(gameId, button) {
+            // 在新窗口中打开游戏
+            window.open(gameId + '/index.html', '_blank', 'width=800,height=600');
+
+            // 更新按钮状态
+            button.className = 'status-btn untested';
+            button.textContent = '测试中...';
+
+            // 3秒后询问用户结果
+            setTimeout(() => {
+                const result = confirm(`游戏 "${gameId}" 测试完成！\n\n请选择：\n- 点击"确定"如果游戏正常\n- 点击"取消"如果游戏有问题`);
+
+                if (result) {
+                    setGameStatus(gameId, 'working', button);
+                } else {
+                    setGameStatus(gameId, 'broken', button);
+                }
+            }, 3000);
+        }
+
+        function setGameStatus(gameId, status, button) {
+            gameResults[gameId] = status;
+
+            // 隐藏当前按钮
+            button.style.display = 'none';
+
+            // 显示对应的状态按钮
+            const parent = button.parentElement;
+            if (status === 'broken') {
+                parent.querySelector('.status-btn.broken').style.display = 'inline-block';
+            } else if (status === 'working') {
+                parent.querySelector('.status-btn.working').style.display = 'inline-block';
+            }
+        }
+
+        function clearAllCache() {
+            if (confirm('确定要清除所有缓存吗？这将删除所有游戏数据！')) {
+                localStorage.clear();
+                alert('✅ 已清除所有缓存！\n\n页面将刷新...');
+                location.reload();
+            }
+        }
+
+        function submitReport() {
+            const brokenGames = Object.keys(gameResults).filter(id => gameResults[id] === 'broken');
+            const otherProblems = document.getElementById('otherProblems').value.trim();
+
+            let report = '游戏问题报告：\n\n';
+
+            if (brokenGames.length > 0) {
+                report += '有问题的游戏：\n';
+                brokenGames.forEach(id => {
+                    const game = games.find(g => g.id === id);
+                    report += `- ${game ? game.name : id}\n`;
+                });
+                report += '\n';
+            }
+
+            if (otherProblems) {
+                report += '其他问题：\n' + otherProblems + '\n\n';
+            }
+
+            if (brokenGames.length === 0 && !otherProblems) {
+                report += '没有报告问题，所有游戏正常！';
+            }
+
+            // 将报告显示给用户
+            alert(report);
+
+            // 保存到内存供开发者使用
+            console.log(report);
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            initGameList();
+
+            // 检查localStorage状态
+            const keys = Object.keys(localStorage);
+            if (keys.length > 0) {
+                setTimeout(() => {
+                    if (confirm('检测到缓存数据，建议先清除以获得最佳体验。\n\n是否现在清除？')) {
+                        localStorage.clear();
+                        location.reload();
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

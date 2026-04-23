@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>太空射击</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+        #gameCanvas {
+            border: 3px solid #00cec9;
+            border-radius: 10px;
+            background: #000;
+            box-shadow: 0 0 30px rgba(0, 206, 201, 0.3);
+        }
+        .info { margin-top: 20px; text-align: center; }
+        .info span { color: #00cec9; font-weight: bold; }
+        .game-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            display: flex; justify-content: center; gap: 12px;
+            z-index: 9999 !important;
+        }
+        .game-nav-btn {
+            padding: 10px 20px; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .game-nav-btn.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .game-nav-btn.secondary { background: #f5f5f5; color: #333; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="info">
+        <p>分数: <span id="score">0</span> 波次: <span id="wave">1</span></p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let player = { x: 400, y: 500, width: 40, height: 40 };
+        let bullets = [];
+        let enemies = [];
+        let particles = [];
+        let score = 0;
+        let wave = 1;
+        let gameRunning = true;
+
+        function init() {
+            player = { x: 400, y: 500, width: 40, height: 40 };
+            bullets = [];
+            enemies = [];
+            particles = [];
+            score = 0;
+            wave = 1;
+            gameRunning = true;
+            spawnEnemies();
+            gameLoop();
+        }
+
+        function spawnEnemies() {
+            for (let i = 0; i < 3 + wave; i++) {
+                enemies.push({
+                    x: Math.random() * 700 + 50,
+                    y: -30,
+                    width: 30,
+                    height: 30,
+                    speed: 1 + wave * 0.2
+                });
+            }
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            if (keys.left && player.x > 0) player.x -= 5;
+            if (keys.right && player.x < 760) player.x += 5;
+
+            bullets.forEach(b => b.y -= 10);
+            bullets = bullets.filter(b => b.y > 0);
+
+            enemies.forEach(e => e.y += e.speed);
+            enemies = enemies.filter(e => e.y < 620);
+
+            bullets.forEach((b, bi) => {
+                enemies.forEach((e, ei) => {
+                    if (b.x < e.x + e.width && b.x + 5 > e.x &&
+                        b.y < e.y + e.height && b.y + 5 > e.y) {
+                        bullets.splice(bi, 1);
+                        enemies.splice(ei, 1);
+                        score += 10;
+                        document.getElementById('score').textContent = score;
+                    }
+                });
+            });
+
+            enemies.forEach(e => {
+                if (e.x < player.x + player.width && e.x + e.width > player.x &&
+                    e.y < player.y + player.height && e.y + e.height > player.y) {
+                    gameOver();
+                }
+            });
+
+            if (enemies.length === 0) {
+                wave++;
+                document.getElementById('wave').textContent = wave;
+                spawnEnemies();
+            }
+
+            draw();
+        }
+
+        const keys = { left: false, right: false };
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') keys.left = true;
+            if (e.key === 'ArrowRight') keys.right = true;
+            if (e.key === ' ') {
+                bullets.push({ x: player.x + 17, y: player.y, width: 6, height: 10 });
+            }
+        });
+        document.addEventListener('keyup', e => {
+            if (e.key === 'ArrowLeft') keys.left = false;
+            if (e.key === 'ArrowRight') keys.right = false;
+        });
+
+        function createExplosion(x, y) {
+            for (let i = 0; i < 10; i++) {
+                particles.push({ x, y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, life: 20 });
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00cec9';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            ctx.fillStyle = '#ffeaa7';
+            bullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
+
+            ctx.fillStyle = '#ff7675';
+            enemies.forEach(e => ctx.fillRect(e.x, e.y, e.width, e.height));
+
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                ctx.fillStyle = \`rgba(255, 234, 0, \${p.life / 20})\`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            particles = particles.filter(p => p.life > 0);
+        }
+
+        function gameLoop() {
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            alert(\`游戏结束！\n最终分数: \${score}\n波次: \${wave}\`);
+            setTimeout(() => init(), 2000);
+        }
+
+        sessionStorage.setItem('gameStartTime', Date.now());
+        sessionStorage.setItem('currentGame', 'space-shooter');
+        init();
+    </script>
+
+    <div class="game-nav">
+        <button class="game-nav-btn primary" onclick="window.location.href='../index.html'">
+            <span>🏠</span><span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="location.reload()">
+            <span>🔄</span><span>重新开始</span>
+        </button>
+        <button class="game-nav-btn tertiary" onclick="alert('←→移动，空格射击')">
+            <span>❓</span><span>游戏说明</span>
+        </button>
+    </div>
+</body>
+</html>

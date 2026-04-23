@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 消消大作战</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- 游戏头部信息 -->
+        <div class="game-header">
+            <h1>🎮 消消大作战</h1>
+            <div class="game-info">
+                <div class="level-display">关卡: <span id="level">1</span></div>
+                <button id="home-btn" class="btn">🏠 返回主页</button>
+                <button id="shuffle-btn" class="btn">🔀 洗牌 (<span id="shuffle-count">3</span>)</button>
+                <button id="restart-btn" class="btn">🔄 重新开始</button>
+            </div>
+        </div>
+
+        <!-- 游戏区域 -->
+        <div class="game-area">
+            <!-- 方块堆叠区域 -->
+            <div id="board" class="board"></div>
+        </div>
+
+        <!-- 底部卡槽 -->
+        <div class="slot-container">
+            <div id="slot" class="slot"></div>
+        </div>
+
+        <!-- 游戏结束/胜利弹窗 -->
+        <div id="modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="modal-title"></h2>
+                <p id="modal-message"></p>
+                <button id="modal-btn" class="btn">下一关</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏导航栏 -->
+    
+    <!-- 虚拟方向键 -->
+    <div class="d-pad">
+        <div></div>
+        <button class="d-btn" ontouchstart="moveDirection('up')" onclick="moveDirection('up')">↑</button>
+        <div></div>
+        <button class="d-btn" ontouchstart="moveDirection('left')" onclick="moveDirection('left')">←</button>
+        <div></div>
+        <button class="d-btn" ontouchstart="moveDirection('right')" onclick="moveDirection('right')">→</button>
+        <div></div>
+        <button class="d-btn" ontouchstart="moveDirection('down')" onclick="moveDirection('down')">↓</button>
+        <div></div>
+    </div>
+    <div class="game-nav">
+        <button class="game-nav-btn primary" onclick="backToHall()">
+            <span>🏠</span>
+            <span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="handleRestart()">
+            <span>🔄</span>
+            <span>重新开始</span>
+        </button>
+        <button class="game-nav-btn tertiary" onclick="showHelp()">
+            <span>❓</span>
+            <span>游戏说明</span>
+        </button>
+    </div>
+
+    <!-- 游戏说明弹窗 -->
+    <div class="help-modal" id="helpModal">
+        <div class="help-modal-content">
+            <h2>🎮 消消大作战</h2>
+            <p><strong>游戏目标：</strong>消除所有相同颜色的方块</p>
+            <p><strong>操作方式：</strong></p>
+            <ul>
+                <li>电脑：<span class="key">点击</span>方块移动到底部卡槽</li>
+                <li>手机：<span class="key">点击</span>屏幕操作</li>
+            </ul>
+            <p><strong>游戏规则：</strong></p>
+            <ul>
+                <li>点击方块将其移动到底部卡槽</li>
+                <li>卡槽中有3个相同颜色的方块时会自动消除</li>
+                <li>消除所有方块即可过关</li>
+            </ul>
+            <button class="game-nav-btn primary" onclick="closeHelp()" style="width: 100%; padding: 12px; margin-top: 20px;">知道了</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+        // 返回大厅
+        function backToHall() {
+            if (window.parent) {
+                window.parent.location.href = '../index.html';
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // 智能重启函数
+        function handleRestart() {
+            if (typeof restartGame === 'function') {
+                restartGame();
+            } else if (typeof newGame === 'function') {
+                newGame();
+            } else if (typeof initGame === 'function') {
+                initGame();
+            } else {
+                location.reload();
+            }
+        }
+
+        // 显示帮助
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('show');
+        }
+
+        // 关闭帮助
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

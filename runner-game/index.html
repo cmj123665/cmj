@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏃 跑酷冒险</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffeef8 0%, #e8f4f8 100%);
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #gameCanvas {
+            background: linear-gradient(to bottom, #a8e6ff 0%, #d4f1ff 40%, #ffeef8 80%, #fff5fa 100%);
+            border: 4px solid #ffb6d9;
+            border-radius: 20px;
+            box-shadow: 0 0 60px rgba(255, 182, 217, 0.6);
+        }
+
+        .hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 6px rgba(255, 105, 180, 0.6);
+            z-index: 1000;
+        }
+
+        .hud-item {
+            margin-bottom: 10px;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, rgba(255, 182, 217, 0.95), rgba(255, 118, 158, 0.95));
+            border-radius: 25px;
+            border: 3px solid #fff;
+            box-shadow: 0 5px 20px rgba(255, 105, 180, 0.5);
+        }
+
+        .hud-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .hud-value {
+            font-size: 28px;
+            color: #fff;
+        }
+
+        .jump-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 15px;
+            background: linear-gradient(135deg, rgba(255, 182, 217, 0.95), rgba(255, 118, 158, 0.95));
+            padding: 14px 20px;
+            border-radius: 25px;
+            border: 3px solid #fff;
+            box-shadow: 0 5px 20px rgba(255, 105, 180, 0.5);
+            z-index: 1000;
+        }
+
+        .jump-dot {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            margin: 0 5px;
+            transition: all 0.3s;
+            border: 2px solid #fff;
+        }
+
+        .jump-dot.active {
+            background: #fff;
+            box-shadow: 0 0 18px rgba(255, 255, 255, 0.9);
+            transform: scale(1.25);
+        }
+
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #fff9fc 0%, #ffe8f0 100%);
+            padding: 70px;
+            border-radius: 35px;
+            text-align: center;
+            color: #ff69b4;
+            display: none;
+            z-index: 2000;
+            border: 6px solid #ffb6d9;
+            box-shadow: 0 0 70px rgba(255, 182, 217, 0.7);
+        }
+
+        .game-over.show {
+            display: block;
+            animation: gameOverPop 0.6s ease-out;
+        }
+
+        @keyframes gameOverPop {
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+            70% { transform: translate(-50%, -50%) scale(1.08); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .game-over h2 {
+            font-size: 52px;
+            margin-bottom: 30px;
+            color: #ff69b4;
+            text-shadow: 3px 3px 8px rgba(255, 105, 180, 0.4);
+        }
+
+        .game-over p {
+            font-size: 26px;
+            margin: 20px 0;
+            color: #ff69b4;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 22px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ff76b8, #ff1493);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 20px;
+            box-shadow: 0 10px 30px rgba(255, 105, 180, 0.6);
+            transition: all 0.3s;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 105, 180, 0.8);
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            z-index: 1000;
+        }
+
+        .control-btn {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #ffb6d9, #ff76b8);
+            border: 5px solid #fff;
+            border-radius: 30px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255, 105, 180, 0.6);
+            transition: all 0.2s;
+        }
+
+        .control-btn:active {
+            transform: scale(0.90);
+            box-shadow: 0 5px 20px rgba(255, 105, 180, 0.7);
+        }
+
+        .game-nav {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 240, 250, 0.98)) !important;
+            backdrop-filter: blur(10px) !important;
+            padding: 16px 22px !important;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+            display: flex !important;
+            justify-content: center !important;
+            gap: 16px !important;
+            box-shadow: 0 -6px 30px rgba(255, 182, 217, 0.5) !important;
+            z-index: 9999 !important;
+            pointer-events: auto !important;
+            border-top: 4px solid #ffb6d9 !important;
+        }
+
+        .game-nav-btn {
+            display: flex !important;
+            align-items: center !important;
+            gap: 9px !important;
+            padding: 15px 30px !important;
+            border: 3px solid #ffb6d9 !important;
+            border-radius: 25px !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            transition: all 0.3s !important;
+            box-shadow: 0 5px 18px rgba(255, 182, 217, 0.4) !important;
+        }
+
+        .game-nav-btn:hover {
+            transform: scale(1.10) !important;
+            box-shadow: 0 7px 22px rgba(255, 182, 217, 0.6) !important;
+        }
+
+        .game-nav-btn.primary {
+            background: linear-gradient(135deg, #ff76b8, #ff1493) !important;
+            color: white !important;
+            border-color: #ff1493 !important;
+        }
+
+        .game-nav-btn.secondary {
+            background: linear-gradient(135deg, #ffe8f0, #ffb6d9) !important;
+            color: #ff69b4 !important;
+        }
+
+        .game-nav-btn.tertiary {
+            background: linear-gradient(135deg, #fff9fc, #ffe8f0) !important;
+            color: #ff69b4 !important;
+        }
+
+        @media (min-width: 768px) {
+            .controls { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div class="hud">
+            <div class="hud-item">
+                <div class="hud-label">分数</div>
+                <div class="hud-value" id="score">0</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">距离</div>
+                <div class="hud-value"><span id="distance">0</span>m</div>
+            </div>
+        </div>
+
+        <div class="jump-indicator">
+            跳跃: <span class="jump-dot active" id="jump1"></span><span class="jump-dot" id="jump2"></span>
+        </div>
+
+        <canvas id="gameCanvas" width="900" height="450"></canvas>
+
+        <div class="controls">
+            <button class="control-btn" id="jumpBtn">⬆️</button>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>游戏结束!</h2>
+            <p>你跑了 <span id="finalScore">0</span> 米</p>
+            <p>获得分数: <span id="finalPoints">0</span></p>
+            <button class="btn" onclick="restartGame()">再来一局</button>
+        </div>
+    </div>
+
+    <div class="game-nav">
+        <button class="game-nav-btn primary" onclick="backToHall()">
+            <span>🏠</span><span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="restartGame()">
+            <span>🔄</span><span>重新开始</span>
+        </button>
+        <button class="game-nav-btn tertiary" onclick="alert('空格/↑ 跳跃（可二段跳）| 点击屏幕跳跃')">
+            <span>❓</span><span>游戏说明</span>
+        </button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let player = {
+            x: 120,
+            y: 325,
+            width: 55,
+            height: 90,
+            vy: 0,
+            onGround: true,
+            jumps: 0,
+            maxJumps: 2,
+            legAngle: 0,
+            armAngle: 0,
+            hairOffset: 0,
+            skirtOffset: 0
+        };
+
+        let obstacles = [];
+        let coins = [];
+        let score = 0;
+        let distance = 0;
+        let gameRunning = true;
+        let gameSpeed = 6;
+        let gravity = 0.7;
+        let jumpForce = -15;
+        let groundY = 380;
+
+        function jump() {
+            if (player.jumps < player.maxJumps && gameRunning) {
+                player.vy = jumpForce;
+                player.jumps++;
+                player.onGround = false;
+                updateJumpIndicator();
+
+                if (player.jumps === 2) {
+                    createJumpEffect();
+                }
+            }
+        }
+
+        function updateJumpIndicator() {
+            document.getElementById('jump1').classList.toggle('active', player.jumps >= 1);
+            document.getElementById('jump2').classList.toggle('active', player.jumps >= 2);
+        }
+
+        function createJumpEffect() {
+            const effect = {
+                x: player.x + player.width / 2,
+                y: player.y + player.height,
+                radius: 25,
+                opacity: 1,
+                stars: []
+            };
+
+            for (let i = 0; i < 8; i++) {
+                effect.stars.push({
+                    angle: (i * 45) * Math.PI / 180,
+                    distance: 0
+                });
+            }
+
+            const animateEffect = () => {
+                if (effect.opacity <= 0) return;
+
+                ctx.save();
+                ctx.globalAlpha = effect.opacity;
+
+                ctx.strokeStyle = '#ffb6d9';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffeb3b';
+                effect.stars.forEach(star => {
+                    const starX = effect.x + Math.cos(star.angle) * (effect.radius * 0.7);
+                    const starY = effect.y + Math.sin(star.angle) * (effect.radius * 0.7);
+                    ctx.beginPath();
+                    ctx.arc(starX, starY, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                ctx.restore();
+
+                effect.radius += 6;
+                effect.opacity -= 0.1;
+
+                if (effect.opacity > 0) {
+                    requestAnimationFrame(animateEffect);
+                }
+            };
+
+            animateEffect();
+        }
+
+        function spawnObstacle() {
+            if (Math.random() < 0.008) {
+                const type = Math.floor(Math.random() * 3);
+                let obstacle = {
+                    x: canvas.width + 50,
+                    type: type
+                };
+
+                switch(type) {
+                    case 0:
+                        obstacle.y = groundY - 35;
+                        obstacle.width = 35;
+                        obstacle.height = 35;
+                        break;
+                    case 1:
+                        obstacle.y = groundY - 60;
+                        obstacle.width = 30;
+                        obstacle.height = 60;
+                        break;
+                    case 2:
+                        obstacle.y = groundY - 40;
+                        obstacle.width = 50;
+                        obstacle.height = 40;
+                        break;
+                }
+
+                obstacles.push(obstacle);
+            }
+        }
+
+        function spawnCoin() {
+            if (Math.random() < 0.025) {
+                coins.push({
+                    x: canvas.width,
+                    y: groundY - 85 - Math.random() * 65,
+                    radius: 20,
+                    rotation: 0,
+                    sparkle: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            player.vy += gravity;
+            player.y += player.vy;
+
+            if (player.y >= groundY - player.height) {
+                player.y = groundY - player.height;
+                player.vy = 0;
+                player.onGround = true;
+                player.jumps = 0;
+                updateJumpIndicator();
+            }
+
+            if (player.onGround) {
+                player.legAngle += 0.38;
+                player.armAngle += 0.38;
+                player.hairOffset = Math.sin(player.legAngle) * 3;
+                player.skirtOffset = Math.sin(player.legAngle * 2) * 2;
+            } else {
+                player.legAngle = 0;
+                player.armAngle = 0;
+                player.hairOffset = 0;
+                player.skirtOffset = 0;
+            }
+
+            spawnObstacle();
+            spawnCoin();
+
+            obstacles.forEach((obs, index) => {
+                obs.x -= gameSpeed;
+
+                const hitboxPadding = 10;
+                if (player.x + hitboxPadding < obs.x + obs.width - hitboxPadding &&
+                    player.x + player.width - hitboxPadding > obs.x + hitboxPadding &&
+                    player.y + hitboxPadding < obs.y + obs.height - hitboxPadding &&
+                    player.y + player.height - hitboxPadding > obs.y + hitboxPadding) {
+                    gameOver();
+                }
+
+                if (obs.x < -60) {
+                    obstacles.splice(index, 1);
+                }
+            });
+
+            coins.forEach((coin, index) => {
+                coin.x -= gameSpeed;
+                coin.rotation += 0.12;
+                coin.sparkle += 0.18;
+
+                const dx = player.x + player.width/2 - coin.x;
+                const dy = player.y + player.height/2 - coin.y;
+                if (Math.sqrt(dx*dx + dy*dy) < player.width/2 + coin.radius) {
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    coins.splice(index, 1);
+                }
+
+                if (coin.x < -40) {
+                    coins.splice(index, 1);
+                }
+            });
+
+            distance += gameSpeed / 60;
+            document.getElementById('distance').textContent = Math.floor(distance);
+            gameSpeed = Math.min(12, 6 + distance / 150);
+        }
+
+        // 绘制漂亮的3D漫画JK女生（长发到腰，有脖子）
+        function drawBeautifulJkGirl(x, y, width, height) {
+            ctx.save();
+
+            // 角色阴影
+            const shadowGradient = ctx.createRadialGradient(
+                x + width/2, y + height + 15, 0,
+                x + width/2, y + height + 15, width/2 + 10
+            );
+            shadowGradient.addColorStop(0, 'rgba(255, 182, 217, 0.5)');
+            shadowGradient.addColorStop(1, 'rgba(255, 182, 217, 0)');
+            ctx.fillStyle = shadowGradient;
+            ctx.beginPath();
+            ctx.ellipse(x + width/2, y + height + 15, width/2 + 10, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === 长发到腰（先绘制，在身体后面） ===
+            const hairLength = 75; // 到腰部长度
+            const hairWave = Math.sin(Date.now() / 200) * 5;
+
+            // 左侧长发
+            const leftHairGradient = ctx.createLinearGradient(x - 10, y, x - 30, y + hairLength);
+            leftHairGradient.addColorStop(0, '#6d4c41');
+            leftHairGradient.addColorStop(0.5, '#5d4037');
+            leftHairGradient.addColorStop(1, '#4e342e');
+
+            ctx.fillStyle = leftHairGradient;
+            ctx.beginPath();
+            ctx.moveTo(x + 5, y + 25);
+            ctx.quadraticCurveTo(x - 20 + hairWave, y + 45, x - 15, y + hairLength - 10);
+            ctx.quadraticCurveTo(x - 10, y + hairLength + 10, x + 8, y + height - 5);
+            ctx.fill();
+
+            // 左发丝层次
+            ctx.fillStyle = '#5d4037';
+            ctx.beginPath();
+            ctx.moveTo(x + 8, y + 28);
+            ctx.quadraticCurveTo(x - 15 + hairWave * 0.7, y + 50, x - 12, y + hairLength - 15);
+            ctx.quadraticCurveTo(x - 8, y + hairLength, x + 10, y + height - 10);
+            ctx.fill();
+
+            // 右侧长发
+            const rightHairGradient = ctx.createLinearGradient(x + width + 10, y, x + width + 30, y + hairLength);
+            rightHairGradient.addColorStop(0, '#6d4c41');
+            rightHairGradient.addColorStop(0.5, '#5d4037');
+            rightHairGradient.addColorStop(1, '#4e342e');
+
+            ctx.fillStyle = rightHairGradient;
+            ctx.beginPath();
+            ctx.moveTo(x + width - 5, y + 25);
+            ctx.quadraticCurveTo(x + width + 20 + hairWave, y + 45, x + width + 15, y + hairLength - 10);
+            ctx.quadraticCurveTo(x + width + 10, y + hairLength + 10, x + width - 8, y + height - 5);
+            ctx.fill();
+
+            // 右发丝层次
+            ctx.fillStyle = '#5d4037';
+            ctx.beginPath();
+            ctx.moveTo(x + width - 8, y + 28);
+            ctx.quadraticCurveTo(x + width + 15 + hairWave * 0.7, y + 50, x + width + 12, y + hairLength - 15);
+            ctx.quadraticCurveTo(x + width + 8, y + hairLength, x + width - 10, y + height - 10);
+            ctx.fill();
+
+            // === 腿部 ===
+            const legWidth = 14;
+            const legLength = 45;
+            const legOffset = Math.sin(player.legAngle) * 15;
+
+            // 白色长袜（左腿）
+            const leftSockGradient = ctx.createLinearGradient(x + 10, y + height, x + 24, y + height);
+            leftSockGradient.addColorStop(0, '#fff');
+            leftSockGradient.addColorStop(0.5, '#fef5f8');
+            leftSockGradient.addColorStop(1, '#fce4ec');
+
+            ctx.fillStyle = leftSockGradient;
+            ctx.beginPath();
+            ctx.roundRect(x + 12, y + height - 8, legWidth, legLength + legOffset, 7);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffb6d9';
+            ctx.beginPath();
+            ctx.roundRect(x + 12, y + height + legLength + legOffset - 8, legWidth, 8, 7);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.roundRect(x + 14, y + height - 5, 3, legLength + legOffset - 12, 2);
+            ctx.fill();
+
+            // 白色长袜（右腿）
+            const rightSockGradient = ctx.createLinearGradient(x + width - 24, y + height, x + width - 10, y + height);
+            rightSockGradient.addColorStop(0, '#fce4ec');
+            rightSockGradient.addColorStop(0.5, '#fef5f8');
+            rightSockGradient.addColorStop(1, '#fff');
+
+            ctx.fillStyle = rightSockGradient;
+            ctx.beginPath();
+            ctx.roundRect(x + width - 26, y + height - 8, legWidth, legLength - legOffset, 7);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffb6d9';
+            ctx.beginPath();
+            ctx.roundRect(x + width - 26, y + height + legLength - legOffset - 8, legWidth, 8, 7);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.roundRect(x + width - 24, y + height - 5, 3, legLength - legOffset - 12, 2);
+            ctx.fill();
+
+            // 可爱粉色鞋子
+            const leftShoeGradient = ctx.createRadialGradient(
+                x + 18, y + height + legLength + legOffset, 2,
+                x + 18, y + height + legLength + legOffset, 12
+            );
+            leftShoeGradient.addColorStop(0, '#ffcce0');
+            leftShoeGradient.addColorStop(1, '#ffb6d9');
+
+            ctx.fillStyle = leftShoeGradient;
+            ctx.beginPath();
+            ctx.ellipse(x + 18, y + height + legLength + legOffset - 3, 13, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ff9eb8';
+            ctx.beginPath();
+            ctx.ellipse(x + 18, y + height + legLength + legOffset - 3, 5, 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const rightShoeGradient = ctx.createRadialGradient(
+                x + width - 18, y + height + legLength - legOffset, 2,
+                x + width - 18, y + height + legLength - legOffset, 12
+            );
+            rightShoeGradient.addColorStop(0, '#ffcce0');
+            rightShoeGradient.addColorStop(1, '#ffb6d9');
+
+            ctx.fillStyle = rightShoeGradient;
+            ctx.beginPath();
+            ctx.ellipse(x + width - 18, y + height + legLength - legOffset - 3, 13, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ff9eb8';
+            ctx.beginPath();
+            ctx.ellipse(x + width - 18, y + height + legLength - legOffset - 3, 5, 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === 百褶裙 ===
+            const skirtY = y + 38;
+            const skirtLength = 32;
+            const skirtWidth = width + 12;
+            const skirtX = x - 6;
+
+            const skirtGradient = ctx.createLinearGradient(skirtX, skirtY, skirtX + skirtWidth, skirtY);
+            skirtGradient.addColorStop(0, '#2c3e50');
+            skirtGradient.addColorStop(0.3, '#34495e');
+            skirtGradient.addColorStop(0.7, '#2c3e50');
+            skirtGradient.addColorStop(1, '#1a252f');
+
+            ctx.fillStyle = skirtGradient;
+            ctx.beginPath();
+            ctx.moveTo(skirtX + skirtWidth/2, skirtY);
+            ctx.quadraticCurveTo(skirtX + skirtWidth + 5, skirtY + skirtLength/2, skirtX + skirtWidth + 5, skirtY + skirtLength + player.skirtOffset);
+            ctx.quadraticCurveTo(skirtX + skirtWidth/2, skirtY + skirtLength + player.skirtOffset - 5, skirtX - 5, skirtY + skirtLength - player.skirtOffset);
+            ctx.quadraticCurveTo(skirtX, skirtY + skirtLength/2, skirtX + skirtWidth/2, skirtY);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 7; i++) {
+                const foldX = skirtX + (skirtWidth / 6) * i;
+                const wave = Math.sin(i + Date.now() / 200) * 3;
+                ctx.beginPath();
+                ctx.moveTo(foldX, skirtY);
+                ctx.quadraticCurveTo(foldX + wave, skirtY + skirtLength/2, foldX, skirtY + skirtLength + player.skirtOffset);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.beginPath();
+            ctx.moveTo(skirtX + skirtWidth/2, skirtY + 5);
+            ctx.quadraticCurveTo(skirtX + skirtWidth/2 + 10, skirtY + skirtLength/2, skirtX + skirtWidth/2 + 8, skirtY + skirtLength - 5);
+            ctx.quadraticCurveTo(skirtX + skirtWidth/2, skirtY + skirtLength - 8, skirtX + skirtWidth/2 - 5, skirtY + skirtLength/2);
+            ctx.fill();
+
+            // === 脖子（新增） ===
+            const neckWidth = 16;
+            const neckHeight = 15;
+            const neckY = y + 16;
+            const neckX = x + width/2 - neckWidth/2;
+
+            const neckGradient = ctx.createLinearGradient(neckX, neckY, neckX + neckWidth, neckY);
+            neckGradient.addColorStop(0, '#ffe4d4');
+            neckGradient.addColorStop(0.5, '#ffd4c4');
+            neckGradient.addColorStop(1, '#ffe4d4');
+
+            ctx.fillStyle = neckGradient;
+            ctx.beginPath();
+            ctx.roundRect(neckX, neckY, neckWidth, neckHeight, 5);
+            ctx.fill();
+
+            // 脖子阴影
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.beginPath();
+            ctx.roundRect(neckX + 8, neckY, neckWidth/2 - 2, neckHeight, 5);
+            ctx.fill();
+
+            // === 身体 ===
+            const bodyY = y + 30;
+            const bodyHeight = 25;
+
+            const shirtGradient = ctx.createLinearGradient(x, bodyY, x + width, bodyY);
+            shirtGradient.addColorStop(0, '#fef5f8');
+            shirtGradient.addColorStop(0.5, '#fff');
+            shirtGradient.addColorStop(1, '#fce4ec');
+
+            ctx.fillStyle = shirtGradient;
+            ctx.beginPath();
+            ctx.roundRect(x + 10, bodyY, width - 20, bodyHeight, 8);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.beginPath();
+            ctx.roundRect(x + 10, bodyY + bodyHeight - 8, width - 20, 8, 8);
+            ctx.fill();
+
+            // 可爱领结
+            const bowGradient = ctx.createRadialGradient(
+                x + width/2, bodyY + 4, 1,
+                x + width/2, bodyY + 4, 12
+            );
+            bowGradient.addColorStop(0, '#ffcce0');
+            bowGradient.addColorStop(0.5, '#ffb6d9');
+            bowGradient.addColorStop(1, '#ff9eb8');
+
+            ctx.fillStyle = bowGradient;
+            ctx.beginPath();
+            ctx.moveTo(x + width/2 - 10, bodyY);
+            ctx.quadraticCurveTo(x + width/2, bodyY + 4, x + width/2 + 10, bodyY);
+            ctx.quadraticCurveTo(x + width/2, bodyY + 8, x + width/2 - 10, bodyY);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(x + width/2 - 10, bodyY + 4, 8, 5, -0.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.ellipse(x + width/2 + 10, bodyY + 4, 8, 5, 0.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ff9eb8';
+            ctx.beginPath();
+            ctx.arc(x + width/2, bodyY + 4, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(x + width/2 - 2, bodyY + 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === 手臂 ===
+            const armWidth = 12;
+            const armLength = 32;
+            const armSwing = Math.sin(player.armAngle) * 25;
+
+            // 左臂
+            ctx.save();
+            ctx.translate(x + 10, bodyY + 4);
+            ctx.rotate((armSwing * Math.PI) / 180);
+
+            const leftSleeveGradient = ctx.createLinearGradient(-armWidth/2, 0, armWidth/2, 0);
+            leftSleeveGradient.addColorStop(0, '#fef5f8');
+            leftSleeveGradient.addColorStop(1, '#fff');
+
+            ctx.fillStyle = leftSleeveGradient;
+            ctx.beginPath();
+            ctx.roundRect(-armWidth/2, 0, armWidth, armLength * 0.35, 6);
+            ctx.fill();
+
+            const leftArmGradient = ctx.createLinearGradient(-armWidth/2, 0, armWidth/2, 0);
+            leftArmGradient.addColorStop(0, '#1a252f');
+            leftArmGradient.addColorStop(0.5, '#2c3e50');
+            leftArmGradient.addColorStop(1, '#34495e');
+
+            ctx.fillStyle = leftArmGradient;
+            ctx.beginPath();
+            ctx.roundRect(-armWidth/2, armLength * 0.25, armWidth, armLength * 0.75, 6);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.roundRect(-armWidth/2 + 2, armLength * 0.25, 3, armLength * 0.75 - 2, 3);
+            ctx.fill();
+
+            const handGradient = ctx.createRadialGradient(0, armLength, 1, 0, armLength, 7);
+            handGradient.addColorStop(0, '#ffe4d4');
+            handGradient.addColorStop(1, '#ffd4c4');
+
+            ctx.fillStyle = handGradient;
+            ctx.beginPath();
+            ctx.arc(0, armLength + 3, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.arc(-2, armLength + 1, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+            // 右臂
+            ctx.save();
+            ctx.translate(x + width - 10, bodyY + 4);
+            ctx.rotate((-armSwing * Math.PI) / 180);
+
+            const rightSleeveGradient = ctx.createLinearGradient(-armWidth/2, 0, armWidth/2, 0);
+            rightSleeveGradient.addColorStop(0, '#fff');
+            rightSleeveGradient.addColorStop(1, '#fef5f8');
+
+            ctx.fillStyle = rightSleeveGradient;
+            ctx.beginPath();
+            ctx.roundRect(-armWidth/2, 0, armWidth, armLength * 0.35, 6);
+            ctx.fill();
+
+            const rightArmGradient = ctx.createLinearGradient(-armWidth/2, 0, armWidth/2, 0);
+            rightArmGradient.addColorStop(0, '#34495e');
+            rightArmGradient.addColorStop(0.5, '#2c3e50');
+            rightArmGradient.addColorStop(1, '#1a252f');
+
+            ctx.fillStyle = rightArmGradient;
+            ctx.beginPath();
+            ctx.roundRect(-armWidth/2, armLength * 0.25, armWidth, armLength * 0.75, 6);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.roundRect(armWidth/2 - 5, armLength * 0.25, 3, armLength * 0.75 - 2, 3);
+            ctx.fill();
+
+            ctx.fillStyle = handGradient;
+            ctx.beginPath();
+            ctx.arc(0, armLength + 3, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.arc(2, armLength + 1, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+            // === 头部 ===
+            const headSize = 45;
+            const headX = x + width/2 - headSize/2;
+            const headY = y - headSize + 28;
+
+            // 后发
+            const hairBackGradient = ctx.createLinearGradient(headX, headY, headX + headSize, headY);
+            hairBackGradient.addColorStop(0, '#5d4037');
+            hairBackGradient.addColorStop(0.5, '#6d4c41');
+            hairBackGradient.addColorStop(1, '#4e342e');
+
+            ctx.fillStyle = hairBackGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + headSize/2, headY + headSize/2 + 12, headSize/2 + 6, headSize/2 + 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(139, 90, 43, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(headX + headSize/2 - 5, headY + headSize/2 + 8, headSize/4, headSize/4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === 脸部（鹅蛋脸） ===
+            const faceGradient = ctx.createRadialGradient(
+                headX + headSize/2 - 5, headY + headSize/2 - 3, 3,
+                headX + headSize/2, headY + headSize/2 + 3, headSize/2 - 1
+            );
+            faceGradient.addColorStop(0, '#fffaf5');
+            faceGradient.addColorStop(0.6, '#ffe4d4');
+            faceGradient.addColorStop(0.9, '#ffd4c4');
+            faceGradient.addColorStop(1, '#f5c4b4');
+
+            ctx.fillStyle = faceGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + headSize/2, headY + headSize/2 + 6, headSize/2 - 2, headSize/2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 柔和的脸部阴影（粉色系，不使用黑色）
+            ctx.fillStyle = 'rgba(255, 200, 200, 0.08)';
+            ctx.beginPath();
+            ctx.ellipse(headX + headSize/2, headY + headSize/2 + 8, headSize/2 - 3, headSize/2 - 2, 0.5, 0.5, Math.PI, 0);
+            ctx.fill();
+
+            // 脸颊红晕
+            const blushGradient = ctx.createRadialGradient(
+                headX + 12, headY + headSize/2 + 12, 2,
+                headX + 12, headY + headSize/2 + 12, 8
+            );
+            blushGradient.addColorStop(0, 'rgba(255, 182, 217, 0.7)');
+            blushGradient.addColorStop(1, 'rgba(255, 182, 217, 0)');
+
+            ctx.fillStyle = blushGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + 12, headY + headSize/2 + 12, 8, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const blushGradient2 = ctx.createRadialGradient(
+                headX + headSize - 12, headY + headSize/2 + 12, 2,
+                headX + headSize - 12, headY + headSize/2 + 12, 8
+            );
+            blushGradient2.addColorStop(0, 'rgba(255, 182, 217, 0.7)');
+            blushGradient2.addColorStop(1, 'rgba(255, 182, 217, 0)');
+
+            ctx.fillStyle = blushGradient2;
+            ctx.beginPath();
+            ctx.ellipse(headX + headSize - 12, headY + headSize/2 + 12, 8, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === 刘海 ===
+            const bangGradient = ctx.createLinearGradient(headX, headY, headX + headSize, headY);
+            bangGradient.addColorStop(0, '#5d4037');
+            bangGradient.addColorStop(0.3, '#6d4c41');
+            bangGradient.addColorStop(0.7, '#6d4c41');
+            bangGradient.addColorStop(1, '#5d4037');
+
+            ctx.fillStyle = bangGradient;
+            ctx.beginPath();
+            ctx.moveTo(headX + 4, headY + 14);
+            ctx.quadraticCurveTo(headX + 8, headY, headX + 18, headY + 4);
+            ctx.quadraticCurveTo(headX + headSize/2, headY - 2, headX + headSize - 18, headY + 4);
+            ctx.quadraticCurveTo(headX + headSize - 8, headY, headX + headSize - 4, headY + 14);
+            ctx.quadraticCurveTo(headX + headSize/2, headY + 8, headX + 4, headY + 14);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(139, 90, 43, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(headX + headSize/2 - 8, headY + 8);
+            ctx.quadraticCurveTo(headX + headSize/2, headY + 4, headX + headSize/2 + 8, headY + 8);
+            ctx.quadraticCurveTo(headX + headSize/2, headY + 12, headX + headSize/2 - 8, headY + 8);
+            ctx.fill();
+
+            // 刘海分叉
+            for (let i = 0; i < 5; i++) {
+                const strandX = headX + 10 + i * 9;
+                const strandLength = 10 + (i % 3) * 4;
+                const wave = Math.sin(i + Date.now() / 300) * 2;
+                ctx.fillStyle = '#5d4037';
+                ctx.beginPath();
+                ctx.moveTo(strandX - 4, headY + 12);
+                ctx.quadraticCurveTo(strandX + wave, headY + strandLength, strandX + 5, headY + 12);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(139, 90, 43, 0.6)';
+                ctx.beginPath();
+                ctx.moveTo(strandX - 3, headY + 12);
+                ctx.quadraticCurveTo(strandX + wave, headY + strandLength - 3, strandX + 3, headY + 12);
+                ctx.fill();
+            }
+
+            // === 漂亮的大眼睛 ===
+            // 左眼
+            const leftEyeWhiteGradient = ctx.createRadialGradient(
+                headX + 13, headY + headSize/2 + 5, 2,
+                headX + 13, headY + headSize/2 + 5, 9
+            );
+            leftEyeWhiteGradient.addColorStop(0, '#fff');
+            leftEyeWhiteGradient.addColorStop(1, '#f8f8ff');
+
+            ctx.fillStyle = leftEyeWhiteGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + 13, headY + headSize/2 + 5, 9, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const leftIrisGradient = ctx.createRadialGradient(
+                headX + 14, headY + headSize/2 + 4, 1,
+                headX + 13, headY + headSize/2 + 5, 7
+            );
+            leftIrisGradient.addColorStop(0, '#e6b3ff');
+            leftIrisGradient.addColorStop(0.4, '#d89fff');
+            leftIrisGradient.addColorStop(0.7, '#c77dff');
+            leftIrisGradient.addColorStop(1, '#a855f7');
+
+            ctx.fillStyle = leftIrisGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + 13, headY + headSize/2 + 5, 7, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(139, 69, 193, 0.3)';
+            ctx.lineWidth = 0.5;
+            for (let ring = 2; ring < 6; ring++) {
+                ctx.beginPath();
+                ctx.ellipse(headX + 13, headY + headSize/2 + 5, ring, ring * 1.1, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            const leftPupilGradient = ctx.createRadialGradient(
+                headX + 13, headY + headSize/2 + 4, 0,
+                headX + 13, headY + headSize/2 + 5, 3.5
+            );
+            leftPupilGradient.addColorStop(0, '#1a1a1a');
+            leftPupilGradient.addColorStop(1, '#000');
+
+            ctx.fillStyle = leftPupilGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + 13, headY + headSize/2 + 5, 3.5, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            ctx.arc(headX + 15, headY + headSize/2 + 2, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(headX + 11, headY + headSize/2 + 6, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(headX + 14, headY + headSize/2 + 7, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 右眼
+            const rightEyeWhiteGradient = ctx.createRadialGradient(
+                headX + headSize - 13, headY + headSize/2 + 5, 2,
+                headX + headSize - 13, headY + headSize/2 + 5, 9
+            );
+            rightEyeWhiteGradient.addColorStop(0, '#fff');
+            rightEyeWhiteGradient.addColorStop(1, '#f8f8ff');
+
+            ctx.fillStyle = rightEyeWhiteGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + headSize - 13, headY + headSize/2 + 5, 9, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const rightIrisGradient = ctx.createRadialGradient(
+                headX + headSize - 12, headY + headSize/2 + 4, 1,
+                headX + headSize - 13, headY + headSize/2 + 5, 7
+            );
+            rightIrisGradient.addColorStop(0, '#e6b3ff');
+            rightIrisGradient.addColorStop(0.4, '#d89fff');
+            rightIrisGradient.addColorStop(0.7, '#c77dff');
+            rightIrisGradient.addColorStop(1, '#a855f7');
+
+            ctx.fillStyle = rightIrisGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + headSize - 13, headY + headSize/2 + 5, 7, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(139, 69, 193, 0.3)';
+            ctx.lineWidth = 0.5;
+            for (let ring = 2; ring < 6; ring++) {
+                ctx.beginPath();
+                ctx.ellipse(headX + headSize - 13, headY + headSize/2 + 5, ring, ring * 1.1, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            const rightPupilGradient = ctx.createRadialGradient(
+                headX + headSize - 13, headY + headSize/2 + 4, 0,
+                headX + headSize - 13, headY + headSize/2 + 5, 3.5
+            );
+            rightPupilGradient.addColorStop(0, '#1a1a1a');
+            rightPupilGradient.addColorStop(1, '#000');
+
+            ctx.fillStyle = rightPupilGradient;
+            ctx.beginPath();
+            ctx.ellipse(headX + headSize - 13, headY + headSize/2 + 5, 3.5, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            ctx.arc(headX + headSize - 11, headY + headSize/2 + 2, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(headX + headSize - 15, headY + headSize/2 + 6, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(headX + headSize - 12, headY + headSize/2 + 7, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === 睫毛 ===
+            ctx.strokeStyle = '#6d4c41';
+            ctx.lineWidth = 1.5;
+            ctx.lineCap = 'round';
+
+            for (let i = 0; i < 4; i++) {
+                const lashLength = 5 + i;
+                const angle = -15 + i * 8;
+                ctx.save();
+                ctx.translate(headX + 7 + i * 4, headY + headSize/2 - 3);
+                ctx.rotate((angle * Math.PI) / 180);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -lashLength);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            for (let i = 0; i < 4; i++) {
+                const lashLength = 5 + i;
+                const angle = -15 + i * 8;
+                ctx.save();
+                ctx.translate(headX + headSize - 7 - i * 4, headY + headSize/2 - 3);
+                ctx.rotate((-angle * Math.PI) / 180);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -lashLength);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // === 眉毛 ===
+            ctx.strokeStyle = 'rgba(109, 76, 65, 0.6)';
+            ctx.lineWidth = 1.5;
+
+            ctx.beginPath();
+            ctx.moveTo(headX + 6, headY + headSize/2 - 8);
+            ctx.quadraticCurveTo(headX + 13, headY + headSize/2 - 10, headX + 20, headY + headSize/2 - 8);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(headX + headSize - 6, headY + headSize/2 - 8);
+            ctx.quadraticCurveTo(headX + headSize - 13, headY + headSize/2 - 10, headX + headSize - 20, headY + headSize/2 - 8);
+            ctx.stroke();
+
+            // === 小鼻子 ===
+            const noseGradient = ctx.createRadialGradient(
+                headX + headSize/2, headY + headSize/2 + 12, 1,
+                headX + headSize/2, headY + headSize/2 + 12, 4
+            );
+            noseGradient.addColorStop(0, 'rgba(255, 200, 180, 0.3)');
+            noseGradient.addColorStop(1, 'rgba(255, 200, 180, 0)');
+
+            ctx.fillStyle = noseGradient;
+            ctx.beginPath();
+            ctx.arc(headX + headSize/2, headY + headSize/2 + 12, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(200, 150, 150, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(headX + headSize/2, headY + headSize/2 + 10);
+            ctx.lineTo(headX + headSize/2 - 1, headY + headSize/2 + 16);
+            ctx.stroke();
+
+            // === 可爱嘴巴 ===
+            if (player.onGround) {
+                const mouthGradient = ctx.createLinearGradient(
+                    headX + headSize/2 - 6, headY + headSize/2 + 18,
+                    headX + headSize/2 + 6, headY + headSize/2 + 18
+                );
+                mouthGradient.addColorStop(0, '#ff9eb8');
+                mouthGradient.addColorStop(0.5, '#ffb6d9');
+                mouthGradient.addColorStop(1, '#ff9eb8');
+
+                ctx.strokeStyle = mouthGradient;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(headX + headSize/2, headY + headSize/2 + 16, 6, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.beginPath();
+                ctx.arc(headX + headSize/2 + 2, headY + headSize/2 + 14, 2, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                const mouthGradient = ctx.createRadialGradient(
+                    headX + headSize/2, headY + headSize/2 + 16, 1,
+                    headX + headSize/2, headY + headSize/2 + 16, 4
+                );
+                mouthGradient.addColorStop(0, '#ffb6d9');
+                mouthGradient.addColorStop(1, '#ff9eb8');
+
+                ctx.fillStyle = mouthGradient;
+                ctx.beginPath();
+                ctx.ellipse(headX + headSize/2, headY + headSize/2 + 16, 3, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // === 精致发饰 ===
+            const bowX = headX + headSize + 4;
+            const bowY = headY + 4;
+
+            const leftBowGradient = ctx.createRadialGradient(
+                bowX - 7, bowY, 1,
+                bowX - 7, bowY, 10
+            );
+            leftBowGradient.addColorStop(0, '#ffd9eb');
+            leftBowGradient.addColorStop(0.5, '#ffb6d9');
+            leftBowGradient.addColorStop(1, '#ff9eb8');
+
+            ctx.fillStyle = leftBowGradient;
+            ctx.beginPath();
+            ctx.ellipse(bowX - 7, bowY, 10, 6, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            const rightBowGradient = ctx.createRadialGradient(
+                bowX + 7, bowY, 1,
+                bowX + 7, bowY, 10
+            );
+            rightBowGradient.addColorStop(0, '#ffd9eb');
+            rightBowGradient.addColorStop(0.5, '#ffb6d9');
+            rightBowGradient.addColorStop(1, '#ff9eb8');
+
+            ctx.fillStyle = rightBowGradient;
+            ctx.beginPath();
+            ctx.ellipse(bowX + 7, bowY, 10, 6, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            const bowCenterGradient = ctx.createRadialGradient(
+                bowX, bowY, 1,
+                bowX, bowY, 5
+            );
+            bowCenterGradient.addColorStop(0, '#ffcce0');
+            bowCenterGradient.addColorStop(1, '#ff9eb8');
+
+            ctx.fillStyle = bowCenterGradient;
+            ctx.beginPath();
+            ctx.arc(bowX, bowY, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.beginPath();
+            ctx.arc(bowX - 2, bowY - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(bowX + 2, bowY - 1, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 可爱背景云朵
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            const time = Date.now() / 80;
+            const cloudPositions = [
+                { x: (time) % 1000 - 80, y: 40, size: 50 },
+                { x: ((time + 250) % 1000) - 80, y: 70, size: 42 },
+                { x: ((time + 500) % 1000) - 80, y: 35, size: 48 },
+                { x: ((time + 750) % 1000) - 80, y: 65, size: 45 }
+            ];
+
+            cloudPositions.forEach(cloud => {
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.size * 0.75, cloud.y - cloud.size * 0.12, cloud.size * 0.8, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.size * 1.4, cloud.y, cloud.size * 0.85, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 地面
+            const groundGradient = ctx.createLinearGradient(0, groundY, 0, canvas.height);
+            groundGradient.addColorStop(0, '#ffd9eb');
+            groundGradient.addColorStop(0.5, '#ffb6d9');
+            groundGradient.addColorStop(1, '#ff9eb8');
+
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+
+            const grassGradient = ctx.createLinearGradient(0, groundY, 0, groundY + 18);
+            grassGradient.addColorStop(0, '#90EE90');
+            grassGradient.addColorStop(1, '#7CCD7C');
+
+            ctx.fillStyle = grassGradient;
+            ctx.fillRect(0, groundY, canvas.width, 18);
+
+            // 小花装饰
+            for (let i = 0; i < 12; i++) {
+                const flowerX = ((i * 100 + time * 0.5) % 1000);
+                const flowerY = groundY + 5 + Math.sin(i) * 8;
+                ctx.fillStyle = ['#ffb6d9', '#ffcce0', '#ffd9eb', '#fff'][i % 4];
+                ctx.beginPath();
+                ctx.arc(flowerX, flowerY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(flowerX, flowerY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 绘制JK女生
+            drawBeautifulJkGirl(player.x, player.y, player.width, player.height);
+
+            // 障碍物
+            obstacles.forEach(obs => {
+                const obsGradient = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y);
+                obsGradient.addColorStop(0, '#ffd9eb');
+                obsGradient.addColorStop(0.5, '#ffb6d9');
+                obsGradient.addColorStop(1, '#ff9eb8');
+
+                ctx.fillStyle = obsGradient;
+                ctx.beginPath();
+                ctx.roundRect(obs.x, obs.y, obs.width, obs.height, 10);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                const heartX = obs.x + obs.width/2;
+                const heartY = obs.y + obs.height/2;
+                ctx.beginPath();
+                ctx.moveTo(heartX, heartY + 3);
+                ctx.bezierCurveTo(heartX, heartY, heartX - 5, heartY - 3, heartX - 5, heartY);
+                ctx.bezierCurveTo(heartX - 5, heartY + 3, heartX, heartY + 5, heartX, heartY + 6);
+                ctx.bezierCurveTo(heartX, heartY + 5, heartX + 5, heartY + 3, heartX + 5, heartY);
+                ctx.bezierCurveTo(heartX + 5, heartY - 3, heartX, heartY, heartX, heartY + 3);
+                ctx.fill();
+            });
+
+            // 金币
+            coins.forEach(coin => {
+                ctx.save();
+                ctx.translate(coin.x, coin.y);
+
+                ctx.fillStyle = 'rgba(255, 105, 180, 0.35)';
+                ctx.beginPath();
+                ctx.ellipse(0, coin.radius + 10, coin.radius, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                const scale = Math.abs(Math.cos(coin.rotation));
+                ctx.scale(scale, 1);
+
+                const starGradient = ctx.createRadialGradient(0, 0, 3, 0, 0, coin.radius);
+                starGradient.addColorStop(0, '#fffef0');
+                starGradient.addColorStop(0.3, '#ffeb3b');
+                starGradient.addColorStop(0.7, '#ffc107');
+                starGradient.addColorStop(1, '#ffb6d9');
+
+                ctx.fillStyle = starGradient;
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 72 - 90) * Math.PI / 180;
+                    const x = Math.cos(angle) * coin.radius;
+                    const y = Math.sin(angle) * coin.radius;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+
+                    const innerAngle = ((i * 72) + 36 - 90) * Math.PI / 180;
+                    const innerX = Math.cos(innerAngle) * (coin.radius * 0.35);
+                    const innerY = Math.sin(innerAngle) * (coin.radius * 0.35);
+                    ctx.lineTo(innerX, innerY);
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.beginPath();
+                ctx.arc(-4, -4, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                const sparkleAngle = coin.sparkle;
+                const sparkleDist = coin.radius * 0.6;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                for (let i = 0; i < 4; i++) {
+                    const angle = sparkleAngle + (i * Math.PI / 2);
+                    const sx = Math.cos(angle) * sparkleDist;
+                    const sy = Math.sin(angle) * sparkleDist;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            });
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (gameRunning) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = Math.floor(distance);
+            document.getElementById('finalPoints').textContent = score;
+            document.getElementById('gameOver').classList.add('show');
+        }
+
+        function restartGame() {
+            player = {
+                x: 120,
+                y: 325,
+                width: 55,
+                height: 90,
+                vy: 0,
+                onGround: true,
+                jumps: 0,
+                maxJumps: 2,
+                legAngle: 0,
+                armAngle: 0,
+                hairOffset: 0,
+                skirtOffset: 0
+            };
+            obstacles = [];
+            coins = [];
+            score = 0;
+            distance = 0;
+            gameRunning = true;
+            gameSpeed = 6;
+            document.getElementById('score').textContent = '0';
+            document.getElementById('distance').textContent = '0';
+            document.getElementById('gameOver').classList.remove('show');
+            updateJumpIndicator();
+            gameLoop();
+        }
+
+        function backToHall() {
+            window.location.href = '../index.html';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        document.getElementById('jumpBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jump();
+        });
+
+        canvas.addEventListener('click', jump);
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.target.id !== 'jumpBtn') {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        updateJumpIndicator();
+        gameLoop();
+    </script>
+</body>
+</html>

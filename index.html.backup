@@ -3351,6 +3351,12 @@
             achievementProgress.favoritesCount = favoriteGames.length;
             if (achievementProgress.favoritesCount >= 5) unlockAchievement('favorite_5');
 
+            // 如果有新解锁，保存数据
+            if (newUnlock) {
+                saveAchievementData();
+            }
+        }
+
             // 最高分
             achievementProgress.highScore = playerData.highScore || 0;
             if (achievementProgress.highScore >= 100) unlockAchievement('high_score_100');
@@ -3749,21 +3755,6 @@
         // 初始化
         window.addEventListener('DOMContentLoaded', function() {
             console.log('DOM加载完成');
-
-            // 自动清除可能导致重复的自定义游戏数据
-            try {
-                const customGames = localStorage.getItem('customGames');
-                if (customGames) {
-                    const games = JSON.parse(customGames);
-                    if (games.length > 0) {
-                        console.log('清除重复的自定义游戏数据:', games.length);
-                        localStorage.removeItem('customGames');
-                    }
-                }
-            } catch (e) {
-                console.error('清除自定义游戏数据失败:', e);
-            }
-
             loadPlayerData();
             loadUserData();
             loadCheckinData();

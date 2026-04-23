@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扫雷</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #fff;
+}
+.title {
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.controls {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+.btn {
+    padding: 10px 20px;
+    border: 2px solid #74b9ff;
+    background: transparent;
+    color: #74b9ff;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 8px;
+}
+.btn.active {
+    background: #74b9ff;
+    color: #000;
+}
+.stats {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+.stat {
+    text-align: center;
+}
+.stat .label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+}
+.stat .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #74b9ff;
+}
+.grid {
+    display: grid;
+    gap: 2px;
+    background: rgba(255,255,255,0.1);
+    padding: 10px;
+    border-radius: 10px;
+}
+.cell {
+    width: 35px;
+    height: 35px;
+    background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+    border: 1px solid #74b9ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.cell:hover {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+}
+.cell.revealed {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    cursor: default;
+}
+.cell.mine {
+    background: #d63031 !important;
+}
+.cell.flagged::after {
+    content: '🚩';
+}
+.cell-1 { color: #74b9ff; }
+.cell-2 { color: #00b894; }
+.cell-3 { color: #d63031; }
+.cell-4 { color: #6c5ce7; }
+.cell-5 { color: #e17055; }
+.cell-6 { color: #00cec9; }
+.cell-7 { color: #fd79a8; }
+.cell-8 { color: #636e72; }
+
+    /* ========== 游戏导航栏 ========== */
+    .game-nav { z-index: 9999 !important; z-index: 9999 !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 12px 20px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 9999 !important;
+    }
+
+    .game-nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .game-nav-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .game-nav-btn:active {
+        transform: scale(0.95);
+    }
+
+    .game-nav-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .game-nav-btn.secondary {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #e0e0e0;
+    }
+
+    .game-nav-btn.tertiary {
+        background: transparent;
+        color: #666;
+    }
+
+    /* 游戏说明弹窗 */
+    .help-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+    }
+
+    .help-modal.show {
+        display: flex;
+    }
+
+    .help-modal-content {
+        background: #fff;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+        color: #333;
+    }
+
+    .help-modal-content h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-align: center;
+        color: #333;
+    }
+
+    .help-modal-content p {
+        font-size: 14px;
+        line-height: 1.8;
+        margin-bottom: 12px;
+        color: #666;
+    }
+
+    .help-modal-content .key {
+        display: inline-block;
+        background: #f5f5f5;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #333;
+        margin: 0 4px;
+    }
+
+    .help-modal-content ul {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    .help-modal-content li {
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    @media (max-width: 768px) {
+        .game-nav { z-index: 9999 !important; z-index: 9999 !important;
+            flex-wrap: wrap;
+            padding: 10px;
+        }
+
+        .game-nav-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+    }
+
+        /* 虚拟方向键 */
+        .d-pad {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+            z-index: 999;
+        }
+        .d-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .d-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+        @media (min-width: 768px) {
+            .d-pad { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="title">扫雷</div>
+<div class="controls">
+    <button class="btn active" onclick="setDifficulty('easy')">简单</button>
+    <button class="btn" onclick="setDifficulty('medium')">中等</button>
+    <button class="btn" onclick="setDifficulty('hard')">困难</button>
+</div>
+<div class="stats">
+    <div class="stat">
+        <div class="label">地雷</div>
+        <div class="value" id="mines">0</div>
+    </div>
+    <div class="stat">
+        <div class="label">时间</div>
+        <div class="value" id="time">0:00</div>
+    </div>
+</div>
+<div class="grid" id="grid"></div>
+
+<script>
+const DIFFICULTIES = {
+    easy: { rows: 9, cols: 9, mines: 10 },
+    medium: { rows: 16, cols: 16, mines: 40 },
+    hard: { rows: 16, cols: 30, mines: 99 }
+};
+
+let grid = [];
+let revealed = [];
+let flagged = [];
+let gameOver = false;
+let difficulty = 'easy';
+let timer = null;
+let time = 0;
+let minesLeft = 0;
+
+function setDifficulty(diff) {
+    difficulty = diff;
+    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    initGame();
+}
+
+function initGame() {
+    const config = DIFFICULTIES[difficulty];
+
+    grid = [];
+    revealed = [];
+    flagged = [];
+    gameOver = false;
+    time = 0;
+    minesLeft = config.mines;
+
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => {
+        time++;
+        document.getElementById('time').textContent = formatTime(time);
+    }, 1000);
+
+    for (let y = 0; y < config.rows; y++) {
+        grid[y] = [];
+        revealed[y] = [];
+        flagged[y] = [];
+        for (let x = 0; x < config.cols; x++) {
+            grid[y][x] = 0;
+            revealed[y][x] = false;
+            flagged[y][x] = false;
+        }
+    }
+
+    // 随机放置地雷
+    let placed = 0;
+    while (placed < config.mines) {
+        const x = Math.floor(Math.random() * config.cols);
+        const y = Math.floor(Math.random() * config.rows);
+        if (grid[y][x] !== -1) {
+            grid[y][x] = -1;
+            placed++;
+        }
+    }
+
+    // 计算数字
+    for (let y = 0; y < config.rows; y++) {
+        for (let x = 0; x < config.cols; x++) {
+            if (grid[y][x] === -1) continue;
+
+            let count = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    const ny = y + dy;
+                    const nx = x + dx;
+                    if (ny >= 0 && ny < config.rows && nx >= 0 && nx < config.cols) {
+                        if (grid[ny][nx] === -1) count++;
+                    }
+                }
+            }
+            grid[y][x] = count;
+        }
+    }
+
+    document.getElementById('mines').textContent = minesLeft;
+    render();
+}
+
+function render() {
+    const config = DIFFICULTIES[difficulty];
+    const gridEl = document.getElementById('grid');
+
+    gridEl.style.gridTemplateColumns = `repeat(${config.cols}, 35px)`;
+
+    gridEl.innerHTML = '';
+    for (let y = 0; y < config.rows; y++) {
+        for (let x = 0; x < config.cols; x++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+
+            if (revealed[y][x]) {
+                cell.classList.add('revealed');
+                if (grid[y][x] === -1) {
+                    cell.classList.add('mine');
+                    cell.textContent = '💣';
+                } else if (grid[y][x] > 0) {
+                    cell.textContent = grid[y][x];
+                    cell.classList.add(`cell-${grid[y][x]}`);
+                }
+            } else if (flagged[y][x]) {
+                cell.classList.add('flagged');
+            }
+
+            cell.addEventListener('click', () => handleClick(x, y));
+            cell.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                handleFlag(x, y);
+            });
+
+            gridEl.appendChild(cell);
+        }
+    }
+}
+
+function handleClick(x, y) {
+    if (gameOver || revealed[y][x] || flagged[y][x]) return;
+
+    reveal(x, y);
+    render();
+
+    if (checkWin()) {
+        endGame(true);
+    }
+}
+
+function reveal(x, y) {
+    const config = DIFFICULTIES[difficulty];
+    if (x < 0 || x >= config.cols || y < 0 || y >= config.rows) return;
+    if (revealed[y][x] || flagged[y][x]) return;
+
+    revealed[y][x] = true;
+
+    if (grid[y][x] === -1) {
+        endGame(false);
+        return;
+    }
+
+    if (grid[y][x] === 0) {
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                reveal(x + dx, y + dy);
+            }
+        }
+    }
+}
+
+function handleFlag(x, y) {
+    if (gameOver || revealed[y][x]) return;
+
+    flagged[y][x] = !flagged[y][x];
+    minesLeft += flagged[y][x] ? -1 : 1;
+    document.getElementById('mines').textContent = minesLeft;
+    render();
+}
+
+function checkWin() {
+    const config = DIFFICULTIES[difficulty];
+    for (let y = 0; y < config.rows; y++) {
+        for (let x = 0; x < config.cols; x++) {
+            if (!revealed[y][x] && grid[y][x] !== -1) return false;
+        }
+    }
+    return true;
+}
+
+function endGame(won) {
+    gameOver = true;
+    clearInterval(timer);
+
+    const config = DIFFICULTIES[difficulty];
+
+    if (!won) {
+        for (let y = 0; y < config.rows; y++) {
+            for (let x = 0; x < config.cols; x++) {
+                if (grid[y][x] === -1) {
+                    revealed[y][x] = true;
+                }
+            }
+        }
+        render();
+    }
+
+    setTimeout(() => {
+        const score = won ? Math.max(0, 1000 - time * 10) : 0;
+        alert(won ? `🎉 恭喜通关！\n用时: ${formatTime(time)}` : '💥 游戏结束！');
+
+        // 保存游戏结果
+        saveGameResult(score, 1, won);
+    }, 500);
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+sessionStorage.setItem('gameStartTime', Date.now());
+sessionStorage.setItem('currentGame', 'minesweeper');
+
+        // 兼容旧的 window.parent.gameFinished 调用
+        window.gameFinished = function(score, level, won) {
+            saveGameResult(score, level, won);
+        };
+
+        // 页面卸载前保存结果
+        window.addEventListener('beforeunload', function() {
+            if (!sessionStorage.getItem('lastGameResult')) {
+                const scoreEl = document.getElementById('score');
+                const currentScore = scoreEl ? scoreEl.textContent : '0';
+                saveGameResult(parseInt(currentScore), 1, false);
+            }
+        });
+
+        
+        function saveGameResult(score, level, won) {
+
+            const result = {
+                score: score || 0,
+                level: level || 1,
+                won: won || false,
+                timestamp: Date.now(),
+                gameId: sessionStorage.getItem('currentGame') || 'unknown'
+            };
+            sessionStorage.setItem('lastGameResult', JSON.stringify(result));
+        }
+
+        // 兼容旧的 window.parent.gameFinished 调用（如果主页使用iframe）
+        window.gameFinished = function(score, level, won) {
+            saveGameResult(score, level, won);
+        };
+
+        // 页面卸载前保存结果（如果游戏还在运行中）
+        window.addEventListener('beforeunload', function() {
+            // 检查是否有未保存的游戏结果
+            if (!sessionStorage.getItem('lastGameResult')) {
+                const currentScore = document.getElementById('score')?.textContent || '0';
+                saveGameResult(parseInt(currentScore), 1, false);
+            }
+        });
+
+initGame();
+
+        // 初始化游戏
+        init();
+</script>
+
+    <!-- 游戏导航栏 -->
+    
+    <!-- 虚拟方向键 -->
+    <div class="d-pad">
+        <div></div>
+        <button class="d-btn" ontouchstart="moveDirection('up')" onclick="moveDirection('up')">↑</button>
+        <div></div>
+        <button class="d-btn" ontouchstart="moveDirection('left')" onclick="moveDirection('left')">←</button>
+        <div></div>
+        <button class="d-btn" ontouchstart="moveDirection('right')" onclick="moveDirection('right')">→</button>
+        <div></div>
+        <button class="d-btn" ontouchstart="moveDirection('down')" onclick="moveDirection('down')">↓</button>
+        <div></div>
+    </div>
+    <div class="game-nav">
+        <button class="game-nav-btn primary" onclick="backToHall()">
+            <span>🏠</span>
+            <span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="handleRestart()">
+            <span>🔄</span>
+            <span>重新开始</span>
+        </button>
+        <button class="game-nav-btn tertiary" onclick="showHelp()">
+            <span>❓</span>
+            <span>游戏说明</span>
+        </button>
+    </div>
+
+    <!-- 游戏说明弹窗 -->
+    <div class="help-modal" id="helpModal">
+        <div class="help-modal-content">
+            <h2>💣 扫雷</h2>
+            <p><strong>游戏目标：</strong>经典扫雷游戏</p>
+            <p><strong>操作方式：</strong></p>
+            <ul>
+                <li>电脑：使用<span class="key">方向键</span>或<span class="key">WASD</span>控制</li>
+                <li>手机：<span class="key">点击</span>或<span class="key">滑动</span>屏幕</li>
+            </ul>
+            <p><strong>游戏规则：</strong>尽可能获得高分，挑战自己的极限！</p>
+            <button class="game-nav-btn primary" onclick="closeHelp()" style="width: 100%; padding: 12px; margin-top: 20px;">知道了</button>
+        </div>
+    </div>
+
+    <script>
+        function backToHall() {
+            if (window.parent) {
+                window.parent.location.href = '../index.html';
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // 智能重启函数 - 优先调用游戏的restart函数，不存在则重新加载页面
+        function handleRestart() {
+            if (typeof restartGame === 'function') {
+                restartGame();
+            } else if (typeof newGame === 'function') {
+                newGame();
+            } else if (typeof initGame === 'function') {
+                initGame();
+            } else {
+                location.reload();
+            }
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('show');
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('show');
+        }
+
+    </script>
+</body>
+</html>

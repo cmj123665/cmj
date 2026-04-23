@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>功能测试</title>
+</head>
+<body>
+    <h1>功能测试页面</h1>
+    <div id="test1">测试1：DOM操作</div>
+    <div id="test2">测试2：JavaScript执行</div>
+    <div id="test3">测试3：事件处理</div>
+
+    <button onclick="testFunction()">点击测试</button>
+
+    <script>
+        console.log("页面加载成功");
+
+        document.getElementById("test1").style.color = "green";
+        document.getElementById("test2").textContent = "JavaScript正常";
+        document.getElementById("test3").innerHTML = "<b>事件系统正常</b>";
+
+        function testFunction() {
+            alert("按钮点击正常！");
+            document.body.style.backgroundColor = "#f0f0f0";
+        }
+
+        setTimeout(() => {
+            console.log("定时器正常");
+            document.getElementById("test3").style.color = "blue";
+        }, 1000);
+    </script>
+</body>
+</html>

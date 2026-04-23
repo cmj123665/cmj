@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 坦克大战</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #2d3436 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            text-align: center;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+
+        .game-title {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .game-area {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .side-panel {
+            background: rgba(45, 52, 54, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 150px;
+        }
+
+        .side-panel h3 {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-box .label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+        }
+
+        .info-box .value {
+            color: #fbbf24;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .game-board {
+            background: #1a1a2e;
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 10px;
+        }
+
+        .controls-hint {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        .controls-hint p {
+            margin: 5px 0;
+        }
+
+        .mobile-controls {
+            display: none;
+            margin-top: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(45, 52, 54, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(0.95);
+        }
+
+        .control-btn.fire {
+            width: 70px;
+            height: 70px;
+            background: rgba(231, 76, 60, 0.8);
+            font-size: 2rem;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(45, 52, 54, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .modal-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .start-screen {
+            background: rgba(45, 52, 54, 0.9);
+            border-radius: 25px;
+            padding: 40px;
+            color: white;
+        }
+
+        .start-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .start-screen p {
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .start-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .mobile-controls {
+                display: flex;
+            }
+
+            .controls-hint {
+                display: none;
+            }
+
+            .side-panel {
+                order: 2;
+                display: flex;
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .info-box {
+                margin-bottom: 0;
+            }
+        }
+    
+    /* ========== 游戏导航栏 ========== */
+    .game-nav { z-index: 9999 !important; z-index: 9999 !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 12px 20px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 9999 !important;
+    }
+
+    .game-nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .game-nav-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .game-nav-btn:active {
+        transform: scale(0.95);
+    }
+
+    .game-nav-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .game-nav-btn.secondary {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #e0e0e0;
+    }
+
+    .game-nav-btn.tertiary {
+        background: transparent;
+        color: #666;
+    }
+
+    /* 游戏说明弹窗 */
+    .help-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 20px;
+    }
+
+    .help-modal.show {
+        display: flex;
+    }
+
+    .help-modal-content {
+        background: #fff;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+        color: #333;
+    }
+
+    .help-modal-content h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-align: center;
+        color: #333;
+    }
+
+    .help-modal-content p {
+        font-size: 14px;
+        line-height: 1.8;
+        margin-bottom: 12px;
+        color: #666;
+    }
+
+    .help-modal-content .key {
+        display: inline-block;
+        background: #f5f5f5;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #333;
+        margin: 0 4px;
+    }
+
+    .help-modal-content ul {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    .help-modal-content li {
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    @media (max-width: 768px) {
+        .game-nav { z-index: 9999 !important; z-index: 9999 !important;
+            flex-wrap: wrap;
+            padding: 10px;
+        }
+
+        .game-nav-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+    }
+
+        /* 虚拟方向键 */
+        .d-pad {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+            z-index: 999;
+        }
+        .d-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .d-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.95);
+        }
+        @media (min-width: 768px) {
+            .d-pad { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="game-title">🎮 坦克大战</h1>
+            <div>
+                <button class="btn" id="homeBtn">🏠 返回</button>
+                <button class="btn" id="restartBtn">🔄 重来</button>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="side-panel">
+                <h3>📊 信息</h3>
+                <div class="info-box">
+                    <div class="label">分数</div>
+                    <div class="value" id="score">0</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">生命</div>
+                    <div class="value" id="lives">3</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">关卡</div>
+                    <div class="value" id="level">1</div>
+                </div>
+            </div>
+
+            <div class="game-board">
+                <canvas id="gameCanvas" width="600" height="600"></canvas>
+            </div>
+
+            <div class="side-panel">
+                <h3>🎯 操作</h3>
+                <div class="controls-hint">
+                    <p>WASD / 方向键 移动</p>
+                    <p>空格 / J 发射</p>
+                    <p>消灭所有敌坦克</p>
+                    <p>保护基地🏠</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mobile-controls">
+            <div class="control-btn" id="upBtn">↑</div>
+            <div class="control-btn" id="leftBtn">←</div>
+            <div class="control-btn fire" id="fireBtn">🔥</div>
+            <div class="control-btn" id="rightBtn">→</div>
+            <div class="control-btn" id="downBtn">↓</div>
+        </div>
+
+        <div class="modal" id="startModal">
+            <div class="start-screen">
+                <h2>🎮 坦克大战</h2>
+                <p>消灭所有敌坦克，保护基地！</p>
+                <p>你的坦克: 绿色</p>
+                <p>敌坦克: 红色</p>
+                <p>基地: 🏠 (不能被摧毁)</p>
+                <button class="start-btn" onclick="startGame()">开始游戏</button>
+            </div>
+        </div>
+
+        <div class="modal" id="gameOverModal">
+            <div class="modal-content">
+                <h2 id="gameOverTitle">游戏结束!</h2>
+                <p>分数: <span id="finalScore">0</span></p>
+                <p>到达关卡: <span id="finalLevel">1</span></p>
+                <button class="modal-btn" onclick="restartGame()">再来一局</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function backToHall() {
+            if (window.parent) {
+                window.parent.location.href = '../index.html';
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let player = { x: 400, y: 500, width: 40, height: 40, speed: 5 };
+        let bullets = [];
+        let enemies = [];
+        let score = 0;
+        let gameRunning = false;
+
+        function initGame() {
+            player = { x: 400, y: 500, width: 40, height: 40, speed: 5 };
+            bullets = [];
+            enemies = [];
+            score = 0;
+            gameRunning = true;
+            spawnEnemies();
+            gameLoop();
+        }
+
+        function spawnEnemies() {
+            if (!gameRunning) return;
+            if (Math.random() < 0.02) {
+                enemies.push({
+                    x: Math.random() * 760,
+                    y: -30,
+                    width: 30,
+                    height: 30,
+                    speed: 2
+                });
+            }
+            setTimeout(spawnEnemies, 1000);
+        }
+
+        function shoot() {
+            bullets.push({
+                x: player.x + player.width / 2 - 2,
+                y: player.y,
+                width: 4,
+                height: 10
+            });
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            // 更新子弹
+            bullets.forEach(b => b.y -= 10);
+            bullets = bullets.filter(b => b.y > -20);
+
+            // 更新敌人
+            enemies.forEach(e => e.y += e.speed);
+            enemies = enemies.filter(e => e.y < 600);
+
+            // 碰撞检测
+            bullets.forEach((b, bi) => {
+                enemies.forEach((e, ei) => {
+                    if (b.x < e.x + e.width && b.x + b.width > e.x &&
+                        b.y < e.y + e.height && b.y + b.height > e.y) {
+                        bullets.splice(bi, 1);
+                        enemies.splice(ei, 1);
+                        score += 10;
+                    }
+                });
+            });
+
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制玩家
+            ctx.fillStyle = '#4ecdc4';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // 绘制子弹
+            ctx.fillStyle = '#ffe66d';
+            bullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
+
+            // 绘制敌人
+            ctx.fillStyle = '#ff6b6b';
+            enemies.forEach(e => ctx.fillRect(e.x, e.y, e.width, e.height));
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            update();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        // 控制事件
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && player.x > 0) player.x -= player.speed;
+            if (e.key === 'ArrowRight' && player.x < 760) player.x += player.speed;
+            if (e.key === ' ') shoot();
+        });
+
+        // 初始化
+        initGame();
+    
+
+
+
+        // 智能重启函数 - 优先调用游戏的restart函数，不存在则重新加载页面
+        function handleRestart() {
+            if (typeof restartGame === 'function') {
+                restartGame();
+            } else if (typeof newGame === 'function') {
+                newGame();
+            } else if (typeof initGame === 'function') {
+                initGame();
+            } else {
+                location.reload();
+            }
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('show');
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
