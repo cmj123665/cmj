@@ -275,7 +275,7 @@
         <button class="game-nav-btn secondary" onclick="restartGame()">
             <span>🔄</span><span>重新开始</span>
         </button>
-        <button class="game-nav-btn tertiary" onclick="alert('空格/↑ 跳跃（可二段跳）| 点击屏幕跳跃')">
+        <button class="game-nav-btn tertiary" onclick="document.getElementById('helpModal').classList.add('show')">
             <span>❓</span><span>游戏说明</span>
         </button>
     </div>
@@ -308,6 +308,7 @@
         let gravity = 0.7;
         let jumpForce = -15;
         let groundY = 380;
+        let animationFrameId = null;
 
         function jump() {
             if (player.jumps < player.maxJumps && gameRunning) {
@@ -1360,7 +1361,7 @@
             update();
             draw();
             if (gameRunning) {
-                requestAnimationFrame(gameLoop);
+                animationFrameId = requestAnimationFrame(gameLoop);
             }
         }
 
@@ -1372,6 +1373,10 @@
         }
 
         function restartGame() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             player = {
                 x: 120,
                 y: 325,

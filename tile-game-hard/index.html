@@ -67,5 +67,52 @@
     </div>
 
     <script src="game.js"></script>
+    <div class="game-nav">
+        <button class="game-nav-btn primary" onclick="backToHall()">
+            <span>🏠</span><span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="location.reload()">
+            <span>🔄</span><span>重新开始</span>
+        </button>
+        <button class="game-nav-btn tertiary" onclick="document.getElementById('helpModal').classList.add('show')">
+            <span>❓</span><span>游戏说明</span>
+        </button>
+    </div>
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <h2>游戏说明</h2>
+            <p>点击方块将其移入底部卡槽</p>
+            <p>3个相同图案即可消除</p>
+            <p>卡槽满8个则游戏结束</p>
+            <p>🐏 多种道具助你通关</p>
+            <button class="btn" onclick="document.getElementById('helpModal').classList.remove('show')">知道了</button>
+        </div>
+    </div>
+    <style>
+        .game-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255,255,255,0.95); padding: 12px 20px;
+            display: flex; justify-content: center; gap: 12px;
+            z-index: 9999;
+        }
+        .game-nav-btn {
+            padding: 10px 20px; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .game-nav-btn.primary { background: linear-gradient(135deg,#667eea,#764ba2); color: white; }
+        .game-nav-btn.secondary { background: #f5f5f5; color: #333; }
+        .game-nav-btn.tertiary { background: #e3f2fd; color: #1976d2; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 300px; }
+        .modal-content h2 { margin-bottom: 15px; }
+        .modal-content p { margin: 8px 0; color: #555; }
+        .modal-content .btn { margin-top: 15px; padding: 10px 30px; border: none; border-radius: 8px; background: linear-gradient(135deg,#667eea,#764ba2); color: white; cursor: pointer; font-size: 16px; }
+    </style>
+    <script>
+        function backToHall() {
+            window.location.href = '../index.html';
+        }
+    </script>
 </body>
 </html>

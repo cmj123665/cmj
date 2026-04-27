@@ -6,6 +6,12 @@
     <title>🐍 贪吃蛇</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal.show { display: flex; }
+        .start-screen { background: rgba(45,52,54,0.95); border-radius: 25px; padding: 40px; text-align: center; color: white; max-width: 320px; }
+        .start-screen h2 { font-size: 2rem; margin-bottom: 15px; }
+        .start-screen p { margin: 8px 0; color: #ccc; }
+        .modal-btn { padding: 15px 40px; background: linear-gradient(135deg,#22c55e,#16a34a); border: none; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
         body {
             font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -160,6 +166,14 @@
     </style>
 </head>
 <body>
+    <div class="modal show" id="startModal">
+        <div class="start-screen">
+            <h2>🐍 贪吃蛇</h2>
+            <p>使用方向键或WASD控制</p>
+            <p>吃掉食物得分，不要撞墙!</p>
+            <button class="modal-btn" onclick="startGameReal()">开始游戏</button>
+        </div>
+    </div>
     <div class="game-container">
         <div class="header">
             <h1>🐍 贪吃蛇</h1>
@@ -377,7 +391,10 @@
         sessionStorage.setItem('gameStartTime', Date.now());
         sessionStorage.setItem('currentGame', 'snake-game');
 
-        initGame();
+        function startGameReal() {
+            document.getElementById('startModal').classList.remove('show');
+            initGame();
+        }
     </script>
 
     <!-- 虚拟方向键 -->
@@ -403,7 +420,7 @@
             <span>🔄</span>
             <span>重新开始</span>
         </button>
-        <button class="game-nav-btn tertiary" onclick="alert('使用方向键或WASD控制蛇的移动，吃掉红色食物得分！')">
+        <button class="game-nav-btn tertiary" onclick="document.getElementById('helpModal').classList.add('show')">
             <span>❓</span>
             <span>游戏说明</span>
         </button>

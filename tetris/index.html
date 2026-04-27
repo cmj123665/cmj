@@ -118,6 +118,13 @@
                 display: none;
             }
         }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal.show { display: flex; }
+        .modal-content { background: rgba(45,52,54,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 40px; text-align: center; color: white; }
+        .modal-content h2 { font-size: 2rem; margin-bottom: 20px; }
+        .modal-content p { margin: 8px 0; }
+        .modal-btn { padding: 15px 40px; background: linear-gradient(135deg,#22c55e,#16a34a); border: none; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin: 5px; }
+        .modal-btn:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -283,8 +290,11 @@
 
         function gameOver() {
             clearInterval(gameLoop);
-            alert(`游戏结束！\n最终分数: ${score}\n等级: ${level}`);
-            resetGame();
+            document.getElementById('gameOverTitle').textContent = '游戏结束!';
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalLevel').textContent = level;
+            document.getElementById('gameOverModal').classList.add('show');
+            saveGameResult(score, level, false);
         }
 
         function resetGame() {
@@ -399,6 +409,14 @@
         <button class="control-btn" ontouchstart="moveTetris('right')" onclick="moveTetris('right')">▶</button>
     </div>
 
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2 id="gameOverTitle">游戏结束!</h2>
+            <p>最终分数: <span id="finalScore">0</span></p>
+            <p>等级: <span id="finalLevel">1</span></p>
+            <button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); resetGame();">再来一局</button>
+        </div>
+    </div>
     <div class="game-nav">
         <button class="game-nav-btn primary" onclick="backToHall()">
             <span>🏠</span><span>返回大厅</span>
@@ -406,9 +424,16 @@
         <button class="game-nav-btn secondary" onclick="resetGame()">
             <span>🔄</span><span>重新开始</span>
         </button>
-        <button class="game-nav-btn tertiary" onclick="alert('使用←→移动，↑旋转，↓加速下落')">
+        <button class="game-nav-btn tertiary" onclick="document.getElementById('helpModal').classList.add('show')">
             <span>❓</span><span>游戏说明</span>
         </button>
+    </div>
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <h2>游戏说明</h2>
+            <p>使用←→移动，↑旋转，↓加速下落</p>
+            <button class="modal-btn" onclick="document.getElementById('helpModal').classList.remove('show')">知道了</button>
+        </div>
     </div>
 </body>
 </html>

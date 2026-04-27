@@ -253,7 +253,7 @@
         <button class="game-nav-btn secondary" onclick="restartGame()">
             <span>🔄</span><span>重新开始</span>
         </button>
-        <button class="game-nav-btn secondary" onclick="alert('⬆️ 跳跃 | ⬇️ 滑行 | 点击屏幕跳跃')">
+        <button class="game-nav-btn secondary" onclick="document.getElementById('helpModal').classList.add('show')">
             <span>❓</span><span>游戏说明</span>
         </button>
     </div>
@@ -269,6 +269,7 @@
         let isJumping = false;
         let isSliding = false;
         let gameSpeed = 10;
+        let animationFrameId = null;
 
         // 玩家状态
         let playerY = 0;
@@ -373,7 +374,7 @@
             // 增加速度
             gameSpeed = 10 + distance / 100;
 
-            requestAnimationFrame(update);
+            animationFrameId = requestAnimationFrame(update);
         }
 
         function jump() {
@@ -403,6 +404,10 @@
         }
 
         function restartGame() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             // 清除所有障碍物和金币
             obstacles.forEach(obs => obs.element.remove());
             coins.forEach(coin => coin.element.remove());

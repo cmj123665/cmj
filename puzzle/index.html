@@ -221,6 +221,7 @@ body {
             -webkit-user-select: none;
             touch-action: manipulation;
         }
+        .d-pad { display: none !important; }
         .d-btn:active {
             background: rgba(255, 255, 255, 0.4);
             transform: scale(0.95);
@@ -340,8 +341,9 @@ function handleClick(e) {
             if (checkWin()) {
                 clearInterval(timer);
                 setTimeout(() => {
-                    alert(`🎉 恭喜通关！\n步数: ${moves}\n时间: ${formatTime(time)}`);
-                    // 保存游戏结果
+                    document.getElementById('gameOverTitle').textContent = '🎉 恭喜通关！';
+                    document.getElementById('gameOverMessage').textContent = `步数: ${moves} | 时间: ${formatTime(time)}`;
+                    document.getElementById('gameOverModal').classList.add('show');
                     saveGameResult(1000 - moves * 10 - time, 1, true);
                 }, 200);
             }
@@ -435,21 +437,6 @@ canvas.addEventListener('click', handleClick);
 sessionStorage.setItem('gameStartTime', Date.now());
 sessionStorage.setItem('currentGame', 'puzzle');
 
-        // 兼容旧的 window.parent.gameFinished 调用
-        window.gameFinished = function(score, level, won) {
-            saveGameResult(score, level, won);
-        };
-
-        // 页面卸载前保存结果
-        window.addEventListener('beforeunload', function() {
-            if (!sessionStorage.getItem('lastGameResult')) {
-                const scoreEl = document.getElementById('score');
-                const currentScore = scoreEl ? scoreEl.textContent : '0';
-                saveGameResult(parseInt(currentScore), 1, false);
-            }
-        });
-
-        
         function saveGameResult(score, level, won) {
 
             const result = {
@@ -461,20 +448,6 @@ sessionStorage.setItem('currentGame', 'puzzle');
             };
             sessionStorage.setItem('lastGameResult', JSON.stringify(result));
         }
-
-        // 兼容旧的 window.parent.gameFinished 调用（如果主页使用iframe）
-        window.gameFinished = function(score, level, won) {
-            saveGameResult(score, level, won);
-        };
-
-        // 页面卸载前保存结果（如果游戏还在运行中）
-        window.addEventListener('beforeunload', function() {
-            // 检查是否有未保存的游戏结果
-            if (!sessionStorage.getItem('lastGameResult')) {
-                const currentScore = document.getElementById('score')?.textContent || '0';
-                saveGameResult(parseInt(currentScore), 1, false);
-            }
-        });
 
 initGame();
 
@@ -496,6 +469,21 @@ initGame();
         <button class="d-btn" ontouchstart="moveDirection('down')" onclick="moveDirection('down')">↓</button>
         <div></div>
     </div>
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2 id="gameOverTitle">游戏结束!</h2>
+            <p id="gameOverMessage"></p>
+            <button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); handleRestart();">再来一局</button>
+        </div>
+    </div>
+    <style>
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal.show { display: flex; }
+        .modal-content { background: rgba(45,52,54,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 40px; text-align: center; color: white; }
+        .modal-content h2 { font-size: 2rem; margin-bottom: 20px; }
+        .modal-content p { margin: 8px 0; }
+        .modal-btn { padding: 15px 40px; background: linear-gradient(135deg,#22c55e,#16a34a); border: none; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin: 5px; }
+    </style>
     <div class="game-nav">
         <button class="game-nav-btn primary" onclick="backToHall()">
             <span>🏠</span>

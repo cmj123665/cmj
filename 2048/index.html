@@ -753,21 +753,6 @@
         sessionStorage.setItem('gameStartTime', Date.now());
         sessionStorage.setItem('currentGame', '2048');
 
-        // 兼容旧的 window.parent.gameFinished 调用
-        window.gameFinished = function(score, level, won) {
-            saveGameResult(score, level, won);
-        };
-
-        // 页面卸载前保存结果
-        window.addEventListener('beforeunload', function() {
-            if (!sessionStorage.getItem('lastGameResult')) {
-                const scoreEl = document.getElementById('score');
-                const currentScore = scoreEl ? scoreEl.textContent : '0';
-                saveGameResult(parseInt(currentScore), 1, false);
-            }
-        });
-
-        
         function saveGameResult(score, level, won) {
             const result = {
                 score: score || 0,
@@ -778,20 +763,6 @@
             };
             sessionStorage.setItem('lastGameResult', JSON.stringify(result));
         }
-
-        // 兼容旧的 window.parent.gameFinished 调用（如果主页使用iframe）
-        window.gameFinished = function(score, level, won) {
-            saveGameResult(score, level, won);
-        };
-
-        // 页面卸载前保存结果（如果游戏还在运行中）
-        window.addEventListener('beforeunload', function() {
-            // 检查是否有未保存的游戏结果
-            if (!sessionStorage.getItem('lastGameResult')) {
-                const currentScore = document.getElementById('score')?.textContent || '0';
-                saveGameResult(parseInt(currentScore), 1, false);
-            }
-        });
 
         // 启动游戏
         init();

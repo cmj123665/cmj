@@ -91,10 +91,13 @@ class Game {
                 if (this.level < this.MAX_LEVEL) {
                     this.level++;
                     this.saveLevel();
+                    this.startLevel();
                 } else {
-                    alert('🏆 恭喜你通关了全部999关！');
-                    this.level = 1;
+                    this.showModal('🏆 恭喜你通关了全部999关！', '游戏将从头开始！', 'winall');
                 }
+            } else if (this.modalBtn.dataset.action === 'winall') {
+                this.level = 1;
+                this.saveLevel();
                 this.startLevel();
             } else {
                 this.restart();
