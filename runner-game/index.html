@@ -640,7 +640,7 @@
 
             // === 腿部 ===
             const legWidth = 14;
-            const legLength = 45;
+            const legLength = 52;
             const legOffset = Math.sin(player.legAngle) * 8;
 
             // 白色长袜（左腿）
@@ -721,8 +721,8 @@
             ctx.fill();
 
             // === 百褶裙 ===
-            const skirtY = y + 38;
-            const skirtLength = 32;
+            const skirtY = y + 30;
+            const skirtLength = 40;
             const skirtWidth = width + 12;
             const skirtX = x - 6;
 
@@ -758,10 +758,10 @@
             ctx.quadraticCurveTo(skirtX + skirtWidth/2, skirtY + skirtLength - 8, skirtX + skirtWidth/2 - 5, skirtY + skirtLength/2);
             ctx.fill();
 
-            // === 脖子（新增） ===
+            // === 脖子 ===
             const neckWidth = 16;
-            const neckHeight = 15;
-            const neckY = y + 16;
+            const neckHeight = 18;
+            const neckY = y + 12;
             const neckX = x + width/2 - neckWidth/2;
 
             const neckGradient = ctx.createLinearGradient(neckX, neckY, neckX + neckWidth, neckY);
@@ -781,8 +781,8 @@
             ctx.fill();
 
             // === 身体 ===
-            const bodyY = y + 30;
-            const bodyHeight = 25;
+            const bodyY = y + 24;
+            const bodyHeight = 32;
 
             const shirtGradient = ctx.createLinearGradient(x, bodyY, x + width, bodyY);
             shirtGradient.addColorStop(0, '#fef5f8');
@@ -835,7 +835,7 @@
 
             // === 手臂 ===
             const armWidth = 12;
-            const armLength = 32;
+            const armLength = 38;
             const armSwing = Math.sin(player.armAngle) * 25;
 
             // 左臂
@@ -1269,55 +1269,6 @@
                 ctx.ellipse(headX + headSize/2, headY + headSize/2 + 16, 3, 4, 0, 0, Math.PI * 2);
                 ctx.fill();
             }
-
-            // === 头顶大蝴蝶结 ===
-            const topBowX = headX + headSize/2;
-            const topBowY = headY + 2;
-
-            // 左半边
-            const topBowLeftGrad = ctx.createRadialGradient(topBowX - 10, topBowY, 1, topBowX - 10, topBowY, 14);
-            topBowLeftGrad.addColorStop(0, '#ffcce0');
-            topBowLeftGrad.addColorStop(0.5, '#ffb6d9');
-            topBowLeftGrad.addColorStop(1, '#ff9eb8');
-            ctx.fillStyle = topBowLeftGrad;
-            ctx.beginPath();
-            ctx.ellipse(topBowX - 12, topBowY, 14, 10, -0.3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 右半边
-            const topBowRightGrad = ctx.createRadialGradient(topBowX + 10, topBowY, 1, topBowX + 10, topBowY, 14);
-            topBowRightGrad.addColorStop(0, '#ffcce0');
-            topBowRightGrad.addColorStop(0.5, '#ffb6d9');
-            topBowRightGrad.addColorStop(1, '#ff9eb8');
-            ctx.fillStyle = topBowRightGrad;
-            ctx.beginPath();
-            ctx.ellipse(topBowX + 12, topBowY, 14, 10, 0.3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 中心
-            ctx.fillStyle = '#ff9eb8';
-            ctx.beginPath();
-            ctx.arc(topBowX, topBowY, 6, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 高光
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-            ctx.beginPath();
-            ctx.arc(topBowX - 3, topBowY - 3, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 飘带
-            ctx.strokeStyle = '#ffb6d9';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(topBowX - 2, topBowY + 6);
-            ctx.quadraticCurveTo(topBowX - 8, topBowY + 20, topBowX - 4, topBowY + 30);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(topBowX + 2, topBowY + 6);
-            ctx.quadraticCurveTo(topBowX + 8, topBowY + 20, topBowX + 4, topBowY + 30);
-            ctx.stroke();
 
             // === 右侧小蝴蝶结发饰 ===
             const bowX = headX + headSize + 4;
