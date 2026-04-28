@@ -578,9 +578,9 @@
 
             // 左侧长发
             const leftHairGradient = ctx.createLinearGradient(x - 10, y, x - 30, y + hairLength);
-            leftHairGradient.addColorStop(0, '#e53935');
-            leftHairGradient.addColorStop(0.5, '#c62828');
-            leftHairGradient.addColorStop(1, '#b71c1c');
+            leftHairGradient.addColorStop(0, '#3d3d3d');
+            leftHairGradient.addColorStop(0.5, '#2d2d2d');
+            leftHairGradient.addColorStop(1, '#1a1a1a');
 
             ctx.fillStyle = leftHairGradient;
             ctx.beginPath();
@@ -590,7 +590,7 @@
             ctx.fill();
 
             // 左发丝层次
-            ctx.fillStyle = '#c62828';
+            ctx.fillStyle = '#2d2d2d';
             ctx.beginPath();
             ctx.moveTo(x + 8, y + 28);
             ctx.quadraticCurveTo(x - 15 + hairWave * 0.7, y + 50, x - 12, y + hairLength - 15);
@@ -599,9 +599,9 @@
 
             // 右侧长发
             const rightHairGradient = ctx.createLinearGradient(x + width + 10, y, x + width + 30, y + hairLength);
-            rightHairGradient.addColorStop(0, '#e53935');
-            rightHairGradient.addColorStop(0.5, '#c62828');
-            rightHairGradient.addColorStop(1, '#b71c1c');
+            rightHairGradient.addColorStop(0, '#3d3d3d');
+            rightHairGradient.addColorStop(0.5, '#2d2d2d');
+            rightHairGradient.addColorStop(1, '#1a1a1a');
 
             ctx.fillStyle = rightHairGradient;
             ctx.beginPath();
@@ -611,7 +611,7 @@
             ctx.fill();
 
             // 右发丝层次
-            ctx.fillStyle = '#c62828';
+            ctx.fillStyle = '#2d2d2d';
             ctx.beginPath();
             ctx.moveTo(x + width - 8, y + 28);
             ctx.quadraticCurveTo(x + width + 15 + hairWave * 0.7, y + 50, x + width + 12, y + hairLength - 15);
@@ -911,16 +911,16 @@
 
             // 后发
             const hairBackGradient = ctx.createLinearGradient(headX, headY, headX + headSize, headY);
-            hairBackGradient.addColorStop(0, '#c62828');
-            hairBackGradient.addColorStop(0.5, '#e53935');
-            hairBackGradient.addColorStop(1, '#b71c1c');
+            hairBackGradient.addColorStop(0, '#2d2d2d');
+            hairBackGradient.addColorStop(0.5, '#3d3d3d');
+            hairBackGradient.addColorStop(1, '#1a1a1a');
 
             ctx.fillStyle = hairBackGradient;
             ctx.beginPath();
             ctx.ellipse(headX + headSize/2, headY + headSize/2 + 6, headSize/2 + 2, headSize/2 + 10, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(229, 57, 53, 0.3)';
+            ctx.fillStyle = 'rgba(30, 30, 30, 0.3)';
             ctx.beginPath();
             ctx.ellipse(headX + headSize/2 - 5, headY + headSize/2 + 8, headSize/4, headSize/4, 0, 0, Math.PI * 2);
             ctx.fill();
@@ -973,10 +973,10 @@
 
             // === 蓬松八字刘海 ===
             const bangGradient = ctx.createLinearGradient(headX, headY, headX + headSize, headY);
-            bangGradient.addColorStop(0, '#c62828');
-            bangGradient.addColorStop(0.3, '#e53935');
-            bangGradient.addColorStop(0.7, '#e53935');
-            bangGradient.addColorStop(1, '#c62828');
+            bangGradient.addColorStop(0, '#2d2d2d');
+            bangGradient.addColorStop(0.3, '#3d3d3d');
+            bangGradient.addColorStop(0.7, '#3d3d3d');
+            bangGradient.addColorStop(1, '#2d2d2d');
 
             // 左侧八字刘海
             ctx.fillStyle = bangGradient;
@@ -996,7 +996,7 @@
             ctx.fill();
 
             // 中间短刘海（蓬松感）
-            ctx.fillStyle = '#e53935';
+            ctx.fillStyle = '#3d3d3d';
             ctx.beginPath();
             ctx.moveTo(headX + headSize/2 - 7, headY + 4);
             ctx.quadraticCurveTo(headX + headSize/2, headY + 14, headX + headSize/2 + 7, headY + 4);
@@ -1010,7 +1010,7 @@
 
                 // 左侧发丝
                 const leftX = headX + 8 + i * 4;
-                ctx.fillStyle = i % 2 === 0 ? '#c62828' : '#e53935';
+                ctx.fillStyle = i % 2 === 0 ? '#2d2d2d' : '#3d3d3d';
                 ctx.beginPath();
                 ctx.moveTo(leftX - 3, headY + 10);
                 ctx.quadraticCurveTo(leftX + wave - 5, headY + strandLen, leftX + 2, headY + 10);
@@ -1018,7 +1018,7 @@
 
                 // 右侧发丝
                 const rightX = headX + headSize - 8 - i * 4;
-                ctx.fillStyle = i % 2 === 0 ? '#c62828' : '#e53935';
+                ctx.fillStyle = i % 2 === 0 ? '#2d2d2d' : '#3d3d3d';
                 ctx.beginPath();
                 ctx.moveTo(rightX - 2, headY + 10);
                 ctx.quadraticCurveTo(rightX + wave + 5, headY + strandLen, rightX + 3, headY + 10);
@@ -1151,7 +1151,7 @@
             ctx.fill();
 
             // === 睫毛 ===
-            ctx.strokeStyle = '#e53935';
+            ctx.strokeStyle = '#3d3d3d';
             ctx.lineWidth = 1.5;
             ctx.lineCap = 'round';
 
