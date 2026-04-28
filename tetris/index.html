@@ -199,6 +199,8 @@
         }
         const MAX_LEVEL = 999;
         let currentLevel = parseInt(localStorage.getItem('tetrisLevel')) || 1;
+        let levelPage = 0;
+        const LEVELS_PER_PAGE = 30;
         let linesClearedTotal = 0;
 
         let board = [];
@@ -441,6 +443,7 @@
         }
 
         function openLevelSelect() {
+            levelPage = Math.floor((currentLevel - 1) / LEVELS_PER_PAGE);
             renderLevelSelect();
             document.getElementById('levelModal').classList.add('show');
         }
@@ -453,7 +456,10 @@
             const grid = document.getElementById('levelGrid');
             grid.innerHTML = '';
             const maxLevel = parseInt(localStorage.getItem('tetrisMaxLevel')) || 1;
-            LEVELS.forEach(lv => {
+            const start = levelPage * LEVELS_PER_PAGE;
+            const end = Math.min(start + LEVELS_PER_PAGE, LEVELS.length);
+            for (let i = start; i < end; i++) {
+                const lv = LEVELS[i];
                 const card = document.createElement('div');
                 const unlocked = lv.id <= maxLevel;
                 const isCurrent = lv.id === currentLevel;
@@ -470,7 +476,24 @@
                     card.innerHTML = `<div style="font-size:1.2rem;">🔒</div><div style="font-size:0.85rem;color:#94a3b8;">锁定</div>`;
                 }
                 grid.appendChild(card);
-            });
+            }
+            const maxPage = Math.ceil(LEVELS.length / LEVELS_PER_PAGE);
+            document.getElementById('levelPageNum').textContent = `${levelPage + 1} / ${maxPage}`;
+        }
+
+        function prevLevelPage() {
+            if (levelPage > 0) {
+                levelPage--;
+                renderLevelSelect();
+            }
+        }
+
+        function nextLevelPage() {
+            const maxPage = Math.ceil(LEVELS.length / LEVELS_PER_PAGE);
+            if (levelPage < maxPage - 1) {
+                levelPage++;
+                renderLevelSelect();
+            }
         }
 
         let dropTimer = null;
@@ -573,9 +596,14 @@
         </div>
     </div>
     <div class="modal" id="levelModal">
-        <div class="modal-content" style="max-width:400px;">
+        <div class="modal-content" style="max-width:400px;max-height:85vh;overflow-y:auto;">
             <h2>选择关卡</h2>
             <div id="levelGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;"></div>
+            <div id="levelPagination" style="display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;">
+                <button class="btn" onclick="prevLevelPage()" style="padding:8px 16px;font-size:14px;">上一页</button>
+                <span id="levelPageNum" style="font-size:14px;color:#333;font-weight:bold;">1 / 1</span>
+                <button class="btn" onclick="nextLevelPage()" style="padding:8px 16px;font-size:14px;">下一页</button>
+            </div>
             <button class="modal-btn" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>

@@ -582,9 +582,14 @@
     </div>
 
     <div class="game-over" id="levelModal">
-        <div class="game-over-content">
+        <div class="game-over-content" style="max-height:85vh;overflow-y:auto;">
             <h2>🗺️ 关卡选择</h2>
             <div class="level-grid" id="levelGrid"></div>
+            <div id="levelPagination" style="display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;">
+                <button class="btn btn-secondary" onclick="prevLevelPage()" style="padding:8px 16px;font-size:14px;">上一页</button>
+                <span id="levelPageNum" style="font-size:14px;color:#fff;font-weight:bold;">1 / 1</span>
+                <button class="btn btn-secondary" onclick="nextLevelPage()" style="padding:8px 16px;font-size:14px;">下一页</button>
+            </div>
             <button class="btn btn-secondary" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>
@@ -605,6 +610,8 @@
         }
         const MAX_LEVEL = 999;
         let currentLevel = parseInt(localStorage.getItem('2048Level')) || 1;
+        let levelPage = 0;
+        const LEVELS_PER_PAGE = 30;
         let targetValue = LEVELS[currentLevel - 1].target;
 
         let grid = [];
@@ -683,6 +690,7 @@
         }
 
         function openLevelSelect() {
+            levelPage = Math.floor((currentLevel - 1) / LEVELS_PER_PAGE);
             renderLevelSelect();
             document.getElementById('levelModal').classList.add('show');
         }
@@ -696,7 +704,9 @@
             const maxUnlocked = parseInt(localStorage.getItem('2048MaxLevel')) || 1;
             gridEl.innerHTML = '';
 
-            for (let i = 0; i < MAX_LEVEL; i++) {
+            const start = levelPage * LEVELS_PER_PAGE;
+            const end = Math.min(start + LEVELS_PER_PAGE, LEVELS.length);
+            for (let i = start; i < end; i++) {
                 const level = i + 1;
                 const data = LEVELS[i];
                 const unlocked = level <= maxUnlocked;
@@ -727,6 +737,24 @@
                 }
 
                 gridEl.appendChild(card);
+            }
+
+            const maxPage = Math.ceil(LEVELS.length / LEVELS_PER_PAGE);
+            document.getElementById('levelPageNum').textContent = `${levelPage + 1} / ${maxPage}`;
+        }
+
+        function prevLevelPage() {
+            if (levelPage > 0) {
+                levelPage--;
+                renderLevelSelect();
+            }
+        }
+
+        function nextLevelPage() {
+            const maxPage = Math.ceil(LEVELS.length / LEVELS_PER_PAGE);
+            if (levelPage < maxPage - 1) {
+                levelPage++;
+                renderLevelSelect();
             }
         }
 

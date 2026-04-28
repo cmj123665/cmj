@@ -347,9 +347,14 @@
     </div>
 
     <div class="modal" id="levelModal">
-        <div class="modal-content" style="max-width:520px;">
+        <div class="modal-content" style="max-width:520px;max-height:85vh;overflow-y:auto;">
             <h2>🗺️ 选择关卡</h2>
             <div class="level-select-grid" id="levelSelectGrid"></div>
+            <div id="levelPagination" style="display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;">
+                <button class="btn" onclick="prevLevelPage()" style="padding:8px 16px;font-size:14px;">上一页</button>
+                <span id="levelPageNum" style="font-size:14px;color:#333;font-weight:bold;">1 / 1</span>
+                <button class="btn" onclick="nextLevelPage()" style="padding:8px 16px;font-size:14px;">下一页</button>
+            </div>
             <button class="modal-btn" style="margin-top:14px;background:#6b7280;" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>
@@ -502,6 +507,8 @@
         }
 
         let currentLevel = 0;
+        let levelPage = 0;
+        const LEVELS_PER_PAGE = 30;
         let towers = [];
         let enemies = [];
         let bullets = [];
@@ -1089,6 +1096,7 @@
         }
 
         function openLevelSelect() {
+            levelPage = Math.floor(currentLevel / LEVELS_PER_PAGE);
             renderLevelSelect();
             document.getElementById('levelModal').classList.add('show');
         }
@@ -1097,11 +1105,23 @@
             document.getElementById('levelModal').classList.remove('show');
         }
 
+        function prevLevelPage() {
+            if (levelPage > 0) { levelPage--; renderLevelSelect(); }
+        }
+
+        function nextLevelPage() {
+            const maxPage = Math.ceil(LEVELS.length / LEVELS_PER_PAGE);
+            if (levelPage < maxPage - 1) { levelPage++; renderLevelSelect(); }
+        }
+
         function renderLevelSelect() {
             const grid = document.getElementById('levelSelectGrid');
             grid.innerHTML = '';
             const maxUnlocked = parseInt(localStorage.getItem('towerDefenseMaxLevel') || '1', 10);
-            LEVELS.forEach((lvl, idx) => {
+            const start = levelPage * LEVELS_PER_PAGE;
+            const end = Math.min(start + LEVELS_PER_PAGE, LEVELS.length);
+            for (let idx = start; idx < end; idx++) {
+                const lvl = LEVELS[idx];
                 const card = document.createElement('div');
                 card.className = 'level-card';
                 const unlocked = idx < maxUnlocked;
@@ -1119,7 +1139,9 @@
                     card.innerHTML = `<div class="level-num">🔒</div><div class="level-name-small">锁定</div>`;
                 }
                 grid.appendChild(card);
-            });
+            }
+            const maxPage = Math.ceil(LEVELS.length / LEVELS_PER_PAGE);
+            document.getElementById('levelPageNum').textContent = `${levelPage + 1} / ${maxPage}`;
         }
 
         // 事件绑定

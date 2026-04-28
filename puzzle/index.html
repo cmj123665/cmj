@@ -290,6 +290,8 @@ for (let i = 9; i <= 999; i++) {
     LEVELS.push({ id: i, name: `第${i}关`, size: size });
 }
 let currentLevel = 1;
+let levelPage = 0;
+const LEVELS_PER_PAGE = 30;
 
 function getGameData() {
     const defaults = { maxLevel: 1 };
@@ -554,9 +556,14 @@ initGame();
         .modal-btn { padding: 15px 40px; background: linear-gradient(135deg,#22c55e,#16a34a); border: none; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin: 5px; }
     </style>
     <div class="modal" id="levelModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:300;">
-        <div class="modal-content" style="max-width:380px;width:90%;">
+        <div class="modal-content" style="max-width:380px;width:90%;max-height:85vh;overflow-y:auto;">
             <h2>🗺️ 关卡选择</h2>
             <div class="level-select-grid" id="levelGrid"></div>
+            <div id="levelPagination" style="display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;">
+                <button class="btn" onclick="prevLevelPage()" style="padding:8px 16px;font-size:14px;">上一页</button>
+                <span id="levelPageNum" style="font-size:14px;color:#333;font-weight:bold;">1 / 1</span>
+                <button class="btn" onclick="nextLevelPage()" style="padding:8px 16px;font-size:14px;">下一页</button>
+            </div>
             <button class="modal-btn" onclick="document.getElementById('levelModal').style.display='none'" style="margin-top:10px;">关闭</button>
         </div>
     </div>
@@ -565,7 +572,7 @@ initGame();
             <span>🏠</span>
             <span>返回大厅</span>
         </button>
-        <button class="game-nav-btn secondary" onclick="document.getElementById('levelModal').style.display='flex'; renderLevelSelect();">
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
             <span>🗺️</span>
             <span>关卡</span>
         </button>
@@ -579,11 +586,26 @@ initGame();
         </button>
     </div>
     <script>
+        function openLevelSelect() {
+            levelPage = Math.floor((currentLevel - 1) / LEVELS_PER_PAGE);
+            document.getElementById('levelModal').style.display = 'flex';
+            renderLevelSelect();
+        }
+        function prevLevelPage() {
+            if (levelPage > 0) { levelPage--; renderLevelSelect(); }
+        }
+        function nextLevelPage() {
+            const maxPage = Math.ceil(LEVELS.length / LEVELS_PER_PAGE);
+            if (levelPage < maxPage - 1) { levelPage++; renderLevelSelect(); }
+        }
         function renderLevelSelect() {
             const data = getGameData();
             const grid = document.getElementById('levelGrid');
             grid.innerHTML = '';
-            LEVELS.forEach(lv => {
+            const start = levelPage * LEVELS_PER_PAGE;
+            const end = Math.min(start + LEVELS_PER_PAGE, LEVELS.length);
+            for (let i = start; i < end; i++) {
+                const lv = LEVELS[i];
                 const unlocked = lv.id <= data.maxLevel;
                 const isCurrent = lv.id === currentLevel;
                 const card = document.createElement('div');
@@ -591,7 +613,9 @@ initGame();
                 card.innerHTML = `<div class="level-card-num">${lv.id}</div><div class="level-card-target">${lv.name}</div><div class="level-card-target">${lv.size}x${lv.size}</div>`;
                 if (unlocked) card.onclick = () => { currentLevel = lv.id; document.getElementById('levelModal').style.display = 'none'; initGame(); };
                 grid.appendChild(card);
-            });
+            }
+            const maxPage = Math.ceil(LEVELS.length / LEVELS_PER_PAGE);
+            document.getElementById('levelPageNum').textContent = `${levelPage + 1} / ${maxPage}`;
         }
     </script>
 

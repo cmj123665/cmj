@@ -438,9 +438,14 @@
     </div>
 
     <div class="level-modal" id="levelModal">
-        <div class="level-modal-content">
+        <div class="level-modal-content" style="max-height:85vh;overflow-y:auto;">
             <h2>🗺️ 选择关卡</h2>
             <div class="level-grid" id="levelGrid"></div>
+            <div id="levelPagination" style="display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;">
+                <button class="btn btn-primary" onclick="prevLevelPage()" style="padding:8px 16px;font-size:14px;">上一页</button>
+                <span id="levelPageNum" style="font-size:14px;color:#fff;font-weight:bold;">1 / 1</span>
+                <button class="btn btn-primary" onclick="nextLevelPage()" style="padding:8px 16px;font-size:14px;">下一页</button>
+            </div>
             <button class="btn btn-primary" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>
@@ -461,6 +466,8 @@
         let combo = 0;
         let currentLevel = parseInt(localStorage.getItem('breakoutLevel')) || 1;
         const MAX_LEVEL = 999;
+        let levelPage = 0;
+        const LEVELS_PER_PAGE = 30;
 
         const BRICK_COLORS = [
             '#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#ff9ff3', '#54a0ff'
@@ -872,6 +879,7 @@
         }
 
         function openLevelSelect() {
+            levelPage = Math.floor((currentLevel - 1) / LEVELS_PER_PAGE);
             renderLevelSelect();
             document.getElementById('levelModal').classList.add('show');
         }
@@ -885,15 +893,18 @@
             const maxUnlocked = parseInt(localStorage.getItem('breakoutMaxLevel')) || 1;
             grid.innerHTML = '';
 
-            for (let i = 1; i <= MAX_LEVEL; i++) {
+            const start = levelPage * LEVELS_PER_PAGE;
+            const end = Math.min(start + LEVELS_PER_PAGE, MAX_LEVEL);
+            for (let i = start; i < end; i++) {
+                const levelNum = i + 1;
                 const card = document.createElement('div');
                 card.className = 'level-card';
 
-                if (i <= maxUnlocked) {
+                if (levelNum <= maxUnlocked) {
                     card.classList.add('unlocked');
-                    card.textContent = i;
+                    card.textContent = levelNum;
                     card.onclick = () => {
-                        currentLevel = i;
+                        currentLevel = levelNum;
                         saveProgress();
                         closeLevelSelect();
                         startGame();
@@ -903,11 +914,29 @@
                     card.textContent = '🔒';
                 }
 
-                if (i === currentLevel) {
+                if (levelNum === currentLevel) {
                     card.classList.add('current');
                 }
 
                 grid.appendChild(card);
+            }
+
+            const maxPage = Math.ceil(MAX_LEVEL / LEVELS_PER_PAGE);
+            document.getElementById('levelPageNum').textContent = `${levelPage + 1} / ${maxPage}`;
+        }
+
+        function prevLevelPage() {
+            if (levelPage > 0) {
+                levelPage--;
+                renderLevelSelect();
+            }
+        }
+
+        function nextLevelPage() {
+            const maxPage = Math.ceil(MAX_LEVEL / LEVELS_PER_PAGE);
+            if (levelPage < maxPage - 1) {
+                levelPage++;
+                renderLevelSelect();
             }
         }
 

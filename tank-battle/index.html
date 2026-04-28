@@ -428,9 +428,14 @@
         </div>
 
         <div class="modal" id="levelModal">
-            <div class="modal-content">
+            <div class="modal-content" style="max-height:85vh;overflow-y:auto;">
                 <h2>选择关卡</h2>
                 <div class="level-grid" id="levelGrid"></div>
+                <div id="levelPagination" style="display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;">
+                    <button class="btn" onclick="prevLevelPage()" style="padding:8px 16px;font-size:14px;">上一页</button>
+                    <span id="levelPageNum" style="font-size:14px;color:#fff;font-weight:bold;">1 / 1</span>
+                    <button class="btn" onclick="nextLevelPage()" style="padding:8px 16px;font-size:14px;">下一页</button>
+                </div>
                 <button class="modal-btn" id="closeLevelBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">关闭</button>
             </div>
         </div>
@@ -487,6 +492,8 @@
         let currentLevel = parseInt(localStorage.getItem('tankBattleLevel')) || 1;
         let maxUnlockedLevel = parseInt(localStorage.getItem('tankBattleMaxLevel')) || currentLevel;
         const MAX_LEVEL = 999;
+        let levelPage = 0;
+        const LEVELS_PER_PAGE = 30;
         let gameRunning = false;
         let enemiesToSpawn = 20;
         let enemiesSpawned = 0;
@@ -1139,6 +1146,7 @@
         }
 
         function openLevelSelect() {
+            levelPage = Math.floor((currentLevel - 1) / LEVELS_PER_PAGE);
             renderLevelSelect();
             document.getElementById('levelModal').classList.add('show');
         }
@@ -1147,11 +1155,22 @@
             document.getElementById('levelModal').classList.remove('show');
         }
 
+        function prevLevelPage() {
+            if (levelPage > 0) { levelPage--; renderLevelSelect(); }
+        }
+
+        function nextLevelPage() {
+            const maxPage = Math.ceil(MAX_LEVEL / LEVELS_PER_PAGE);
+            if (levelPage < maxPage - 1) { levelPage++; renderLevelSelect(); }
+        }
+
         function renderLevelSelect() {
             const grid = document.getElementById('levelGrid');
             grid.innerHTML = '';
             const unlocked = parseInt(localStorage.getItem('tankBattleMaxLevel')) || 1;
-            for (let i = 1; i <= MAX_LEVEL; i++) {
+            const start = levelPage * LEVELS_PER_PAGE;
+            const end = Math.min(start + LEVELS_PER_PAGE, MAX_LEVEL);
+            for (let i = start + 1; i <= end; i++) {
                 const card = document.createElement('div');
                 card.className = 'level-card';
                 if (i <= unlocked) {
@@ -1172,6 +1191,8 @@
                 }
                 grid.appendChild(card);
             }
+            const maxPage = Math.ceil(MAX_LEVEL / LEVELS_PER_PAGE);
+            document.getElementById('levelPageNum').textContent = `${levelPage + 1} / ${maxPage}`;
         }
 
         // 移动端控制

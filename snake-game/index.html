@@ -233,6 +233,8 @@
             LEVELS.push({ id: i, name: `第${i}关`, targetApples: 60 + (i - 10) * 5 });
         }
         let currentLevel = 1;
+        let levelPage = 0;
+        const LEVELS_PER_PAGE = 30;
 
         function getGameData() {
             const defaults = { maxLevel: 1 };
@@ -518,10 +520,15 @@
     </div>
 
     <div class="modal" id="levelModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:200;">
-        <div class="start-screen" style="max-width:360px;width:90%;">
+        <div class="start-screen" style="max-width:360px;width:90%;max-height:85vh;overflow-y:auto;">
             <h2>🗺️ 关卡选择</h2>
             <div class="level-select-grid" id="levelGrid"></div>
-            <button class="modal-btn" onclick="document.getElementById('levelModal').style.display='none'" style="margin-top:10px;">关闭</button>
+            <div id="levelPagination" style="display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;">
+                <button class="modal-btn" onclick="prevLevelPage()" style="padding:8px 16px;font-size:14px;">上一页</button>
+                <span id="levelPageNum" style="font-size:14px;color:#333;font-weight:bold;">1 / 1</span>
+                <button class="modal-btn" onclick="nextLevelPage()" style="padding:8px 16px;font-size:14px;">下一页</button>
+            </div>
+            <button class="modal-btn" onclick="document.getElementById('levelModal').style.display='none'" style="margin-top:5px;">关闭</button>
         </div>
     </div>
     <div class="game-nav">
