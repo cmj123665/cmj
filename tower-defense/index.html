@@ -204,12 +204,34 @@
             transition: all 0.2s;
         }
         .start-btn:hover { background: #16a34a; }
+        .level-select-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .level-card {
+            background: #f9fafb;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 10px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+        .level-card:hover:not(.locked) { background: #eff6ff; border-color: #3b82f6; transform: translateY(-2px); }
+        .level-card.locked { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+        .level-card.current { border-color: #f59e0b; background: #fffbeb; }
+        .level-card .level-num { font-weight: 700; font-size: 1rem; }
+        .level-card .level-name-small { font-size: 0.75rem; margin-top: 2px; }
         @media (max-width: 768px) {
             .top-bar { justify-content: center; }
             .game-title { font-size: 1.1rem; }
             .status-group { gap: 10px; }
             .bottom-shop { flex-wrap: wrap; }
             canvas { width: 100%; height: auto; }
+            .level-select-grid { grid-template-columns: repeat(3, 1fr); }
         }
         .game-nav {
             position: fixed;
@@ -308,6 +330,7 @@
             <p>✨ 魔塔 - 减速敌人移动</p>
             <p>⚡ 激光塔 - 穿透多个敌人</p>
             <button class="start-btn" onclick="startGame()">开始游戏</button>
+            <button class="start-btn" style="background:#3b82f6;margin-top:8px;" onclick="openLevelSelect()">选择关卡</button>
         </div>
     </div>
 
@@ -323,7 +346,21 @@
         </div>
     </div>
 
+    <div class="modal" id="levelModal">
+        <div class="modal-content" style="max-width:520px;">
+            <h2>🗺️ 选择关卡</h2>
+            <div class="level-select-grid" id="levelSelectGrid"></div>
+            <button class="modal-btn" style="margin-top:14px;background:#6b7280;" onclick="closeLevelSelect()">关闭</button>
+        </div>
+    </div>
+
     <div class="combo-display" id="comboDisplay">🔥 连杀 x2</div>
+
+    <div class="game-nav">
+        <button class="game-nav-btn secondary" onclick="backToHall()">🏠 大厅</button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">🗺️ 关卡</button>
+        <button class="game-nav-btn secondary" onclick="restartGame()">🔄 重来</button>
+    </div>
 
     <script>
         function backToHall() {
@@ -395,6 +432,60 @@
                     {col:11,row:11},{col:15,row:11},{col:15,row:2},{col:19,row:2}
                 ],
                 enemyMultiplier: 2.5
+            },
+            {
+                id: 6, name: '地狱火海', targetWaves: 18,
+                startGold: 280, startLives: 8,
+                path: [
+                    {col:0,row:1},{col:2,row:1},{col:2,row:5},{col:5,row:5},
+                    {col:5,row:2},{col:8,row:2},{col:8,row:8},{col:12,row:8},
+                    {col:12,row:3},{col:15,row:3},{col:15,row:10},{col:18,row:10},
+                    {col:18,row:6},{col:19,row:6}
+                ],
+                enemyMultiplier: 3.0
+            },
+            {
+                id: 7, name: '无尽迷宫', targetWaves: 20,
+                startGold: 300, startLives: 8,
+                path: [
+                    {col:0,row:12},{col:3,row:12},{col:3,row:2},{col:6,row:2},
+                    {col:6,row:10},{col:9,row:10},{col:9,row:2},{col:12,row:2},
+                    {col:12,row:10},{col:15,row:10},{col:15,row:2},{col:18,row:2},
+                    {col:18,row:12},{col:19,row:12}
+                ],
+                enemyMultiplier: 3.5
+            },
+            {
+                id: 8, name: '死亡螺旋', targetWaves: 22,
+                startGold: 320, startLives: 6,
+                path: [
+                    {col:0,row:7},{col:3,row:7},{col:3,row:4},{col:16,row:4},
+                    {col:16,row:10},{col:6,row:10},{col:6,row:7},{col:10,row:7},
+                    {col:10,row:1},{col:14,row:1},{col:14,row:12},{col:18,row:12},
+                    {col:18,row:7},{col:19,row:7}
+                ],
+                enemyMultiplier: 4.0
+            },
+            {
+                id: 9, name: '末日审判', targetWaves: 25,
+                startGold: 350, startLives: 5,
+                path: [
+                    {col:0,row:1},{col:4,row:1},{col:4,row:12},{col:8,row:12},
+                    {col:8,row:2},{col:12,row:2},{col:12,row:11},{col:16,row:11},
+                    {col:16,row:4},{col:18,row:4},{col:18,row:8},{col:19,row:8}
+                ],
+                enemyMultiplier: 4.5
+            },
+            {
+                id: 10, name: '传说之巅', targetWaves: 30,
+                startGold: 400, startLives: 5,
+                path: [
+                    {col:0,row:7},{col:2,row:7},{col:2,row:2},{col:5,row:2},
+                    {col:5,row:11},{col:8,row:11},{col:8,row:4},{col:11,row:4},
+                    {col:11,row:10},{col:14,row:10},{col:14,row:2},{col:17,row:2},
+                    {col:17,row:12},{col:19,row:12}
+                ],
+                enemyMultiplier: 5.0
             }
         ];
 
@@ -418,6 +509,21 @@
         let comboTimer = null;
         let totalScore = 0;
         let hoverGrid = null;
+
+        function saveProgress() {
+            const maxLevel = Math.max(parseInt(localStorage.getItem('towerDefenseMaxLevel') || '1', 10), currentLevel + 1);
+            localStorage.setItem('towerDefenseMaxLevel', String(maxLevel));
+        }
+
+        function loadProgress() {
+            const savedLevel = localStorage.getItem('towerDefenseLevel');
+            if (savedLevel !== null) {
+                const idx = parseInt(savedLevel, 10);
+                if (!isNaN(idx) && idx >= 0 && idx < LEVELS.length) {
+                    currentLevel = idx;
+                }
+            }
+        }
 
         function saveGameResult(score, level, won) {
             sessionStorage.setItem('lastGameResult', JSON.stringify({
@@ -458,6 +564,7 @@
             waveInProgress = true; gameRunning = true; combo = 0; selectedTowerIndex = -1;
             document.getElementById('startModal').classList.remove('show');
             document.getElementById('gameOverModal').classList.remove('show');
+            document.getElementById('levelModal').classList.remove('show');
             document.getElementById('upgradePanel').classList.remove('show');
             document.getElementById('comboDisplay').classList.remove('show');
             document.getElementById('levelName').textContent = `第 ${level.id} 关 - ${level.name}`;
@@ -681,10 +788,22 @@
             nextBtn.style.display = (won && currentLevel < LEVELS.length - 1) ? 'inline-block' : 'none';
             modal.classList.add('show');
             saveGameResult(score, wave, won);
+            if (won) saveProgress();
         }
 
-        function nextLevel() { currentLevel++; document.getElementById('gameOverModal').classList.remove('show'); startGame(); }
-        function restartGame() { currentLevel = 0; startGame(); }
+        function nextLevel() {
+            saveProgress();
+            currentLevel++;
+            localStorage.setItem('towerDefenseLevel', String(currentLevel));
+            document.getElementById('gameOverModal').classList.remove('show');
+            startGame();
+        }
+
+        function restartGame() {
+            currentLevel = 0;
+            localStorage.setItem('towerDefenseLevel', '0');
+            startGame();
+        }
 
         function updateUI() {
             document.getElementById('goldDisplay').textContent = score;
@@ -957,6 +1076,40 @@
             update();
         }
 
+        function openLevelSelect() {
+            renderLevelSelect();
+            document.getElementById('levelModal').classList.add('show');
+        }
+
+        function closeLevelSelect() {
+            document.getElementById('levelModal').classList.remove('show');
+        }
+
+        function renderLevelSelect() {
+            const grid = document.getElementById('levelSelectGrid');
+            grid.innerHTML = '';
+            const maxUnlocked = parseInt(localStorage.getItem('towerDefenseMaxLevel') || '1', 10);
+            LEVELS.forEach((lvl, idx) => {
+                const card = document.createElement('div');
+                card.className = 'level-card';
+                const unlocked = idx < maxUnlocked;
+                if (!unlocked) card.classList.add('locked');
+                if (idx === currentLevel) card.classList.add('current');
+                if (unlocked) {
+                    card.innerHTML = `<div class="level-num">${lvl.id}</div><div class="level-name-small">${lvl.name}</div>`;
+                    card.addEventListener('click', () => {
+                        currentLevel = idx;
+                        localStorage.setItem('towerDefenseLevel', String(idx));
+                        closeLevelSelect();
+                        startGame();
+                    });
+                } else {
+                    card.innerHTML = `<div class="level-num">🔒</div><div class="level-name-small">锁定</div>`;
+                }
+                grid.appendChild(card);
+            });
+        }
+
         // 事件绑定
         document.querySelectorAll('.shop-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -1003,6 +1156,7 @@
         document.getElementById('restartBtn').addEventListener('click', restartGame);
         document.getElementById('homeBtn').addEventListener('click', backToHall);
 
+        loadProgress();
         draw();
     </script>
 </body>

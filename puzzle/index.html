@@ -59,6 +59,17 @@ body {
     cursor: pointer;
     font-weight: 600;
 }
+.level-bar { width: 320px; margin: 10px auto; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 14px; border: 1px solid rgba(0,206,201,0.2); }
+.level-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #00cec9; margin-bottom: 4px; }
+.level-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.level-fill { height: 100%; background: linear-gradient(135deg, #00cec9, #81ecec); border-radius: 3px; transition: width 0.3s; }
+.level-select-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.level-card { padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(0,206,201,0.3); cursor: pointer; transition: all 0.2s; text-align: center; }
+.level-card:hover { transform: translateY(-2px); border-color: #00cec9; }
+.level-card.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); }
+.level-card.current { border-color: #00cec9; background: rgba(0,206,201,0.15); }
+.level-card-num { font-size: 18px; font-weight: bold; color: #00cec9; }
+.level-card-target { font-size: 11px; color: #ccc; margin-top: 2px; }
 
     /* ========== 游戏导航栏 ========== */
     .game-nav { z-index: 9999 !important; z-index: 9999 !important;
@@ -243,6 +254,10 @@ body {
         <div class="value" id="time">0:00</div>
     </div>
 </div>
+<div class="level-bar">
+    <div class="level-info"><span id="levelName">第 1 关</span><span id="levelProgress">3x3</span></div>
+    <div class="level-track"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
+</div>
 <canvas id="puzzleCanvas" width="400" height="400"></canvas>
 <button class="btn" onclick="initGame()">重新开始</button>
 
@@ -250,21 +265,50 @@ body {
 const canvas = document.getElementById('puzzleCanvas');
 const ctx = canvas.getContext('2d');
 
-const GRID_SIZE = 4;
-const TILE_SIZE = 100;
+let GRID_SIZE = 3;
+let TILE_SIZE = Math.floor(400 / GRID_SIZE);
 
 let tiles = [];
-let emptyPos = { x: 3, y: 3 };
+let emptyPos = { x: 2, y: 2 };
 let moves = 0;
 let time = 0;
 let timer = null;
 let originalImage = null;
 
+const LEVELS = [
+    { id: 1, name: '初识拼图', size: 3 },
+    { id: 2, name: '小有挑战', size: 4 },
+    { id: 3, name: '数字迷宫', size: 5 },
+    { id: 4, name: '逻辑大师', size: 5 },
+    { id: 5, name: '极限拼图', size: 6 },
+    { id: 6, name: '疯狂六阶', size: 6 },
+    { id: 7, name: '七阶地狱', size: 7 },
+    { id: 8, name: '拼图之神', size: 7 }
+];
+let currentLevel = 1;
+
+function getGameData() {
+    const defaults = { maxLevel: 1 };
+    try { const raw = localStorage.getItem('puzzleData'); if (raw) return { ...defaults, ...JSON.parse(raw) }; } catch(e) {}
+    return defaults;
+}
+function saveGameData(data) { localStorage.setItem('puzzleData', JSON.stringify(data)); }
+function getLevelConfig() { return LEVELS[Math.min(currentLevel, LEVELS.length) - 1] || LEVELS[0]; }
+function updateLevelUI() {
+    const cfg = getLevelConfig();
+    document.getElementById('levelName').textContent = `第 ${currentLevel} 关 · ${cfg.name}`;
+    document.getElementById('levelProgress').textContent = `${cfg.size}x${cfg.size}`;
+    document.getElementById('levelFill').style.width = '0%';
+}
+
 function initGame() {
+    const cfg = getLevelConfig();
+    GRID_SIZE = cfg.size;
+    TILE_SIZE = Math.floor(400 / GRID_SIZE);
+    emptyPos = { x: GRID_SIZE - 1, y: GRID_SIZE - 1 };
     tiles = [];
     moves = 0;
     time = 0;
-    emptyPos = { x: 3, y: 3 };
 
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
@@ -290,6 +334,7 @@ function initGame() {
     // 随机打乱
     shuffle();
     updateMoves();
+    updateLevelUI();
     draw();
 }
 
@@ -341,10 +386,7 @@ function handleClick(e) {
             if (checkWin()) {
                 clearInterval(timer);
                 setTimeout(() => {
-                    document.getElementById('gameOverTitle').textContent = '🎉 恭喜通关！';
-                    document.getElementById('gameOverMessage').textContent = `步数: ${moves} | 时间: ${formatTime(time)}`;
-                    document.getElementById('gameOverModal').classList.add('show');
-                    saveGameResult(1000 - moves * 10 - time, 1, true);
+                    levelComplete();
                 }, 200);
             }
         }
@@ -368,13 +410,14 @@ function draw() {
     ctx.strokeStyle = 'rgba(0, 206, 201, 0.2)';
     ctx.lineWidth = 2;
     for (let i = 0; i <= GRID_SIZE; i++) {
+        const pos = i * TILE_SIZE;
         ctx.beginPath();
-        ctx.moveTo(i * TILE_SIZE, 0);
-        ctx.lineTo(i * TILE_SIZE, canvas.height);
+        ctx.moveTo(pos, 0);
+        ctx.lineTo(pos, canvas.height);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(0, i * TILE_SIZE);
-        ctx.lineTo(canvas.width, i * TILE_SIZE);
+        ctx.moveTo(0, pos);
+        ctx.lineTo(canvas.width, pos);
         ctx.stroke();
     }
 
@@ -422,6 +465,31 @@ function shadeColor(color, percent) {
     return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
+function levelComplete() {
+    const cfg = getLevelConfig();
+    const data = getGameData();
+    const levelBonus = currentLevel * 100;
+    if (currentLevel >= data.maxLevel && currentLevel < LEVELS.length) data.maxLevel = currentLevel + 1;
+    saveGameData(data);
+    document.getElementById('gameOverTitle').textContent = '🎉 关卡完成！';
+    document.getElementById('gameOverMessage').textContent = `步数: ${moves} | 时间: ${formatTime(time)}`;
+    const btns = document.getElementById('gameOverModal').querySelector('.modal-content');
+    const existingBtns = btns.querySelectorAll('.modal-btn');
+    existingBtns.forEach(b => b.remove());
+    if (currentLevel < LEVELS.length) {
+        btns.insertAdjacentHTML('beforeend', `<button class="modal-btn" onclick="nextLevel()">下一关</button><button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); initGame();">重玩本关</button>`);
+    } else {
+        btns.insertAdjacentHTML('beforeend', `<button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); initGame();">再次挑战</button>`);
+    }
+    document.getElementById('gameOverModal').classList.add('show');
+    saveGameResult(1000 - moves * 10 - time + levelBonus, currentLevel, true);
+}
+function nextLevel() {
+    if (currentLevel < LEVELS.length) currentLevel++;
+    document.getElementById('gameOverModal').classList.remove('show');
+    initGame();
+}
+
 function updateMoves() {
     document.getElementById('moves').textContent = moves;
 }
@@ -450,9 +518,6 @@ sessionStorage.setItem('currentGame', 'puzzle');
         }
 
 initGame();
-
-        // 初始化游戏
-        init();
 </script>
 
     <!-- 游戏导航栏 -->
@@ -484,10 +549,21 @@ initGame();
         .modal-content p { margin: 8px 0; }
         .modal-btn { padding: 15px 40px; background: linear-gradient(135deg,#22c55e,#16a34a); border: none; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin: 5px; }
     </style>
+    <div class="modal" id="levelModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:300;">
+        <div class="modal-content" style="max-width:380px;width:90%;">
+            <h2>🗺️ 关卡选择</h2>
+            <div class="level-select-grid" id="levelGrid"></div>
+            <button class="modal-btn" onclick="document.getElementById('levelModal').style.display='none'" style="margin-top:10px;">关闭</button>
+        </div>
+    </div>
     <div class="game-nav">
         <button class="game-nav-btn primary" onclick="backToHall()">
             <span>🏠</span>
             <span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="document.getElementById('levelModal').style.display='flex'; renderLevelSelect();">
+            <span>🗺️</span>
+            <span>关卡</span>
         </button>
         <button class="game-nav-btn secondary" onclick="handleRestart()">
             <span>🔄</span>
@@ -498,6 +574,22 @@ initGame();
             <span>游戏说明</span>
         </button>
     </div>
+    <script>
+        function renderLevelSelect() {
+            const data = getGameData();
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            LEVELS.forEach(lv => {
+                const unlocked = lv.id <= data.maxLevel;
+                const isCurrent = lv.id === currentLevel;
+                const card = document.createElement('div');
+                card.className = 'level-card' + (isCurrent ? ' current' : '') + (!unlocked ? ' locked' : '');
+                card.innerHTML = `<div class="level-card-num">${lv.id}</div><div class="level-card-target">${lv.name}</div><div class="level-card-target">${lv.size}x${lv.size}</div>`;
+                if (unlocked) card.onclick = () => { currentLevel = lv.id; document.getElementById('levelModal').style.display = 'none'; initGame(); };
+                grid.appendChild(card);
+            });
+        }
+    </script>
 
     <!-- 游戏说明弹窗 -->
     <div class="help-modal" id="helpModal">

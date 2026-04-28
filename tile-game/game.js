@@ -391,11 +391,20 @@ class Game {
     }
 }
 
+let tileGameInstance = null;
+function selectTileLevel(level) {
+    if (tileGameInstance) {
+        tileGameInstance.level = level;
+        tileGameInstance.saveLevel();
+        tileGameInstance.startLevel();
+    }
+}
+
 // 初始化游戏
 document.addEventListener('DOMContentLoaded', () => {
     // 设置游戏开始时间和当前游戏ID
     sessionStorage.setItem('gameStartTime', Date.now());
     sessionStorage.setItem('currentGame', 'tile-game');
 
-    new Game();
+    tileGameInstance = new Game();
 });

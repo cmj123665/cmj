@@ -108,6 +108,17 @@ body {
     cursor: pointer;
     font-weight: 700;
 }
+.level-bar { width: 320px; margin: 10px auto; background: rgba(255,255,255,0.3); border-radius: 10px; padding: 8px 14px; }
+.level-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 4px; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.level-track { width: 100%; height: 6px; background: rgba(0,0,0,0.2); border-radius: 3px; overflow: hidden; }
+.level-fill { height: 100%; background: linear-gradient(135deg, #a8e063, #56ab2f); border-radius: 3px; transition: width 0.3s; }
+.level-select-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.level-card { padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.9); border: 1px solid #ddd; cursor: pointer; transition: all 0.2s; text-align: center; }
+.level-card:hover { transform: translateY(-2px); border-color: #56ab2f; }
+.level-card.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); }
+.level-card.current { border-color: #56ab2f; background: rgba(86,171,47,0.15); }
+.level-card-num { font-size: 18px; font-weight: bold; color: #56ab2f; }
+.level-card-target { font-size: 11px; color: #666; margin-top: 2px; }
 
     /* ========== 游戏导航栏 ========== */
     .game-nav { z-index: 9999 !important; z-index: 9999 !important;
@@ -296,6 +307,10 @@ body {
         <div class="value" id="combo">0</div>
     </div>
 </div>
+<div class="level-bar">
+    <div class="level-info"><span id="levelName">第 1 关</span><span id="levelProgress">0 / 200</span></div>
+    <div class="level-track"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
+</div>
 <div class="game-grid" id="grid"></div>
 <button class="btn" onclick="startGame()">开始游戏</button>
 
@@ -307,6 +322,33 @@ let combo = 0;
 let gameRunning = false;
 let timer = null;
 
+const LEVELS = [
+    { id: 1, name: '新手训练', targetScore: 150, time: 30, spawnMin: 300, spawnMax: 800, stayMin: 900, stayMax: 1600 },
+    { id: 2, name: '草地狩猎', targetScore: 300, time: 28, spawnMin: 250, spawnMax: 700, stayMin: 800, stayMax: 1400 },
+    { id: 3, name: '地鼠狂潮', targetScore: 500, time: 25, spawnMin: 200, spawnMax: 600, stayMin: 700, stayMax: 1200 },
+    { id: 4, name: '急速打击', targetScore: 750, time: 23, spawnMin: 150, spawnMax: 500, stayMin: 600, stayMax: 1000 },
+    { id: 5, name: '地鼠大师', targetScore: 1000, time: 20, spawnMin: 100, spawnMax: 400, stayMin: 500, stayMax: 900 },
+    { id: 6, name: '闪电反应', targetScore: 1300, time: 20, spawnMin: 80, spawnMax: 350, stayMin: 450, stayMax: 800 },
+    { id: 7, name: '疯狂农场', targetScore: 1600, time: 18, spawnMin: 60, spawnMax: 300, stayMin: 400, stayMax: 700 },
+    { id: 8, name: '终极试炼', targetScore: 2000, time: 15, spawnMin: 50, spawnMax: 250, stayMin: 350, stayMax: 600 }
+];
+let currentLevel = 1;
+
+function getGameData() {
+    const defaults = { maxLevel: 1 };
+    try { const raw = localStorage.getItem('whackData'); if (raw) return { ...defaults, ...JSON.parse(raw) }; } catch(e) {}
+    return defaults;
+}
+function saveGameData(data) { localStorage.setItem('whackData', JSON.stringify(data)); }
+function getLevelConfig() { return LEVELS[Math.min(currentLevel, LEVELS.length) - 1] || LEVELS[0]; }
+function updateLevelUI() {
+    const cfg = getLevelConfig();
+    document.getElementById('levelName').textContent = `第 ${currentLevel} 关 · ${cfg.name}`;
+    document.getElementById('levelProgress').textContent = `${score} / ${cfg.targetScore}`;
+    const pct = Math.min(100, Math.floor((score / cfg.targetScore) * 100));
+    document.getElementById('levelFill').style.width = pct + '%';
+}
+
 for (let i = 0; i < 9; i++) {
     const hole = document.createElement('div');
     hole.className = 'hole';
@@ -317,12 +359,14 @@ for (let i = 0; i < 9; i++) {
 }
 
 function startGame() {
+    const cfg = getLevelConfig();
     score = 0;
-    time = 30;
+    time = cfg.time;
     combo = 0;
     gameRunning = true;
 
     updateStats();
+    updateLevelUI();
 
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
@@ -339,6 +383,7 @@ function startGame() {
 
 function spawnMole() {
     if (!gameRunning) return;
+    const cfg = getLevelConfig();
 
     // 随机选择一个洞
     const index = Math.floor(Math.random() * holes.length);
@@ -352,8 +397,8 @@ function spawnMole() {
         mole.classList.add('special');
     }
 
-    // 随机停留时间
-    const stayTime = 800 + Math.random() * 700;
+    // 随机停留时间（关卡相关）
+    const stayTime = cfg.stayMin + Math.random() * (cfg.stayMax - cfg.stayMin);
 
     setTimeout(() => {
         if (!mole.classList.contains('hit')) {
@@ -365,7 +410,7 @@ function spawnMole() {
 
         // 继续生成
         if (gameRunning) {
-            setTimeout(spawnMole, 200 + Math.random() * 500);
+            setTimeout(spawnMole, cfg.spawnMin + Math.random() * (cfg.spawnMax - cfg.spawnMin));
         }
     }, stayTime);
 }
@@ -384,6 +429,13 @@ function hitMole(index) {
     score += points * combo;
 
     updateStats();
+    updateLevelUI();
+
+    const cfg = getLevelConfig();
+    if (score >= cfg.targetScore) {
+        levelComplete();
+        return;
+    }
 
     // 特效
     mole.style.transform = 'translateX(-50%) translateY(100%) scale(1.2)';
@@ -398,15 +450,47 @@ function updateStats() {
     document.getElementById('combo').textContent = combo;
 }
 
+function levelComplete() {
+    gameRunning = false;
+    clearInterval(timer);
+    const cfg = getLevelConfig();
+    const data = getGameData();
+    const levelBonus = currentLevel * 50;
+    if (currentLevel >= data.maxLevel && currentLevel < LEVELS.length) data.maxLevel = currentLevel + 1;
+    saveGameData(data);
+    document.getElementById('gameOverTitle').textContent = '🎉 关卡完成!';
+    document.getElementById('finalScore').textContent = score + ' + ' + levelBonus + ' 奖励';
+    const btns = document.getElementById('gameOverModal').querySelector('.modal-content');
+    const existingBtns = btns.querySelectorAll('.modal-btn');
+    existingBtns.forEach(b => b.remove());
+    if (currentLevel < LEVELS.length) {
+        btns.insertAdjacentHTML('beforeend', `<button class="modal-btn" onclick="nextLevel()">下一关</button><button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); startGame();">重玩本关</button>`);
+    } else {
+        btns.insertAdjacentHTML('beforeend', `<button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); startGame();">再次挑战</button>`);
+    }
+    document.getElementById('gameOverModal').classList.add('show');
+    saveGameResult(score + levelBonus, currentLevel, true);
+}
+function nextLevel() {
+    if (currentLevel < LEVELS.length) currentLevel++;
+    document.getElementById('gameOverModal').classList.remove('show');
+    startGame();
+}
+
 function endGame() {
     gameRunning = false;
     clearInterval(timer);
+    const cfg = getLevelConfig();
 
     setTimeout(() => {
         document.getElementById('gameOverTitle').textContent = '时间到！';
-        document.getElementById('finalScore').textContent = score;
+        document.getElementById('finalScore').textContent = score + ' / ' + cfg.targetScore;
+        const btns = document.getElementById('gameOverModal').querySelector('.modal-content');
+        const existingBtns = btns.querySelectorAll('.modal-btn');
+        existingBtns.forEach(b => b.remove());
+        btns.insertAdjacentHTML('beforeend', `<button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); startGame();">再来一局</button>`);
         document.getElementById('gameOverModal').classList.add('show');
-        saveGameResult(score, 1, score > 500);
+        saveGameResult(score, currentLevel, false);
     }, 500);
 }
 
@@ -441,10 +525,21 @@ sessionStorage.setItem('currentGame', 'whack');
         <button class="d-btn" ontouchstart="moveDirection('down')" onclick="moveDirection('down')">↓</button>
         <div></div>
     </div>
+    <div class="modal" id="levelModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:300;">
+        <div class="modal-content" style="background:rgba(45,52,54,0.95);border-radius:20px;padding:30px;max-width:380px;width:90%;">
+            <h2 style="color:#fff;margin-bottom:15px;">🗺️ 关卡选择</h2>
+            <div class="level-select-grid" id="levelGrid"></div>
+            <button class="modal-btn" onclick="document.getElementById('levelModal').style.display='none'" style="margin-top:10px;">关闭</button>
+        </div>
+    </div>
     <div class="game-nav">
         <button class="game-nav-btn primary" onclick="backToHall()">
             <span>🏠</span>
             <span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="document.getElementById('levelModal').style.display='flex'; renderLevelSelect();">
+            <span>🗺️</span>
+            <span>关卡</span>
         </button>
         <button class="game-nav-btn secondary" onclick="handleRestart()">
             <span>🔄</span>
@@ -455,6 +550,22 @@ sessionStorage.setItem('currentGame', 'whack');
             <span>游戏说明</span>
         </button>
     </div>
+    <script>
+        function renderLevelSelect() {
+            const data = getGameData();
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            LEVELS.forEach(lv => {
+                const unlocked = lv.id <= data.maxLevel;
+                const isCurrent = lv.id === currentLevel;
+                const card = document.createElement('div');
+                card.className = 'level-card' + (isCurrent ? ' current' : '') + (!unlocked ? ' locked' : '');
+                card.innerHTML = `<div class="level-card-num">${lv.id}</div><div class="level-card-target">${lv.name}</div><div class="level-card-target">目标 ${lv.targetScore}</div>`;
+                if (unlocked) card.onclick = () => { currentLevel = lv.id; document.getElementById('levelModal').style.display = 'none'; startGame(); };
+                grid.appendChild(card);
+            });
+        }
+    </script>
 
     <!-- 游戏说明弹窗 -->
     <div class="help-modal" id="helpModal">

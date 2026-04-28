@@ -59,6 +59,10 @@
             <span>🏠</span>
             <span>返回大厅</span>
         </button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
+            <span>🗺️</span>
+            <span>关卡</span>
+        </button>
         <button class="game-nav-btn secondary" onclick="handleRestart()">
             <span>🔄</span>
             <span>重新开始</span>
@@ -68,6 +72,32 @@
             <span>游戏说明</span>
         </button>
     </div>
+    <div class="shop-modal" id="levelModal">
+        <div class="shop-content">
+            <div class="shop-header">
+                <h2>🗺️ 关卡选择</h2>
+                <button class="shop-close" onclick="closeLevelSelect()">✕</button>
+            </div>
+            <div class="shop-body">
+                <div class="shop-grid" id="levelGrid"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openLevelSelect() { document.getElementById('levelModal').classList.add('show'); renderLevelSelect(); }
+        function closeLevelSelect() { document.getElementById('levelModal').classList.remove('show'); }
+        function renderLevelSelect() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 30; i++) {
+                const card = document.createElement('div');
+                card.className = 'skin-card';
+                card.innerHTML = `<div style="font-size:20px;font-weight:bold;color:#5c4f43;">${i}</div><div style="font-size:11px;color:#8a7a6a;">第${i}关</div>`;
+                card.onclick = () => { selectTileLevel(i); closeLevelSelect(); };
+                grid.appendChild(card);
+            }
+        }
+    </script>
 
     <!-- 游戏说明弹窗 -->
     <div class="help-modal" id="helpModal">

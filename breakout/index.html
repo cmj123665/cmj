@@ -95,7 +95,124 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-    
+
+        /* 关卡选择弹窗 */
+        .level-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .level-modal.show {
+            display: flex;
+        }
+
+        .level-modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0c29 100%);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            color: #fff;
+            border: 2px solid rgba(240, 147, 251, 0.5);
+            text-align: center;
+        }
+
+        .level-modal-content h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .level-card {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid rgba(240, 147, 251, 0.3);
+        }
+
+        .level-card.unlocked {
+            background: rgba(240, 147, 251, 0.15);
+            color: #fff;
+        }
+
+        .level-card.unlocked:hover {
+            background: rgba(240, 147, 251, 0.35);
+            transform: scale(1.05);
+        }
+
+        .level-card.locked {
+            background: rgba(255, 255, 255, 0.05);
+            color: #666;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .level-card.current {
+            border-color: #f093fb;
+            box-shadow: 0 0 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .level-complete-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .level-complete-modal.show {
+            display: flex;
+        }
+
+        .level-complete-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0c29 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid rgba(240, 147, 251, 0.5);
+        }
+
+        .level-complete-content h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .level-complete-content .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
     /* ========== 游戏导航栏 ========== */
     .game-nav { z-index: 9999 !important; z-index: 9999 !important;
         position: fixed;
@@ -305,7 +422,26 @@
             <h2>游戏结束</h2>
             <p>最终分数: <span id="finalScore">0</span></p>
             <p>达到关卡: <span id="finalLevel">1</span></p>
-            <button class="btn btn-primary" onclick="startGame()">再来一局</button>
+            <button class="btn btn-primary" onclick="restartGame()">再来一局</button>
+        </div>
+    </div>
+
+    <div class="level-complete-modal" id="levelCompleteModal">
+        <div class="level-complete-content">
+            <h2 id="levelCompleteTitle">🎉 恭喜通关！</h2>
+            <p>当前分数: <span id="levelCompleteScore">0</span></p>
+            <div class="buttons">
+                <button class="btn btn-primary" id="nextLevelBtn" onclick="nextLevel()">下一关</button>
+                <button class="btn btn-primary" onclick="restartGame()">重新开始</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="level-modal" id="levelModal">
+        <div class="level-modal-content">
+            <h2>🗺️ 选择关卡</h2>
+            <div class="level-grid" id="levelGrid"></div>
+            <button class="btn btn-primary" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>
 
@@ -321,8 +457,10 @@
         window.addEventListener('resize', resizeCanvas);
 
         let paddle, ball, bricks, powerUps, particles;
-        let score, level, lives, gameLoop, isPaused;
+        let score, lives, gameLoop, isPaused;
         let combo = 0;
+        let currentLevel = parseInt(localStorage.getItem('breakoutLevel')) || 1;
+        const MAX_LEVEL = 10;
 
         const BRICK_COLORS = [
             '#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#ff9ff3', '#54a0ff'
@@ -343,14 +481,13 @@
                 radius: 8,
                 dx: 4,
                 dy: -4,
-                speed: 4
+                speed: 4 + (currentLevel - 1) * 0.5
             };
 
             bricks = [];
             powerUps = [];
             particles = [];
             score = 0;
-            level = 1;
             lives = 3;
             combo = 0;
             isPaused = false;
@@ -361,7 +498,7 @@
 
         function createBricks() {
             bricks = [];
-            const rows = Math.min(5 + Math.floor(level / 2), 10);
+            const rows = Math.min(5 + Math.floor(currentLevel / 2), 10);
             const cols = Math.floor(canvas.width / 70);
             const brickWidth = (canvas.width - 40) / cols - 5;
             const brickHeight = 25;
@@ -374,7 +511,7 @@
 
                     if (Math.random() < 0.1) {
                         type = 'multi';
-                        hits = Math.min(3, 1 + Math.floor(level / 3));
+                        hits = Math.min(3, 1 + Math.floor(currentLevel / 3));
                     } else if (Math.random() < 0.05) {
                         type = 'explosive';
                     }
@@ -459,7 +596,7 @@
                     if (brick.hits <= 0) {
                         brick.visible = false;
                         combo++;
-                        score += 10 * combo * level;
+                        score += 10 * combo * currentLevel;
 
                         createParticles(
                             brick.x + brick.width / 2,
@@ -523,11 +660,7 @@
 
             // 检查过关
             if (bricks.every(b => !b.visible)) {
-                level++;
-                ball.speed += 0.5;
-                createBricks();
-                resetBall();
-                updateStats();
+                showLevelComplete();
             }
         }
 
@@ -689,8 +822,93 @@
 
         function updateStats() {
             document.getElementById('score').textContent = score;
-            document.getElementById('level').textContent = level;
+            document.getElementById('level').textContent = currentLevel;
             document.getElementById('lives').textContent = lives;
+        }
+
+        function saveProgress() {
+            const maxLevel = parseInt(localStorage.getItem('breakoutMaxLevel')) || 1;
+            if (currentLevel > maxLevel) {
+                localStorage.setItem('breakoutMaxLevel', currentLevel);
+            }
+            localStorage.setItem('breakoutLevel', currentLevel);
+        }
+
+        function showLevelComplete() {
+            clearInterval(gameLoop);
+            gameLoop = null;
+            isPaused = false;
+
+            saveProgress();
+
+            const title = document.getElementById('levelCompleteTitle');
+            const nextBtn = document.getElementById('nextLevelBtn');
+
+            if (currentLevel >= MAX_LEVEL) {
+                title.textContent = '🏆 全部通关！';
+                nextBtn.style.display = 'none';
+            } else {
+                title.textContent = '🎉 恭喜通关！';
+                nextBtn.style.display = 'inline-block';
+            }
+
+            document.getElementById('levelCompleteScore').textContent = score;
+            document.getElementById('levelCompleteModal').classList.add('show');
+        }
+
+        function nextLevel() {
+            if (currentLevel < MAX_LEVEL) {
+                currentLevel++;
+                saveProgress();
+            }
+            document.getElementById('levelCompleteModal').classList.remove('show');
+            startGame();
+        }
+
+        function restartGame() {
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('levelCompleteModal').classList.remove('show');
+            startGame();
+        }
+
+        function openLevelSelect() {
+            renderLevelSelect();
+            document.getElementById('levelModal').classList.add('show');
+        }
+
+        function closeLevelSelect() {
+            document.getElementById('levelModal').classList.remove('show');
+        }
+
+        function renderLevelSelect() {
+            const grid = document.getElementById('levelGrid');
+            const maxUnlocked = parseInt(localStorage.getItem('breakoutMaxLevel')) || 1;
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= MAX_LEVEL; i++) {
+                const card = document.createElement('div');
+                card.className = 'level-card';
+
+                if (i <= maxUnlocked) {
+                    card.classList.add('unlocked');
+                    card.textContent = i;
+                    card.onclick = () => {
+                        currentLevel = i;
+                        saveProgress();
+                        closeLevelSelect();
+                        startGame();
+                    };
+                } else {
+                    card.classList.add('locked');
+                    card.textContent = '🔒';
+                }
+
+                if (i === currentLevel) {
+                    card.classList.add('current');
+                }
+
+                grid.appendChild(card);
+            }
         }
 
         function startGame() {
@@ -710,11 +928,11 @@
             gameLoop = null;
 
             document.getElementById('finalScore').textContent = score;
-            document.getElementById('finalLevel').textContent = level;
+            document.getElementById('finalLevel').textContent = currentLevel;
             document.getElementById('gameOver').classList.add('show');
 
             // 保存游戏结果
-            saveGameResult(score, level, false);
+            saveGameResult(score, currentLevel, false);
         }
 
         const keys = { left: false, right: false };
@@ -789,6 +1007,10 @@
         <button class="game-nav-btn secondary" onclick="handleRestart()">
             <span>🔄</span>
             <span>重新开始</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
+            <span>🗺️</span>
+            <span>关卡</span>
         </button>
         <button class="game-nav-btn tertiary" onclick="showHelp()">
             <span>❓</span>

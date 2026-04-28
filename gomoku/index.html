@@ -219,14 +219,51 @@ canvas {
         @media (min-width: 768px) {
             .d-pad { display: none; }
         }
+
+        /* 关卡选择弹窗 */
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .level-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .level-card:hover {
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.02);
+        }
+        .level-card.active {
+            border-color: #22c55e;
+            background: rgba(34,197,94,0.1);
+        }
+        .level-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .level-card .level-num {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .level-card .level-name {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
     </style>
 </head>
 <body>
 <div class="title">五子棋</div>
 <canvas id="gameCanvas" width="500" height="500"></canvas>
 <div class="info">
-    <p>当前: <span id="current">黑棋</span></p>
-    <button class="btn" onclick="initGame()">重新开始</button>
+    <p id="infoText">当前: 黑棋 ⚫ | 关卡: 入门</p>
 </div>
 
 <script>
@@ -239,11 +276,27 @@ const CELL_SIZE = 33;
 let board = [];
 let currentPlayer = 1; // 1: 黑, 2: 白
 let gameOver = false;
+let lastMove = null;
+
+const LEVELS = [
+    { name: "入门", aiDepth: 0 },
+    { name: "初级", aiDepth: 0 },
+    { name: "中级", aiDepth: 1 },
+    { name: "高级", aiDepth: 2 },
+    { name: "大师", aiDepth: 3 }
+];
+
+let currentLevel = parseInt(localStorage.getItem('gomokuLevel')) || 1;
+const MAX_LEVEL = 5;
+let gameMode = 'ai';
+let aiThinking = false;
 
 function initGame() {
     board = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
     currentPlayer = 1;
     gameOver = false;
+    aiThinking = false;
+    lastMove = null;
     updateInfo();
     draw();
 }
@@ -320,10 +373,8 @@ function draw() {
     }
 }
 
-let lastMove = null;
-
 function handleClick(e) {
-    if (gameOver) return;
+    if (gameOver || aiThinking || currentPlayer !== 1) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = Math.round((e.clientX - rect.left - CELL_SIZE) / CELL_SIZE);
@@ -332,24 +383,276 @@ function handleClick(e) {
     if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return;
     if (board[y][x] !== 0) return;
 
-    board[y][x] = currentPlayer;
-    lastMove = { x, y };
+    placeStone(x, y, 1);
 
     if (checkWin(x, y)) {
         gameOver = true;
         draw();
-
-        const winner = currentPlayer === 1 ? '黑棋' : '白棋';
         setTimeout(() => {
-            document.getElementById('gameOverTitle').textContent = `🎉 ${winner}获胜！`;
-            document.getElementById('gameOverModal').classList.add('show');
-            saveGameResult(1000, 1, currentPlayer === 1);
+            levelComplete();
         }, 100);
-    } else {
-        currentPlayer = currentPlayer === 1 ? 2 : 1;
-        updateInfo();
-        draw();
+        return;
     }
+
+    currentPlayer = 2;
+    updateInfo();
+    draw();
+
+    // AI turn
+    aiThinking = true;
+    updateInfo();
+    setTimeout(() => {
+        const move = getAIMove();
+        if (move) {
+            placeStone(move.x, move.y, 2);
+            if (checkWin(move.x, move.y)) {
+                gameOver = true;
+                draw();
+                setTimeout(() => {
+                    document.getElementById('gameOverTitle').textContent = '😢 游戏结束';
+                    document.getElementById('gameOverModal').classList.add('show');
+                    saveGameResult(0, currentLevel, false);
+                }, 100);
+                return;
+            }
+            currentPlayer = 1;
+            aiThinking = false;
+            updateInfo();
+            draw();
+        }
+    }, 300 + Math.random() * 400);
+}
+
+function placeStone(x, y, player) {
+    board[y][x] = player;
+    lastMove = { x, y };
+}
+
+function getAIMove() {
+    const level = LEVELS[currentLevel - 1];
+
+    // 1. Check if AI can win immediately
+    const winMove = findWinningMove(2);
+    if (winMove) return winMove;
+
+    // 2. Block player immediate win (open 4)
+    const blockMove = findWinningMove(1);
+    if (blockMove) return blockMove;
+
+    // Level 2+: block open 3
+    if (currentLevel >= 2) {
+        const blockThree = findOpenThree(1);
+        if (blockThree) return blockThree;
+    }
+
+    // Level 3+: scoring with lookahead depth
+    if (currentLevel >= 3 && level.aiDepth > 0) {
+        return minimaxMove(level.aiDepth);
+    }
+
+    // Level 1-2 or fallback: scored random
+    return scoredRandomMove();
+}
+
+function findWinningMove(player) {
+    for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+            if (board[y][x] !== 0) continue;
+            board[y][x] = player;
+            const win = checkWin(x, y);
+            board[y][x] = 0;
+            if (win) return { x, y };
+        }
+    }
+    return null;
+}
+
+function findOpenThree(player) {
+    // Look for patterns like _XXX_ or _XX_X_ (open on both ends, 3 in a row)
+    const directions = [[1,0],[0,1],[1,1],[1,-1]];
+    for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+            if (board[y][x] !== 0) continue;
+            let maxThreat = 0;
+            for (const [dx, dy] of directions) {
+                // Check if placing here creates open 3 for player
+                let count = 1;
+                let emptyEnds = 0;
+                for (const sign of [1, -1]) {
+                    let nx = x + dx * sign;
+                    let ny = y + dy * sign;
+                    let c = 0;
+                    while (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && board[ny][nx] === player) {
+                        c++;
+                        nx += dx * sign;
+                        ny += dy * sign;
+                    }
+                    if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && board[ny][nx] === 0) {
+                        emptyEnds++;
+                    }
+                    count += c;
+                }
+                if (count >= 3 && emptyEnds >= 2) {
+                    return { x, y };
+                }
+                if (count >= 3 && emptyEnds >= 1) {
+                    maxThreat = Math.max(maxThreat, count);
+                }
+            }
+            if (maxThreat >= 3) {
+                // Will be considered in scoring fallback
+            }
+        }
+    }
+    return null;
+}
+
+function scoredRandomMove() {
+    const candidates = [];
+    for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+            if (board[y][x] !== 0) continue;
+            const score = evaluatePosition(x, y, 2) + evaluatePosition(x, y, 1) * 0.8;
+            if (score > 0) candidates.push({ x, y, score });
+        }
+    }
+    if (candidates.length === 0) {
+        // First move or no neighbors: center or random
+        if (board[7][7] === 0) return { x: 7, y: 7 };
+        const empties = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                if (board[y][x] === 0) empties.push({ x, y });
+            }
+        }
+        return empties[Math.floor(Math.random() * empties.length)];
+    }
+    candidates.sort((a, b) => b.score - a.score);
+    // For lower levels, add randomness
+    if (currentLevel <= 2) {
+        const topN = Math.min(candidates.length, 5);
+        return candidates[Math.floor(Math.random() * topN)];
+    }
+    return candidates[0];
+}
+
+function evaluatePosition(x, y, player) {
+    const directions = [[1,0],[0,1],[1,1],[1,-1]];
+    let total = 0;
+    for (const [dx, dy] of directions) {
+        let count = 1;
+        let emptyEnds = 0;
+        for (const sign of [1, -1]) {
+            let nx = x + dx * sign;
+            let ny = y + dy * sign;
+            let c = 0;
+            while (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && board[ny][nx] === player) {
+                c++;
+                nx += dx * sign;
+                ny += dy * sign;
+            }
+            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && board[ny][nx] === 0) {
+                emptyEnds++;
+            }
+            count += c;
+        }
+        // Score based on count and open ends
+        let lineScore = 0;
+        if (count >= 5) lineScore = 100000;
+        else if (count === 4) lineScore = emptyEnds >= 2 ? 10000 : (emptyEnds === 1 ? 1000 : 0);
+        else if (count === 3) lineScore = emptyEnds >= 2 ? 1000 : (emptyEnds === 1 ? 100 : 0);
+        else if (count === 2) lineScore = emptyEnds >= 2 ? 100 : (emptyEnds === 1 ? 10 : 0);
+        else lineScore = emptyEnds >= 2 ? 10 : 1;
+        total += lineScore;
+    }
+    return total;
+}
+
+function minimaxMove(depth) {
+    let bestScore = -Infinity;
+    let bestMoves = [];
+    const moves = generateCandidateMoves();
+    for (const move of moves) {
+        board[move.y][move.x] = 2;
+        const score = -negamax(depth - 1, -Infinity, Infinity, 1);
+        board[move.y][move.x] = 0;
+        if (score > bestScore) {
+            bestScore = score;
+            bestMoves = [move];
+        } else if (score === bestScore) {
+            bestMoves.push(move);
+        }
+    }
+    if (bestMoves.length === 0) return scoredRandomMove();
+    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+}
+
+function negamax(depth, alpha, beta, player) {
+    // Terminal checks
+    if (lastMove) {
+        const lastPlayer = board[lastMove.y][lastMove.x];
+        // If last move won, previous player won -> negative for current
+        // We check by temporarily seeing if the board has a win at lastMove
+        // Simplification: check all winning conditions for the player who just moved
+        if (checkWin(lastMove.x, lastMove.y)) {
+            return player === lastPlayer ? -1000000 : 1000000;
+        }
+    }
+    if (depth === 0) {
+        return evaluateBoard(2) - evaluateBoard(1);
+    }
+
+    const moves = generateCandidateMoves();
+    if (moves.length === 0) return 0;
+
+    for (const move of moves) {
+        board[move.y][move.x] = player;
+        const prevLast = lastMove;
+        lastMove = move;
+        const score = -negamax(depth - 1, -beta, -alpha, player === 1 ? 2 : 1);
+        board[move.y][move.x] = 0;
+        lastMove = prevLast;
+        if (score > alpha) alpha = score;
+        if (alpha >= beta) break;
+    }
+    return alpha;
+}
+
+function generateCandidateMoves() {
+    const candidates = [];
+    for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+            if (board[y][x] !== 0) continue;
+            // Only consider cells near existing stones
+            let near = false;
+            for (let dy = -2; dy <= 2; dy++) {
+                for (let dx = -2; dx <= 2; dx++) {
+                    const ny = y + dy, nx = x + dx;
+                    if (ny >= 0 && ny < GRID_SIZE && nx >= 0 && nx < GRID_SIZE && board[ny][nx] !== 0) {
+                        near = true;
+                        break;
+                    }
+                }
+                if (near) break;
+            }
+            if (!near) continue;
+            const score = evaluatePosition(x, y, 2) + evaluatePosition(x, y, 1);
+            candidates.push({ x, y, score });
+        }
+    }
+    candidates.sort((a, b) => b.score - a.score);
+    return candidates.slice(0, 10);
+}
+
+function evaluateBoard(player) {
+    let total = 0;
+    for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+            if (board[y][x] !== player) continue;
+            total += evaluatePosition(x, y, player);
+        }
+    }
+    return total;
 }
 
 function checkWin(x, y) {
@@ -382,7 +685,111 @@ function checkWin(x, y) {
 }
 
 function updateInfo() {
-    document.getElementById('current').textContent = currentPlayer === 1 ? '黑棋 ⚫' : '白棋 ⚪';
+    const levelName = LEVELS[currentLevel - 1].name;
+    let text = `关卡: ${currentLevel} - ${levelName} | `;
+    if (gameOver) {
+        text += '游戏结束';
+    } else if (aiThinking) {
+        text += 'AI 思考中...';
+    } else {
+        text += currentPlayer === 1 ? '你的回合 ⚫' : 'AI 回合 ⚪';
+    }
+    document.getElementById('infoText').textContent = text;
+}
+
+function saveProgress() {
+    const maxLevel = parseInt(localStorage.getItem('gomokuMaxLevel')) || 1;
+    if (currentLevel > maxLevel) {
+        localStorage.setItem('gomokuMaxLevel', currentLevel);
+    }
+    localStorage.setItem('gomokuLevel', currentLevel);
+}
+
+function levelComplete() {
+    saveProgress();
+    const title = document.getElementById('gameOverTitle');
+    const modal = document.getElementById('gameOverModal');
+    const content = modal.querySelector('.modal-content');
+    // Clear old buttons
+    const oldBtns = content.querySelectorAll('.modal-btn');
+    oldBtns.forEach(b => b.remove());
+
+    title.textContent = `🎉 恭喜通关第 ${currentLevel} 关！`;
+
+    const btnContainer = document.createElement('div');
+    if (currentLevel < MAX_LEVEL) {
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'modal-btn';
+        nextBtn.textContent = '下一关';
+        nextBtn.onclick = () => { nextLevel(); };
+        btnContainer.appendChild(nextBtn);
+    }
+    const restartBtn = document.createElement('button');
+    restartBtn.className = 'modal-btn';
+    restartBtn.textContent = '重新开始';
+    restartBtn.onclick = () => { restartGame(); };
+    btnContainer.appendChild(restartBtn);
+    content.appendChild(btnContainer);
+
+    modal.classList.add('show');
+    saveGameResult(1000, currentLevel, true);
+}
+
+function nextLevel() {
+    if (currentLevel < MAX_LEVEL) {
+        currentLevel++;
+        saveProgress();
+    }
+    document.getElementById('gameOverModal').classList.remove('show');
+    initGame();
+}
+
+function restartGame() {
+    document.getElementById('gameOverModal').classList.remove('show');
+    initGame();
+}
+
+function openLevelSelect() {
+    renderLevelSelect();
+    document.getElementById('levelModal').classList.add('show');
+}
+
+function closeLevelSelect() {
+    document.getElementById('levelModal').classList.remove('show');
+}
+
+function renderLevelSelect() {
+    const grid = document.getElementById('levelGrid');
+    grid.innerHTML = '';
+    const maxLevel = parseInt(localStorage.getItem('gomokuMaxLevel')) || 1;
+    for (let i = 1; i <= MAX_LEVEL; i++) {
+        const card = document.createElement('div');
+        card.className = 'level-card';
+        const locked = i > maxLevel;
+        if (locked) card.classList.add('locked');
+        if (i === currentLevel) card.classList.add('active');
+
+        const num = document.createElement('div');
+        num.className = 'level-num';
+        num.textContent = locked ? '🔒' : i;
+
+        const name = document.createElement('div');
+        name.className = 'level-name';
+        name.textContent = LEVELS[i - 1].name;
+
+        card.appendChild(num);
+        card.appendChild(name);
+
+        if (!locked) {
+            card.onclick = () => {
+                currentLevel = i;
+                saveProgress();
+                closeLevelSelect();
+                initGame();
+            };
+        }
+        grid.appendChild(card);
+    }
 }
 
 canvas.addEventListener('click', handleClick);
@@ -409,7 +816,7 @@ initGame();
 </script>
 
     <!-- 游戏导航栏 -->
-    
+
     <!-- 虚拟方向键 -->
     <div class="d-pad">
         <div></div>
@@ -428,10 +835,17 @@ initGame();
             <button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); handleRestart();">再来一局</button>
         </div>
     </div>
+    <div class="modal" id="levelModal">
+        <div class="modal-content">
+            <h2>🗺️ 选择关卡</h2>
+            <div class="level-grid" id="levelGrid"></div>
+            <button class="modal-btn" onclick="closeLevelSelect()" style="margin-top: 16px;">关闭</button>
+        </div>
+    </div>
     <style>
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
         .modal.show { display: flex; }
-        .modal-content { background: rgba(45,52,54,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 40px; text-align: center; color: white; }
+        .modal-content { background: rgba(45,52,54,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 40px; text-align: center; color: white; max-width: 400px; width: 90%; }
         .modal-content h2 { font-size: 2rem; margin-bottom: 20px; }
         .modal-btn { padding: 15px 40px; background: linear-gradient(135deg,#22c55e,#16a34a); border: none; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin: 5px; }
     </style>
@@ -443,6 +857,10 @@ initGame();
         <button class="game-nav-btn secondary" onclick="handleRestart()">
             <span>🔄</span>
             <span>重新开始</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
+            <span>🗺️</span>
+            <span>关卡</span>
         </button>
         <button class="game-nav-btn tertiary" onclick="showHelp()">
             <span>❓</span>

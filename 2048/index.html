@@ -227,6 +227,7 @@
         .tile-2048 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff; font-size: 24px; box-shadow: 0 0 30px rgba(240, 147, 251, 0.5); }
         .tile-4096 { background: linear-gradient(135deg, #ffeaa7 0%, #fd79a8 100%); color: #fff; font-size: 20px; }
         .tile-8192 { background: linear-gradient(135deg, #a29bfe 0%, #fd79a8 100%); color: #fff; font-size: 20px; }
+        .tile-16384 { background: linear-gradient(135deg, #f093fb 0%, #6c5ce7 100%); color: #fff; font-size: 18px; }
 
         .game-over {
             position: fixed;
@@ -322,6 +323,69 @@
             color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
             margin-top: 20px;
+        }
+
+        .level-info {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .level-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .level-card:hover:not(.locked) {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .level-card.current {
+            border-color: #f093fb;
+            background: rgba(240, 147, 251, 0.2);
+            box-shadow: 0 0 15px rgba(240, 147, 251, 0.3);
+        }
+
+        .level-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .level-card .level-num {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .level-card .level-name {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 5px 0;
+        }
+
+        .level-card .level-target {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .level-card.locked .level-num {
+            font-size: 24px;
         }
 
         /* ========== 游戏导航栏 ========== */
@@ -499,30 +563,72 @@
             </div>
         </div>
 
+        <div class="level-info" id="levelInfo">第 1 关 - 初出茅庐 (目标: 128)</div>
+
         <div class="instructions">
             使用方向键或滑动屏幕移动方块<br>
-            相同数字合并，挑战2048！
+            相同数字合并，挑战目标！
         </div>
     </div>
 
     <div class="game-over" id="gameOver">
         <div class="game-over-content">
             <h2 id="gameOverTitle">游戏结束</h2>
-            <p>最终分数: <span id="finalScore">0</span></p>
-            <button class="btn btn-primary" onclick="newGame()">再来一局</button>
+            <p id="gameOverMessage">最终分数: <span id="finalScore">0</span></p>
+            <div id="gameOverButtons">
+                <button class="btn btn-primary" onclick="newGame()">再来一局</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over" id="levelModal">
+        <div class="game-over-content">
+            <h2>🗺️ 关卡选择</h2>
+            <div class="level-grid" id="levelGrid"></div>
+            <button class="btn btn-secondary" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>
 
     <script>
+        const LEVELS = [
+            { target: 128, name: "初出茅庐" },
+            { target: 256, name: "小试牛刀" },
+            { target: 512, name: "渐入佳境" },
+            { target: 1024, name: "中级高手" },
+            { target: 2048, name: "经典挑战" },
+            { target: 4096, name: "极限突破" },
+            { target: 8192, name: "大师之路" },
+            { target: 16384, name: "数字传说" }
+        ];
+        const MAX_LEVEL = 8;
+        let currentLevel = parseInt(localStorage.getItem('2048Level')) || 1;
+        let targetValue = LEVELS[currentLevel - 1].target;
+
         let grid = [];
         let score = 0;
         let best = 0;
         let history = [];
 
+        function saveProgress() {
+            const maxLevel = parseInt(localStorage.getItem('2048MaxLevel')) || 1;
+            if (currentLevel > maxLevel) {
+                localStorage.setItem('2048MaxLevel', currentLevel);
+            }
+        }
+
+        function updateLevelInfo() {
+            const info = document.getElementById('levelInfo');
+            if (info) {
+                info.textContent = `第 ${currentLevel} 关 - ${LEVELS[currentLevel - 1].name} (目标: ${targetValue})`;
+            }
+        }
+
         // 初始化游戏
         function init() {
             best = localStorage.getItem('best2048') || 0;
             document.getElementById('best').textContent = best;
+            targetValue = LEVELS[currentLevel - 1].target;
+            updateLevelInfo();
             newGame();
         }
 
@@ -536,6 +642,89 @@
             addRandomTile();
             renderGrid();
             document.getElementById('gameOver').classList.remove('show');
+            updateLevelInfo();
+        }
+
+        function restartGame() {
+            newGame();
+        }
+
+        function levelComplete() {
+            saveProgress();
+            const maxUnlocked = parseInt(localStorage.getItem('2048MaxLevel')) || currentLevel;
+            const title = document.getElementById('gameOverTitle');
+            const message = document.getElementById('gameOverMessage');
+            const buttons = document.getElementById('gameOverButtons');
+
+            title.textContent = `🎉 恭喜通关第 ${currentLevel} 关！`;
+            message.innerHTML = `目标: ${targetValue} 达成！<br>最终分数: <span id="finalScore">${score}</span>`;
+
+            let html = '';
+            if (currentLevel < MAX_LEVEL) {
+                html += `<button class="btn btn-primary" onclick="nextLevel()">下一关</button> `;
+            }
+            html += `<button class="btn btn-secondary" onclick="restartGame()">重新开始</button>`;
+            buttons.innerHTML = html;
+
+            document.getElementById('gameOver').classList.add('show');
+        }
+
+        function nextLevel() {
+            if (currentLevel < MAX_LEVEL) {
+                currentLevel++;
+                localStorage.setItem('2048Level', currentLevel);
+                targetValue = LEVELS[currentLevel - 1].target;
+                document.getElementById('gameOver').classList.remove('show');
+                newGame();
+            }
+        }
+
+        function openLevelSelect() {
+            renderLevelSelect();
+            document.getElementById('levelModal').classList.add('show');
+        }
+
+        function closeLevelSelect() {
+            document.getElementById('levelModal').classList.remove('show');
+        }
+
+        function renderLevelSelect() {
+            const gridEl = document.getElementById('levelGrid');
+            const maxUnlocked = parseInt(localStorage.getItem('2048MaxLevel')) || 1;
+            gridEl.innerHTML = '';
+
+            for (let i = 0; i < MAX_LEVEL; i++) {
+                const level = i + 1;
+                const data = LEVELS[i];
+                const unlocked = level <= maxUnlocked;
+                const isCurrent = level === currentLevel;
+
+                const card = document.createElement('div');
+                card.className = 'level-card' + (isCurrent ? ' current' : '') + (unlocked ? '' : ' locked');
+
+                if (unlocked) {
+                    card.innerHTML = `
+                        <div class="level-num">${level}</div>
+                        <div class="level-name">${data.name}</div>
+                        <div class="level-target">目标: ${data.target}</div>
+                    `;
+                    card.onclick = () => {
+                        currentLevel = level;
+                        localStorage.setItem('2048Level', currentLevel);
+                        targetValue = LEVELS[currentLevel - 1].target;
+                        closeLevelSelect();
+                        newGame();
+                    };
+                } else {
+                    card.innerHTML = `
+                        <div class="level-num">🔒</div>
+                        <div class="level-name">${data.name}</div>
+                        <div class="level-target">目标: ${data.target}</div>
+                    `;
+                }
+
+                gridEl.appendChild(card);
+            }
         }
 
         // 添加随机方块
@@ -670,9 +859,26 @@
                 renderGrid();
                 updateScore();
 
-                if (isGameOver()) {
-                    document.getElementById('finalScore').textContent = score;
-                    document.getElementById('gameOverTitle').textContent = score >= 2048 ? '🎉 恭喜通关！' : '游戏结束';
+                // 检查是否达到目标
+                let reachedTarget = false;
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (grid[i][j] === targetValue) {
+                            reachedTarget = true;
+                        }
+                    }
+                }
+
+                if (reachedTarget) {
+                    levelComplete();
+                } else if (isGameOver()) {
+                    const title = document.getElementById('gameOverTitle');
+                    const message = document.getElementById('gameOverMessage');
+                    const buttons = document.getElementById('gameOverButtons');
+
+                    title.textContent = '游戏结束';
+                    message.innerHTML = `最终分数: <span id="finalScore">${score}</span>`;
+                    buttons.innerHTML = `<button class="btn btn-primary" onclick="restartGame()">重新开始</button>`;
                     document.getElementById('gameOver').classList.add('show');
                 }
             } else {
@@ -778,6 +984,10 @@
             <span>🔄</span>
             <span>重新开始</span>
         </button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
+            <span>🗺️</span>
+            <span>关卡</span>
+        </button>
         <button class="game-nav-btn tertiary" onclick="showHelp()">
             <span>❓</span>
             <span>游戏说明</span>
@@ -788,7 +998,7 @@
     <div class="help-modal" id="helpModal">
         <div class="help-modal-content">
             <h2>🎮 2048 游戏说明</h2>
-            <p><strong>游戏目标：</strong>合并相同的数字方块，达到2048！</p>
+            <p><strong>游戏目标：</strong>合并相同的数字方块，达到每关的目标数字！</p>
             <p><strong>操作方式：</strong></p>
             <ul>
                 <li>电脑：使用<span class="key">方向键</span>移动方块</li>
@@ -800,10 +1010,11 @@
                 <li>每次移动会在空白处生成新的2或4</li>
                 <li>当无法移动时游戏结束</li>
             </ul>
-            <p><strong>计分规则：</strong></p>
+            <p><strong>关卡系统：</strong></p>
             <ul>
-                <li>合并方块获得对应分数</li>
-                <li>达到2048获得额外奖励</li>
+                <li>共8关，目标从128到16384</li>
+                <li>通关后解锁下一关</li>
+                <li>进度自动保存</li>
             </ul>
             <button class="btn btn-primary" onclick="closeHelp()" style="width: 100%; padding: 12px;">知道了</button>
         </div>
@@ -832,11 +1043,6 @@
             }
         }
 
-        // 重新开始游戏
-        function restartGame() {
-            newGame();
-        }
-
         // 显示帮助
         function showHelp() {
             document.getElementById('helpModal').classList.add('show');
@@ -847,6 +1053,4 @@
             document.getElementById('helpModal').classList.remove('show');
         }
 
-        // 初始化游戏
-        init();
     </script>

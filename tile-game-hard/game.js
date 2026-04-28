@@ -849,7 +849,16 @@ class Game {
     }
 }
 
+let hardGameInstance = null;
+function selectHardLevel(level) {
+    if (hardGameInstance) {
+        hardGameInstance.level = level;
+        hardGameInstance.saveLevel();
+        hardGameInstance.startLevel();
+    }
+}
+
 // ==================== 初始化游戏 ====================
 document.addEventListener('DOMContentLoaded', () => {
-    new Game();
+    hardGameInstance = new Game();
 });

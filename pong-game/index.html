@@ -46,7 +46,18 @@
             color: #000;
             cursor: pointer;
         }
-    
+        .level-bar { width: 320px; margin: 10px auto; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 14px; border: 1px solid rgba(0,212,255,0.2); }
+        .level-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #00d4ff; margin-bottom: 4px; }
+        .level-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+        .level-fill { height: 100%; background: linear-gradient(135deg, #00d4ff, #00ff88); border-radius: 3px; transition: width 0.3s; }
+        .level-select-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .level-card { padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(0,212,255,0.3); cursor: pointer; transition: all 0.2s; text-align: center; }
+        .level-card:hover { transform: translateY(-2px); border-color: #00d4ff; }
+        .level-card.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); }
+        .level-card.current { border-color: #00d4ff; background: rgba(0,212,255,0.15); }
+        .level-card-num { font-size: 18px; font-weight: bold; color: #00d4ff; }
+        .level-card-target { font-size: 11px; color: #ccc; margin-top: 2px; }
+
     /* ========== 游戏导航栏 ========== */
     .game-nav { z-index: 9999 !important; z-index: 9999 !important;
         position: fixed;
@@ -224,6 +235,10 @@
         <div class="stat"><div class="label">玩家</div><div class="value" id="playerScore">0</div></div>
         <div class="stat"><div class="label">电脑</div><div class="value" id="aiScore">0</div></div>
     </div>
+    <div class="level-bar">
+        <div class="level-info"><span id="levelName">第 1 关</span><span id="levelProgress">0 / 3</span></div>
+        <div class="level-track"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
+    </div>
     <canvas id="gameCanvas" width="600" height="400"></canvas>
     <button class="btn" onclick="startGame()">开始游戏</button>
 
@@ -239,7 +254,36 @@
         let particles = [];
         let animationFrameId = null;
 
+        const LEVELS = [
+            { id: 1, name: '新手入门', targetScore: 3, aiSpeed: 0.06, paddleHeight: 90 },
+            { id: 2, name: '初级训练', targetScore: 5, aiSpeed: 0.08, paddleHeight: 85 },
+            { id: 3, name: '中级对手', targetScore: 7, aiSpeed: 0.10, paddleHeight: 80 },
+            { id: 4, name: '高级挑战', targetScore: 10, aiSpeed: 0.13, paddleHeight: 75 },
+            { id: 5, name: '职业选手', targetScore: 12, aiSpeed: 0.16, paddleHeight: 70 },
+            { id: 6, name: '世界冠军', targetScore: 15, aiSpeed: 0.20, paddleHeight: 65 },
+            { id: 7, name: '极限反应', targetScore: 18, aiSpeed: 0.25, paddleHeight: 60 },
+            { id: 8, name: '弹球之神', targetScore: 21, aiSpeed: 0.30, paddleHeight: 55 }
+        ];
+        let currentLevel = 1;
+
+        function getGameData() {
+            const defaults = { maxLevel: 1 };
+            try { const raw = localStorage.getItem('pongData'); if (raw) return { ...defaults, ...JSON.parse(raw) }; } catch(e) {}
+            return defaults;
+        }
+        function saveGameData(data) { localStorage.setItem('pongData', JSON.stringify(data)); }
+        function getLevelConfig() { return LEVELS[Math.min(currentLevel, LEVELS.length) - 1] || LEVELS[0]; }
+        function updateLevelUI() {
+            const cfg = getLevelConfig();
+            document.getElementById('levelName').textContent = `第 ${currentLevel} 关 · ${cfg.name}`;
+            document.getElementById('levelProgress').textContent = `${playerScore} / ${cfg.targetScore}`;
+            const pct = Math.min(100, Math.floor((playerScore / cfg.targetScore) * 100));
+            document.getElementById('levelFill').style.width = pct + '%';
+        }
+
         function init() {
+            const cfg = getLevelConfig();
+            paddleHeight = cfg.paddleHeight;
             playerY = canvas.height / 2 - paddleHeight / 2;
             aiY = canvas.height / 2 - paddleHeight / 2;
             ballX = canvas.width / 2;
@@ -271,9 +315,10 @@
             };
 
             // AI移动
+            const cfg = getLevelConfig();
             const aiCenter = aiY + paddleHeight / 2;
             const targetY = ballY - paddleHeight / 2;
-            aiY += (targetY - aiY) * 0.08;
+            aiY += (targetY - aiY) * cfg.aiSpeed;
             aiY = Math.max(0, Math.min(canvas.height - paddleHeight, aiY));
 
             // 球移动
@@ -329,15 +374,51 @@
             ballY = canvas.height / 2;
             ballDX = (Math.random() > 0.5 ? 1 : -1) * 5;
             ballDY = (Math.random() - 0.5) * 6;
+            updateLevelUI();
 
-            if (playerScore >= 5 || aiScore >= 5) {
+            const cfg = getLevelConfig();
+            if (playerScore >= cfg.targetScore || aiScore >= cfg.targetScore) {
                 gameRunning = false;
-                const winner = playerScore >= 5 ? '🎉 你赢了！' : '😢 电脑获胜';
-                document.getElementById('gameOverTitle').textContent = winner;
-                document.getElementById('finalScore').textContent = `${playerScore} - ${aiScore}`;
-                document.getElementById('gameOverModal').classList.add('show');
-                saveGameResult(playerScore * 100, 1, playerScore >= 5);
+                if (playerScore >= cfg.targetScore) {
+                    levelComplete();
+                } else {
+                    gameOver();
+                }
             }
+        }
+        function levelComplete() {
+            const cfg = getLevelConfig();
+            const data = getGameData();
+            const levelBonus = currentLevel * 100;
+            if (currentLevel >= data.maxLevel && currentLevel < LEVELS.length) data.maxLevel = currentLevel + 1;
+            saveGameData(data);
+            document.getElementById('gameOverTitle').textContent = '🎉 关卡完成!';
+            document.getElementById('finalScore').textContent = `${playerScore} - ${aiScore}`;
+            const btns = document.getElementById('gameOverModal').querySelector('.modal-content');
+            const existingBtns = btns.querySelectorAll('.modal-btn');
+            existingBtns.forEach(b => b.remove());
+            if (currentLevel < LEVELS.length) {
+                btns.insertAdjacentHTML('beforeend', `<button class="modal-btn" onclick="nextLevel()">下一关</button><button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); startGame();">重玩本关</button>`);
+            } else {
+                btns.insertAdjacentHTML('beforeend', `<button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); startGame();">再次挑战</button>`);
+            }
+            document.getElementById('gameOverModal').classList.add('show');
+            saveGameResult(playerScore * 100 + levelBonus, currentLevel, true);
+        }
+        function gameOver() {
+            document.getElementById('gameOverTitle').textContent = '😢 电脑获胜';
+            document.getElementById('finalScore').textContent = `${playerScore} - ${aiScore}`;
+            const btns = document.getElementById('gameOverModal').querySelector('.modal-content');
+            const existingBtns = btns.querySelectorAll('.modal-btn');
+            existingBtns.forEach(b => b.remove());
+            btns.insertAdjacentHTML('beforeend', `<button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); startGame();">再来一局</button>`);
+            document.getElementById('gameOverModal').classList.add('show');
+            saveGameResult(playerScore * 100, currentLevel, false);
+        }
+        function nextLevel() {
+            if (currentLevel < LEVELS.length) currentLevel++;
+            document.getElementById('gameOverModal').classList.remove('show');
+            startGame();
         }
 
         function draw() {
@@ -402,6 +483,7 @@
             aiScore = 0;
             init();
             gameRunning = true;
+            updateLevelUI();
         }
 
         // 触摸支持
@@ -447,10 +529,21 @@
         <button class="d-btn" ontouchstart="moveDirection('down')" onclick="moveDirection('down')">↓</button>
         <div></div>
     </div>
+    <div class="modal" id="levelModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:300;">
+        <div class="modal-content" style="max-width:380px;width:90%;">
+            <h2>🗺️ 关卡选择</h2>
+            <div class="level-select-grid" id="levelGrid"></div>
+            <button class="modal-btn" onclick="document.getElementById('levelModal').style.display='none'" style="margin-top:10px;">关闭</button>
+        </div>
+    </div>
     <div class="game-nav">
         <button class="game-nav-btn primary" onclick="backToHall()">
             <span>🏠</span>
             <span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="document.getElementById('levelModal').style.display='flex'; renderLevelSelect();">
+            <span>🗺️</span>
+            <span>关卡</span>
         </button>
         <button class="game-nav-btn secondary" onclick="handleRestart()">
             <span>🔄</span>
@@ -461,6 +554,22 @@
             <span>游戏说明</span>
         </button>
     </div>
+    <script>
+        function renderLevelSelect() {
+            const data = getGameData();
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            LEVELS.forEach(lv => {
+                const unlocked = lv.id <= data.maxLevel;
+                const isCurrent = lv.id === currentLevel;
+                const card = document.createElement('div');
+                card.className = 'level-card' + (isCurrent ? ' current' : '') + (!unlocked ? ' locked' : '');
+                card.innerHTML = `<div class="level-card-num">${lv.id}</div><div class="level-card-target">${lv.name}</div><div class="level-card-target">${lv.targetScore}分 · AI ${Math.floor(lv.aiSpeed*100)}%</div>`;
+                if (unlocked) card.onclick = () => { currentLevel = lv.id; document.getElementById('levelModal').style.display = 'none'; startGame(); };
+                grid.appendChild(card);
+            });
+        }
+    </script>
 
     <!-- 游戏说明弹窗 -->
     <div class="help-modal" id="helpModal">

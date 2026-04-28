@@ -231,6 +231,17 @@
             background: linear-gradient(135deg, #fff9fc, #ffe8f0) !important;
             color: #ff69b4 !important;
         }
+        .level-bar { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 280px; background: linear-gradient(135deg, rgba(255,182,217,0.95), rgba(255,118,158,0.95)); border-radius: 15px; padding: 10px 14px; border: 3px solid #fff; box-shadow: 0 5px 20px rgba(255,105,180,0.5); z-index: 1000; }
+        .level-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); margin-bottom: 4px; }
+        .level-track { width: 100%; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden; }
+        .level-fill { height: 100%; background: linear-gradient(135deg, #fff, #ffe8f0); border-radius: 4px; transition: width 0.3s; }
+        .level-select-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .level-card { padding: 10px; border-radius: 12px; background: linear-gradient(135deg, #fff9fc, #ffe8f0); border: 2px solid #ffb6d9; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .level-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,105,180,0.3); }
+        .level-card.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); }
+        .level-card.current { border-color: #ff69b4; background: linear-gradient(135deg, #ffe8f0, #ffb6d9); }
+        .level-card-num { font-size: 18px; font-weight: bold; color: #ff69b4; }
+        .level-card-target { font-size: 11px; color: #888; margin-top: 2px; }
 
         @media (min-width: 768px) {
             .controls { display: none; }
@@ -253,6 +264,10 @@
         <div class="jump-indicator">
             跳跃: <span class="jump-dot active" id="jump1"></span><span class="jump-dot" id="jump2"></span>
         </div>
+        <div class="level-bar" id="levelBar">
+            <div class="level-info"><span id="levelName">第 1 关</span><span id="levelDist">0 / 300 m</span></div>
+            <div class="level-track"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
+        </div>
 
         <canvas id="gameCanvas" width="900" height="450"></canvas>
 
@@ -261,10 +276,10 @@
         </div>
 
         <div class="game-over" id="gameOver">
-            <h2>游戏结束!</h2>
-            <p>你跑了 <span id="finalScore">0</span> 米</p>
+            <h2 id="gameOverTitle">游戏结束!</h2>
+            <p id="gameOverMsg">你跑了 <span id="finalScore">0</span> 米</p>
             <p>获得分数: <span id="finalPoints">0</span></p>
-            <button class="btn" onclick="restartGame()">再来一局</button>
+            <div id="gameOverButtons"><button class="btn" onclick="restartGame()">再来一局</button></div>
         </div>
     </div>
 
@@ -272,12 +287,22 @@
         <button class="game-nav-btn primary" onclick="backToHall()">
             <span>🏠</span><span>返回大厅</span>
         </button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
+            <span>🗺️</span><span>关卡</span>
+        </button>
         <button class="game-nav-btn secondary" onclick="restartGame()">
             <span>🔄</span><span>重新开始</span>
         </button>
-        <button class="game-nav-btn tertiary" onclick="document.getElementById('helpModal').classList.add('show')">
+        <button class="game-nav-btn tertiary" onclick="alert('空格/↑ 跳跃（可二段跳）| 点击屏幕跳跃')">
             <span>❓</span><span>游戏说明</span>
         </button>
+    </div>
+    <div id="levelModal" class="game-over" style="z-index:3000;">
+        <div style="padding:30px;">
+            <h2 style="color:#ff69b4;margin-bottom:15px;">🗺️ 关卡选择</h2>
+            <div class="level-select-grid" id="levelGrid"></div>
+            <button class="btn" onclick="closeLevelSelect()" style="margin-top:15px;">关闭</button>
+        </div>
     </div>
 
     <script>
@@ -308,7 +333,33 @@
         let gravity = 0.7;
         let jumpForce = -15;
         let groundY = 380;
-        let animationFrameId = null;
+
+        const LEVELS = [
+            { id: 1, name: '公园晨跑', target: 300, baseSpeed: 6, obsRate: 0.008 },
+            { id: 2, name: '城市街道', target: 500, baseSpeed: 7, obsRate: 0.012 },
+            { id: 3, name: '山间小径', target: 700, baseSpeed: 8, obsRate: 0.015 },
+            { id: 4, name: '森林穿越', target: 900, baseSpeed: 9, obsRate: 0.018 },
+            { id: 5, name: '沙漠疾驰', target: 1200, baseSpeed: 10, obsRate: 0.020 },
+            { id: 6, name: '冰川奔跑', target: 1500, baseSpeed: 11, obsRate: 0.022 },
+            { id: 7, name: '火山边缘', target: 2000, baseSpeed: 12, obsRate: 0.025 },
+            { id: 8, name: '天空之城', target: 3000, baseSpeed: 13, obsRate: 0.028 }
+        ];
+        let currentLevel = 1;
+
+        function getGameData() {
+            const defaults = { maxLevel: 1 };
+            try { const raw = localStorage.getItem('runnerData_v2'); if (raw) return { ...defaults, ...JSON.parse(raw) }; } catch(e) {}
+            return defaults;
+        }
+        function saveGameData(data) { localStorage.setItem('runnerData_v2', JSON.stringify(data)); }
+        function getLevelConfig() { return LEVELS[Math.min(currentLevel, LEVELS.length) - 1] || LEVELS[0]; }
+        function updateLevelUI() {
+            const cfg = getLevelConfig();
+            document.getElementById('levelName').textContent = `第 ${currentLevel} 关 · ${cfg.name}`;
+            document.getElementById('levelDist').textContent = `${Math.floor(distance)} / ${cfg.target} m`;
+            const pct = Math.min(100, Math.floor((distance / cfg.target) * 100));
+            document.getElementById('levelFill').style.width = pct + '%';
+        }
 
         function jump() {
             if (player.jumps < player.maxJumps && gameRunning) {
@@ -379,7 +430,8 @@
         }
 
         function spawnObstacle() {
-            if (Math.random() < 0.008) {
+            const cfg = getLevelConfig();
+            if (Math.random() < cfg.obsRate) {
                 const type = Math.floor(Math.random() * 3);
                 let obstacle = {
                     x: canvas.width + 50,
@@ -485,7 +537,13 @@
 
             distance += gameSpeed / 60;
             document.getElementById('distance').textContent = Math.floor(distance);
-            gameSpeed = Math.min(12, 6 + distance / 150);
+            const cfg = getLevelConfig();
+            gameSpeed = Math.min(cfg.baseSpeed + 4, cfg.baseSpeed + distance / 150);
+            updateLevelUI();
+            if (distance >= cfg.target) {
+                levelComplete();
+                return;
+            }
         }
 
         // 绘制漂亮的3D漫画JK女生（长发到腰，有脖子）
@@ -1361,22 +1419,60 @@
             update();
             draw();
             if (gameRunning) {
-                animationFrameId = requestAnimationFrame(gameLoop);
+                requestAnimationFrame(gameLoop);
             }
         }
 
+        function levelComplete() {
+            gameRunning = false;
+            const cfg = getLevelConfig();
+            const data = getGameData();
+            const levelBonus = currentLevel * 50;
+            if (currentLevel >= data.maxLevel && currentLevel < LEVELS.length) data.maxLevel = currentLevel + 1;
+            saveGameData(data);
+            document.getElementById('gameOverTitle').textContent = '🎉 关卡完成!';
+            document.getElementById('gameOverTitle').style.color = '#ff69b4';
+            document.getElementById('gameOverMsg').innerHTML = `完成 ${cfg.name} · ${Math.floor(distance)} 米`;
+            document.getElementById('finalPoints').textContent = score + ' + ' + levelBonus + ' 奖励';
+            const btns = document.getElementById('gameOverButtons');
+            if (currentLevel < LEVELS.length) {
+                btns.innerHTML = `<button class="btn" onclick="nextLevel()">下一关</button><button class="btn" onclick="restartGame()">重玩本关</button>`;
+            } else {
+                btns.innerHTML = `<button class="btn" onclick="restartGame()">再次挑战</button>`;
+            }
+            document.getElementById('gameOver').classList.add('show');
+        }
         function gameOver() {
             gameRunning = false;
-            document.getElementById('finalScore').textContent = Math.floor(distance);
+            document.getElementById('gameOverTitle').textContent = '游戏结束!';
+            document.getElementById('gameOverTitle').style.color = '';
+            document.getElementById('gameOverMsg').innerHTML = `你跑了 <span id="finalScore">${Math.floor(distance)}</span> 米`;
             document.getElementById('finalPoints').textContent = score;
+            document.getElementById('gameOverButtons').innerHTML = `<button class="btn" onclick="restartGame()">再来一局</button>`;
             document.getElementById('gameOver').classList.add('show');
+        }
+        function nextLevel() {
+            if (currentLevel < LEVELS.length) currentLevel++;
+            restartGame();
+        }
+        function openLevelSelect() { document.getElementById('levelModal').classList.add('show'); renderLevelSelect(); }
+        function closeLevelSelect() { document.getElementById('levelModal').classList.remove('show'); }
+        function renderLevelSelect() {
+            const data = getGameData();
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            LEVELS.forEach(lv => {
+                const unlocked = lv.id <= data.maxLevel;
+                const isCurrent = lv.id === currentLevel;
+                const card = document.createElement('div');
+                card.className = 'level-card' + (isCurrent ? ' current' : '') + (!unlocked ? ' locked' : '');
+                card.innerHTML = `<div class="level-card-num">${lv.id}</div><div class="level-card-target">${lv.name}</div><div class="level-card-target">目标 ${lv.target}m</div>`;
+                if (unlocked) card.onclick = () => { currentLevel = lv.id; closeLevelSelect(); restartGame(); };
+                grid.appendChild(card);
+            });
         }
 
         function restartGame() {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
             player = {
                 x: 120,
                 y: 325,
@@ -1396,11 +1492,13 @@
             score = 0;
             distance = 0;
             gameRunning = true;
-            gameSpeed = 6;
+            const cfg = getLevelConfig();
+            gameSpeed = cfg.baseSpeed;
             document.getElementById('score').textContent = '0';
             document.getElementById('distance').textContent = '0';
             document.getElementById('gameOver').classList.remove('show');
             updateJumpIndicator();
+            updateLevelUI();
             gameLoop();
         }
 

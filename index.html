@@ -1422,6 +1422,120 @@
             color: #333;
         }
 
+        /* ========== 账号管理 ========== */
+        .account-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .account-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffe8f0 0%, #f0e8ff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .account-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .account-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .account-phone {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .account-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .account-btn {
+            flex: 1;
+            padding: 10px 0;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(244, 114, 182, 0.3);
+        }
+
+        .account-btn.secondary {
+            background: rgba(244, 114, 182, 0.1);
+            color: #64748b;
+            border: 1px solid rgba(244, 114, 182, 0.2);
+            box-shadow: none;
+        }
+
+        .account-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* 未登录提示 */
+        .login-tip {
+            background: linear-gradient(135deg, #ffe8f0 0%, #f0e8ff 100%);
+            border-radius: 16px;
+            padding: 24px 20px;
+            text-align: center;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .login-tip-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .login-tip-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .login-tip-btn {
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(244, 114, 182, 0.3);
+            transition: all 0.2s;
+        }
+
+        .login-tip-btn:active {
+            transform: scale(0.95);
+        }
+
         /* ========== 消息中心 ========== */
         .message-tabs {
             display: flex;
@@ -1853,6 +1967,28 @@
                 <p>个性化你的游戏体验</p>
             </div>
 
+            <!-- 账号管理 -->
+            <div class="section-header" style="margin-top: 8px;">
+                <h2 class="section-title">账号管理</h2>
+            </div>
+            <div class="account-card" id="accountCard">
+                <div class="account-info">
+                    <div class="account-avatar" id="settingsAvatar">🎮</div>
+                    <div class="account-detail">
+                        <div class="account-name" id="settingsAccountName">游客</div>
+                        <div class="account-phone" id="settingsAccountPhone">未登录</div>
+                    </div>
+                </div>
+                <div class="account-actions">
+                    <button class="account-btn secondary" id="switchAccountBtn" onclick="switchAccount()" style="display: none;">切换账号</button>
+                    <button class="account-btn" id="logoutBtn" onclick="logout()" style="display: none;">退出登录</button>
+                    <button class="account-btn" id="loginBtn2" onclick="showLoginModal()">立即登录</button>
+                </div>
+            </div>
+
+            <div class="section-header" style="margin-top: 20px;">
+                <h2 class="section-title">通用设置</h2>
+            </div>
             <div class="settings-list">
                 <div class="settings-item" onclick="toggleSound()">
                     <div class="left">
@@ -1965,6 +2101,13 @@
     <!-- ========== 我的 ========== -->
     <div class="page" id="profilePage">
         <div class="main-container">
+            <!-- 未登录提示 -->
+            <div class="login-tip" id="profileLoginTip" style="display: none;">
+                <div class="login-tip-icon">🔒</div>
+                <div class="login-tip-text">登录后可同步游戏进度、查看排行榜</div>
+                <button class="login-tip-btn" onclick="showLoginModal()">立即登录</button>
+            </div>
+
             <div class="profile-header">
                 <div class="profile-avatar-container">
                     <img class="profile-avatar" id="profileAvatar" src="" alt="头像" style="display: none;">
@@ -2130,11 +2273,13 @@
     <div class="modal" id="loginModal">
         <div class="modal-content">
             <h2 id="loginModalTitle">手机号登录</h2>
+            <p id="offlineHint" style="display:none;font-size:12px;color:#ff6b9d;margin-bottom:8px;text-align:center;">🧪 离线模式 - 验证码将直接显示，无需短信</p>
             <input type="tel" class="modal-input" id="phoneInput" placeholder="请输入手机号" maxlength="11" oninput="formatPhone(this)">
             <div style="display: flex; gap: 8px; margin-bottom: 16px;">
                 <input type="text" class="modal-input" id="codeInput" placeholder="验证码" maxlength="6" style="flex: 1;">
                 <button class="modal-btn" id="sendCodeBtn" onclick="sendCode()" style="margin: 0; padding: 12px 16px; min-width: 100px;">获取验证码</button>
             </div>
+            <p id="offlineCodeDisplay" style="display:none;font-size:14px;color:#22c55e;text-align:center;margin-bottom:12px;font-weight:bold;"></p>
             <button class="modal-btn" onclick="loginOrRegister()">登录/注册</button>
             <button class="modal-btn secondary" onclick="closeLoginModal()">取消</button>
         </div>
@@ -2199,6 +2344,16 @@
             <p>确定要清除所有缓存数据吗？这将删除：<br>- 游戏历史记录<br>- 自定义游戏<br>- 本地设置<br><br style="color: #ff6b9d;">⚠️ 此操作不可恢复</p>
             <button class="modal-btn" onclick="clearCache()">确认清除</button>
             <button class="modal-btn secondary" onclick="closeClearCacheModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 切换账号弹窗 -->
+    <div class="modal" id="switchAccountModal">
+        <div class="modal-content">
+            <h2>切换账号</h2>
+            <p>切换账号将退出当前登录状态，并跳转到登录页面。确定要继续吗？</p>
+            <button class="modal-btn" onclick="confirmSwitchAccount()">确定切换</button>
+            <button class="modal-btn secondary" onclick="closeSwitchAccountModal()">取消</button>
         </div>
     </div>
 
@@ -2270,6 +2425,40 @@
         // 新用户注册时选择的头像
         let selectedAvatar = '🎮';
 
+        // 离线模式检测与状态
+        let isOfflineMode = false;
+        const OFFLINE_CODE_KEY = 'offlineVerificationCode';
+        const OFFLINE_CODE_TS_KEY = 'offlineVerificationCodeTs';
+
+        async function detectBackend() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const response = await fetch('http://localhost:3000/health', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                return response.ok;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function getOfflineCode(phone) {
+            const data = JSON.parse(sessionStorage.getItem(OFFLINE_CODE_KEY) || '{}');
+            return data[phone] || null;
+        }
+
+        function setOfflineCode(phone, code) {
+            const data = JSON.parse(sessionStorage.getItem(OFFLINE_CODE_KEY) || '{}');
+            data[phone] = { code, timestamp: Date.now() };
+            sessionStorage.setItem(OFFLINE_CODE_KEY, JSON.stringify(data));
+        }
+
+        function clearOfflineCode(phone) {
+            const data = JSON.parse(sessionStorage.getItem(OFFLINE_CODE_KEY) || '{}');
+            delete data[phone];
+            sessionStorage.setItem(OFFLINE_CODE_KEY, JSON.stringify(data));
+        }
+
         // 加载玩家数据
         function loadPlayerData() {
             try {
@@ -2328,6 +2517,8 @@
                 logout();
             } else {
                 document.getElementById('loginModal').classList.add('show');
+                document.getElementById('offlineHint').style.display = isOfflineMode ? 'block' : 'none';
+                document.getElementById('offlineCodeDisplay').style.display = 'none';
                 document.getElementById('phoneInput').focus();
             }
         }
@@ -2337,6 +2528,7 @@
             document.getElementById('loginModal').classList.remove('show');
             document.getElementById('phoneInput').value = '';
             document.getElementById('codeInput').value = '';
+            document.getElementById('offlineCodeDisplay').style.display = 'none';
         }
 
         // 格式化手机号输入
@@ -2357,6 +2549,37 @@
             }
 
             const btn = document.getElementById('sendCodeBtn');
+
+            // 离线模式：直接在前端生成验证码
+            if (isOfflineMode) {
+                const stored = getOfflineCode(phone);
+                if (stored && Date.now() - stored.timestamp < 60000) {
+                    const remaining = Math.ceil((60000 - (Date.now() - stored.timestamp)) / 1000);
+                    showModal('⏳ 请稍后再试', `请${remaining}秒后再获取验证码`);
+                    return;
+                }
+
+                btn.disabled = true;
+                const code = Math.floor(10000 + Math.random() * 90000).toString();
+                setOfflineCode(phone, code);
+
+                document.getElementById('offlineCodeDisplay').textContent = `🧪 测试验证码: ${code}`;
+                document.getElementById('offlineCodeDisplay').style.display = 'block';
+
+                let countdown = 60;
+                btn.textContent = `${countdown}s`;
+                codeTimer = setInterval(() => {
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(codeTimer);
+                        btn.disabled = false;
+                        btn.textContent = '获取验证码';
+                    } else {
+                        btn.textContent = `${countdown}s`;
+                    }
+                }, 1000);
+                return;
+            }
 
             try {
                 btn.disabled = true;
@@ -2424,21 +2647,46 @@
             }
 
             try {
-                // 先验证验证码
-                const verifyResponse = await fetch(`${API_BASE_URL}/verify-code`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ phone, code })
-                });
+                let verifySuccess = false;
 
-                const verifyResult = await verifyResponse.json();
+                if (isOfflineMode) {
+                    // 离线模式：前端校验验证码
+                    const stored = getOfflineCode(phone);
+                    if (!stored) {
+                        showModal('❌ 验证失败', '验证码不存在，请先获取');
+                        return;
+                    }
+                    if (Date.now() - stored.timestamp > 300000) {
+                        clearOfflineCode(phone);
+                        showModal('❌ 验证失败', '验证码已过期，请重新获取');
+                        return;
+                    }
+                    if (stored.code !== code) {
+                        showModal('❌ 验证失败', '验证码错误');
+                        return;
+                    }
+                    clearOfflineCode(phone);
+                    verifySuccess = true;
+                } else {
+                    // 在线模式：后端校验验证码
+                    const verifyResponse = await fetch(`${API_BASE_URL}/verify-code`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ phone, code })
+                    });
 
-                if (!verifyResult.success) {
-                    showModal('❌ 验证失败', verifyResult.message);
-                    return;
+                    const verifyResult = await verifyResponse.json();
+
+                    if (!verifyResult.success) {
+                        showModal('❌ 验证失败', verifyResult.message);
+                        return;
+                    }
+                    verifySuccess = true;
                 }
+
+                if (!verifySuccess) return;
 
                 // 验证码正确，检查是否已注册
                 const users = JSON.parse(localStorage.getItem('users')) || {};
@@ -2456,6 +2704,8 @@
 
                     saveUserData();
                     updateLoginStatusBar();
+                    updateSettingsAccountInfo();
+                    updateProfileLoginState();
                     updateStats();
                     closeLoginModal();
                     showModal('🎉 登录成功', `欢迎回来，${userData.userName}！`);
@@ -2496,27 +2746,35 @@
             }
 
             try {
-                // 调用后端API进行用户注册
-                const code = document.getElementById('codeInput').value.trim();
+                let token;
 
-                const response = await fetch(`${API_BASE_URL}/auth`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        phone,
-                        code,
-                        userName,
-                        avatar: selectedAvatar
-                    })
-                });
+                if (isOfflineMode) {
+                    // 离线模式：生成本地 mock token
+                    token = btoa(`${phone}_${Date.now()}_${Math.random()}`);
+                } else {
+                    // 在线模式：调用后端API进行用户注册
+                    const code = document.getElementById('codeInput').value.trim();
 
-                const result = await response.json();
+                    const response = await fetch(`${API_BASE_URL}/auth`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            phone,
+                            code,
+                            userName,
+                            avatar: selectedAvatar
+                        })
+                    });
 
-                if (!result.success) {
-                    showModal('❌ 注册失败', result.message);
-                    return;
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        showModal('❌ 注册失败', result.message);
+                        return;
+                    }
+                    token = result.data.token;
                 }
 
                 // 保存新用户到本地
@@ -2524,7 +2782,7 @@
                 userData.phone = phone;
                 userData.userName = userName;
                 userData.avatar = selectedAvatar;
-                userData.token = result.data.token;
+                userData.token = token;
 
                 const users = JSON.parse(localStorage.getItem('users')) || {};
                 users[phone] = {
@@ -2532,13 +2790,15 @@
                     avatar: selectedAvatar,
                     playerData: playerData,
                     createdAt: Date.now(),
-                    token: result.data.token
+                    token: token
                 };
                 localStorage.setItem('users', JSON.stringify(users));
 
                 saveUserData();
                 savePlayerData();
                 updateLoginStatusBar();
+                updateSettingsAccountInfo();
+                updateProfileLoginState();
                 updateStats();
 
                 document.getElementById('profileModal').classList.remove('show');
@@ -2564,8 +2824,38 @@
                 userData.avatar = '🎮';
                 saveUserData();
                 updateLoginStatusBar();
+                updateSettingsAccountInfo();
+                updateProfileLoginState();
                 showModal('👋 已退出登录', '期待您的下次光临！');
             }
+        }
+
+        // 切换账号
+        function switchAccount() {
+            document.getElementById('switchAccountModal').classList.add('show');
+        }
+
+        // 关闭切换账号弹窗
+        function closeSwitchAccountModal() {
+            document.getElementById('switchAccountModal').classList.remove('show');
+        }
+
+        // 确认切换账号
+        function confirmSwitchAccount() {
+            closeSwitchAccountModal();
+            // 先退出当前账号
+            userData.isLoggedIn = false;
+            userData.phone = '';
+            userData.userName = '';
+            userData.avatar = '🎮';
+            saveUserData();
+            updateLoginStatusBar();
+            updateSettingsAccountInfo();
+            updateProfileLoginState();
+            // 延迟弹出登录框
+            setTimeout(() => {
+                showLoginModal();
+            }, 300);
         }
 
         // 搜索游戏
@@ -2750,6 +3040,8 @@
 
         // 加载个人中心页面
         function loadProfilePage() {
+            updateProfileLoginState();
+
             // 显示头像
             const avatarImg = document.getElementById('profileAvatar');
             const avatarEmoji = document.getElementById('profileAvatarEmoji');
@@ -2782,6 +3074,18 @@
 
             // 加载游戏历史
             loadGameHistory();
+        }
+
+        // 更新个人中心登录状态显示
+        function updateProfileLoginState() {
+            const loginTip = document.getElementById('profileLoginTip');
+            if (!loginTip) return;
+
+            if (userData.isLoggedIn) {
+                loginTip.style.display = 'none';
+            } else {
+                loginTip.style.display = 'block';
+            }
         }
 
         // 上传头像
@@ -3688,6 +3992,33 @@
                 console.error('加载设置失败:', e);
             }
             applySettings();
+            updateSettingsAccountInfo();
+        }
+
+        // 更新设置页面的账号信息
+        function updateSettingsAccountInfo() {
+            const avatarEl = document.getElementById('settingsAvatar');
+            const nameEl = document.getElementById('settingsAccountName');
+            const phoneEl = document.getElementById('settingsAccountPhone');
+            const switchBtn = document.getElementById('switchAccountBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const loginBtn2 = document.getElementById('loginBtn2');
+
+            if (userData.isLoggedIn) {
+                avatarEl.textContent = userData.avatar || '🎮';
+                nameEl.textContent = userData.userName || '玩家';
+                phoneEl.textContent = userData.phone || '';
+                switchBtn.style.display = 'block';
+                logoutBtn.style.display = 'block';
+                loginBtn2.style.display = 'none';
+            } else {
+                avatarEl.textContent = '🎮';
+                nameEl.textContent = '游客';
+                phoneEl.textContent = '未登录';
+                switchBtn.style.display = 'none';
+                logoutBtn.style.display = 'none';
+                loginBtn2.style.display = 'block';
+            }
         }
 
         // 保存设置
@@ -3809,8 +4140,17 @@
         }
 
         // 初始化
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', async function() {
             console.log('DOM加载完成');
+
+            // 检测后端是否可用
+            const backendAvailable = await detectBackend();
+            isOfflineMode = !backendAvailable;
+            if (isOfflineMode) {
+                console.log('🧪 后端未启动，已切换到离线模拟模式');
+            } else {
+                console.log('✅ 后端已连接，使用在线模式');
+            }
 
             // 自动清除可能导致重复的自定义游戏数据
             try {
@@ -3870,145 +4210,494 @@
             const cx = w / 2;
             const cy = h / 2;
 
+            // 工具：画圆形按钮/装饰
+            function dot(x, y, r, color) {
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 工具：画小星星
+            function star(x, y, r, color) {
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const a = (i * 4 * Math.PI / 5) - Math.PI / 2;
+                    const px = x + Math.cos(a) * r;
+                    const py = y + Math.sin(a) * r;
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+
             switch (gameId) {
-                case 'snake':
-                    // 蛇头+身体
-                    drawRoundedRect3D(ctx, cx - 12, cy - 4, 10, 10, 2, '#4ade80');
-                    drawRoundedRect3D(ctx, cx - 2, cy - 4, 10, 10, 2, '#22c55e');
-                    drawRoundedRect3D(ctx, cx + 8, cy - 4, 10, 10, 2, '#16a34a');
+                case 'snake': {
+                    // 草绿径向背景
+                    const bg = ctx.createRadialGradient(cx, cy, 5, cx, cy, 35);
+                    bg.addColorStop(0, '#dcfce7');
+                    bg.addColorStop(1, '#86efac');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 浅色网格
+                    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+                    ctx.lineWidth = 0.8;
+                    for (let i = 0; i <= 60; i += 12) {
+                        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke();
+                    }
+                    // 蛇身（弯曲）
+                    const seg = [
+                        {x: cx + 14, y: cy - 2},
+                        {x: cx + 4, y: cy - 2},
+                        {x: cx - 6, y: cy - 2},
+                        {x: cx - 14, y: cy + 4},
+                        {x: cx - 14, y: cy + 12}
+                    ];
+                    for (let i = seg.length - 1; i >= 1; i--) {
+                        const s = seg[i];
+                        const col = i % 2 === 0 ? '#22c55e' : '#16a34a';
+                        drawRoundedRect3D(ctx, s.x - 5, s.y - 5, 10, 10, 3, col);
+                    }
+                    // 蛇头
+                    drawRoundedRect3D(ctx, seg[0].x - 6, seg[0].y - 6, 12, 12, 4, '#4ade80');
                     // 眼睛
                     ctx.fillStyle = 'white';
-                    ctx.beginPath(); ctx.arc(cx + 10, cy - 2, 2, 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = '#1a1a2e';
-                    ctx.beginPath(); ctx.arc(cx + 11, cy - 2, 1, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(seg[0].x + 2, seg[0].y - 2, 2.2, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#1e293b';
+                    ctx.beginPath(); ctx.arc(seg[0].x + 3, seg[0].y - 2, 1.1, 0, Math.PI * 2); ctx.fill();
+                    // 苹果
+                    drawApple(ctx, cx - 6, cy + 16, 5, 0);
                     break;
-                case '2048':
-                    // 数字方块
-                    drawRoundedRect3D(ctx, cx - 14, cy - 14, 12, 12, 2, '#fbbf24');
-                    drawRoundedRect3D(ctx, cx + 2, cy - 14, 12, 12, 2, '#f97316');
-                    drawRoundedRect3D(ctx, cx - 14, cy + 2, 12, 12, 2, '#ef4444');
-                    drawRoundedRect3D(ctx, cx + 2, cy + 2, 12, 12, 2, '#8b5cf6');
+                }
+                case '2048': {
+                    // 暖橙渐变背景
+                    const bg = ctx.createLinearGradient(0, 0, w, h);
+                    bg.addColorStop(0, '#ffedd5');
+                    bg.addColorStop(1, '#fdba74');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 2x2 彩色数字方块
+                    const tiles = [
+                        {x: cx - 15, y: cy - 15, n: '2', c: '#fbbf24'},
+                        {x: cx + 1, y: cy - 15, n: '4', c: '#f97316'},
+                        {x: cx - 15, y: cy + 1, n: '8', c: '#ef4444'},
+                        {x: cx + 1, y: cy + 1, n: '16', c: '#8b5cf6'}
+                    ];
+                    for (const t of tiles) {
+                        drawRoundedRect3D(ctx, t.x, t.y, 14, 14, 2, t.c);
+                        ctx.fillStyle = 'white';
+                        ctx.font = 'bold 7px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(t.n, t.x + 7, t.y + 7.5);
+                    }
                     break;
-                case 'runner':
-                    // 跑步者剪影
+                }
+                case 'runner': {
+                    // 天空蓝渐变
+                    const bg = ctx.createLinearGradient(0, 0, 0, h);
+                    bg.addColorStop(0, '#bae6fd');
+                    bg.addColorStop(0.6, '#e0f2fe');
+                    bg.addColorStop(1, '#86efac');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 云朵
+                    drawCloud(ctx, 4, 10, 20, 8, 'rgba(255,255,255,0.6)');
+                    drawCloud(ctx, 38, 6, 18, 6, 'rgba(255,255,255,0.4)');
+                    // 地面线条
+                    ctx.strokeStyle = 'rgba(34,197,94,0.3)';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < 6; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(i * 12, h - 2);
+                        ctx.lineTo(i * 12 + 4, h - 2);
+                        ctx.stroke();
+                    }
+                    // 跑步小人
+                    ctx.lineWidth = 2.2;
+                    ctx.strokeStyle = '#f472b6';
+                    ctx.lineCap = 'round';
+                    // 头
+                    ctx.fillStyle = '#f472b6';
+                    ctx.beginPath(); ctx.arc(cx, cy - 9, 4, 0, Math.PI * 2); ctx.fill();
+                    // 身体
+                    ctx.beginPath(); ctx.moveTo(cx, cy - 5); ctx.lineTo(cx, cy + 3); ctx.stroke();
+                    // 手臂（跑步姿态）
+                    ctx.beginPath(); ctx.moveTo(cx, cy - 2); ctx.lineTo(cx - 6, cy - 5); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(cx, cy - 2); ctx.lineTo(cx + 6, cy + 1); ctx.stroke();
+                    // 腿（跑步姿态）
+                    ctx.beginPath(); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx - 5, cy + 10); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx + 5, cy + 10); ctx.stroke();
+                    // 小障碍物
+                    drawRoundedRect3D(ctx, cx + 14, cy + 6, 6, 6, 1, '#fb923c');
+                    break;
+                }
+                case 'shooter': {
+                    // 深空渐变
+                    const bg = ctx.createLinearGradient(0, 0, 0, h);
+                    bg.addColorStop(0, '#1e1b4b');
+                    bg.addColorStop(1, '#312e81');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 星星
+                    dot(cx - 18, cy - 18, 1, 'rgba(255,255,255,0.6)');
+                    dot(cx + 16, cy - 12, 0.8, 'rgba(255,255,255,0.4)');
+                    dot(cx - 10, cy + 16, 1.2, 'rgba(255,255,255,0.5)');
+                    dot(cx + 20, cy + 18, 0.7, 'rgba(255,255,255,0.3)');
+                    star(cx - 4, cy - 14, 2, '#fbbf24');
+                    // 我方飞船（简化版）
+                    ctx.save();
                     ctx.fillStyle = '#f472b6';
                     ctx.beginPath();
-                    ctx.arc(cx, cy - 8, 5, 0, Math.PI * 2); // 头
-                    ctx.fill();
-                    ctx.lineWidth = 3;
-                    ctx.strokeStyle = '#f472b6';
-                    ctx.beginPath(); ctx.moveTo(cx, cy - 3); ctx.lineTo(cx, cy + 5); ctx.stroke(); // 身体
-                    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - 6, cy + 2); ctx.stroke(); // 左臂
-                    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 6, cy - 2); ctx.stroke(); // 右臂
-                    ctx.beginPath(); ctx.moveTo(cx, cy + 5); ctx.lineTo(cx - 5, cy + 12); ctx.stroke(); // 左腿
-                    ctx.beginPath(); ctx.moveTo(cx, cy + 5); ctx.lineTo(cx + 5, cy + 10); ctx.stroke(); // 右腿
-                    break;
-                case 'shooter':
-                    // 小飞船
-                    drawSpaceship(ctx, cx - 10, cy - 12, 20, 24, '#60a5fa', 0.8);
-                    break;
-                case 'pong':
-                    // 球拍和球
-                    drawGlowRect(ctx, cx - 12, cy - 10, 4, 20, '#22d3ee', 5);
-                    drawGlowRect(ctx, cx + 8, cy - 10, 4, 20, '#22d3ee', 5);
-                    drawGradientCircle(ctx, cx, cy, 4, '#a5f3fc', '#22d3ee');
-                    break;
-                case 'breakout':
-                    // 砖块和球
-                    for (let i = 0; i < 3; i++) {
-                        for (let j = 0; j < 3; j++) {
-                            const colors = ['#f87171', '#fbbf24', '#34d399'];
-                            drawRoundedRect3D(ctx, cx - 14 + j * 10, cy - 12 + i * 8, 8, 6, 1, colors[i]);
-                        }
-                    }
-                    drawGradientCircle(ctx, cx, cy + 10, 3, '#fef08a', '#facc15');
-                    break;
-                case 'tile':
-                    // 彩色方块
-                    drawRoundedRect3D(ctx, cx - 12, cy - 12, 10, 10, 2, '#f87171');
-                    drawRoundedRect3D(ctx, cx + 2, cy - 12, 10, 10, 2, '#60a5fa');
-                    drawRoundedRect3D(ctx, cx - 12, cy + 2, 10, 10, 2, '#34d399');
-                    drawRoundedRect3D(ctx, cx + 2, cy + 2, 10, 10, 2, '#fbbf24');
-                    break;
-                case 'memory':
-                    // 扑克牌
-                    drawRoundedRect3D(ctx, cx - 10, cy - 12, 14, 20, 2, '#e2e8f0');
-                    drawRoundedRect3D(ctx, cx - 4, cy - 10, 14, 20, 2, '#f1f5f9');
-                    ctx.fillStyle = '#ef4444';
-                    ctx.font = '10px sans-serif';
-                    ctx.fillText('♥', cx - 2, cy + 2);
-                    break;
-                case 'minesweeper':
-                    // 网格+地雷
-                    for (let i = 0; i < 3; i++) {
-                        for (let j = 0; j < 3; j++) {
-                            drawRoundedRect3D(ctx, cx - 12 + j * 9, cy - 12 + i * 9, 7, 7, 1, '#94a3b8');
-                        }
-                    }
-                    drawGradientCircle(ctx, cx + 2, cy + 2, 4, '#f87171', '#dc2626');
-                    break;
-                case 'gomoku':
-                    // 棋盘+棋子
-                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                    ctx.lineWidth = 1;
-                    for (let i = 0; i < 4; i++) {
-                        ctx.beginPath(); ctx.moveTo(cx - 10, cy - 10 + i * 7); ctx.lineTo(cx + 10, cy - 10 + i * 7); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(cx - 10 + i * 7, cy - 10); ctx.lineTo(cx - 10 + i * 7, cy + 10); ctx.stroke();
-                    }
-                    drawGradientCircle(ctx, cx - 3, cy - 3, 3, '#1e293b', '#0f172a', false);
-                    drawGradientCircle(ctx, cx + 3, cy + 3, 3, '#e2e8f0', '#cbd5e1', false);
-                    break;
-                case 'tetris':
-                    // 俄罗斯方块
-                    drawRoundedRect3D(ctx, cx - 14, cy - 4, 8, 8, 1, '#22d3ee');
-                    drawRoundedRect3D(ctx, cx - 6, cy - 4, 8, 8, 1, '#22d3ee');
-                    drawRoundedRect3D(ctx, cx + 2, cy - 4, 8, 8, 1, '#22d3ee');
-                    drawRoundedRect3D(ctx, cx + 2, cy - 12, 8, 8, 1, '#22d3ee');
-                    break;
-                case 'whack':
-                    // 地鼠洞+地鼠
-                    ctx.fillStyle = '#78350f';
-                    ctx.beginPath(); ctx.ellipse(cx, cy + 8, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
-                    drawGradientCircle(ctx, cx, cy - 2, 6, '#d4a574', '#a8714a');
-                    ctx.fillStyle = '#1a1a2e';
-                    ctx.beginPath(); ctx.arc(cx - 2, cy - 3, 1, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(cx + 2, cy - 3, 1, 0, Math.PI * 2); ctx.fill();
-                    break;
-                case 'tank':
-                    // 小坦克
-                    drawRoundedRect3D(ctx, cx - 10, cy - 6, 20, 12, 2, '#4ade80');
-                    drawRoundedRect3D(ctx, cx - 6, cy - 10, 12, 8, 2, '#22c55e');
-                    ctx.fillStyle = '#1a1a2e';
-                    ctx.fillRect(cx - 1, cy - 16, 2, 8);
-                    break;
-                case 'puzzle':
-                    // 拼图块
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.beginPath();
-                    ctx.moveTo(cx - 10, cy - 10);
-                    ctx.lineTo(cx + 2, cy - 10);
-                    ctx.arc(cx + 2, cy - 7, 3, -Math.PI / 2, Math.PI / 2);
-                    ctx.lineTo(cx + 10, cy - 4);
-                    ctx.lineTo(cx + 10, cy + 4);
-                    ctx.arc(cx + 7, cy + 4, 3, 0, Math.PI);
-                    ctx.lineTo(cx - 10, cy + 10);
+                    ctx.moveTo(cx, cy + 10);
+                    ctx.lineTo(cx - 8, cy + 18);
+                    ctx.lineTo(cx - 5, cy + 14);
+                    ctx.lineTo(cx - 5, cy + 22);
+                    ctx.lineTo(cx + 5, cy + 22);
+                    ctx.lineTo(cx + 5, cy + 14);
+                    ctx.lineTo(cx + 8, cy + 18);
                     ctx.closePath();
                     ctx.fill();
-                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    // 驾驶舱
+                    ctx.fillStyle = '#bae6fd';
+                    ctx.beginPath(); ctx.arc(cx, cy + 16, 3, 0, Math.PI * 2); ctx.fill();
+                    // 激光
+                    drawLaser(ctx, cx - 1, cy + 6, 2, 6, '#f472b6', 4);
+                    // 敌机
+                    ctx.fillStyle = '#60a5fa';
+                    ctx.beginPath();
+                    ctx.moveTo(cx + 12, cy - 12);
+                    ctx.lineTo(cx + 8, cy - 6);
+                    ctx.lineTo(cx + 16, cy - 6);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath(); ctx.arc(cx + 12, cy - 10, 1.5, 0, Math.PI * 2); ctx.fill();
+                    break;
+                }
+                case 'pong': {
+                    // 霓虹深色背景
+                    const bg = ctx.createLinearGradient(0, 0, w, h);
+                    bg.addColorStop(0, '#0f172a');
+                    bg.addColorStop(1, '#1e293b');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 中间虚线
+                    ctx.strokeStyle = 'rgba(34,211,238,0.25)';
                     ctx.lineWidth = 1;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath(); ctx.moveTo(cx, 4); ctx.lineTo(cx, h - 4); ctx.stroke();
+                    ctx.setLineDash([]);
+                    // 两侧挡板（发光）
+                    drawGlowRect(ctx, 6, cy - 10, 4, 20, '#22d3ee', 8);
+                    drawGlowRect(ctx, w - 10, cy - 10, 4, 20, '#22d3ee', 8);
+                    // 发光球
+                    drawGradientCircle(ctx, cx + 4, cy - 3, 4, '#a5f3fc', '#22d3ee');
+                    // 轨迹点
+                    dot(cx + 1, cy, 1.2, 'rgba(165,243,252,0.4)');
+                    dot(cx - 2, cy + 2, 0.8, 'rgba(165,243,252,0.2)');
+                    break;
+                }
+                case 'breakout': {
+                    // 深紫背景
+                    const bg = ctx.createLinearGradient(0, 0, 0, h);
+                    bg.addColorStop(0, '#2e1065');
+                    bg.addColorStop(1, '#4c1d95');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 3行彩色砖块
+                    const brickColors = ['#f87171', '#fbbf24', '#34d399'];
+                    for (let row = 0; row < 3; row++) {
+                        for (let col = 0; col < 4; col++) {
+                            drawRoundedRect3D(ctx, 6 + col * 12, 6 + row * 9, 10, 7, 1, brickColors[row]);
+                        }
+                    }
+                    // 底部挡板
+                    drawGlowRect(ctx, cx - 10, h - 10, 20, 4, '#a78bfa', 6);
+                    // 球
+                    drawGradientCircle(ctx, cx - 2, cy + 8, 3.5, '#fef08a', '#facc15');
+                    break;
+                }
+                case 'tile': {
+                    // 粉紫梦幻背景
+                    const bg = ctx.createRadialGradient(cx, cy, 5, cx, cy, 35);
+                    bg.addColorStop(0, '#fce7f3');
+                    bg.addColorStop(1, '#e9d5ff');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 糖果方块
+                    drawCandyBlock(ctx, cx - 14, cy - 14, 12, 12, 3, '#f87171');
+                    drawCandyBlock(ctx, cx + 2, cy - 14, 12, 12, 3, '#60a5fa');
+                    drawCandyBlock(ctx, cx - 14, cy + 2, 12, 12, 3, '#34d399');
+                    drawCandyBlock(ctx, cx + 2, cy + 2, 12, 12, 3, '#fbbf24');
+                    // 交换箭头装饰
+                    ctx.strokeStyle = 'rgba(244,114,182,0.35)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + 8, cy - 4); ctx.lineTo(cx + 14, cy - 4); ctx.lineTo(cx + 12, cy - 6);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(cx + 8, cy + 2); ctx.lineTo(cx + 14, cy + 2); ctx.lineTo(cx + 12, cy + 4);
                     ctx.stroke();
                     break;
-                case 'tower':
-                    // 塔
-                    drawRoundedRect3D(ctx, cx - 8, cy + 4, 16, 10, 1, '#94a3b8');
-                    drawRoundedRect3D(ctx, cx - 6, cy - 4, 12, 10, 1, '#64748b');
-                    drawRoundedRect3D(ctx, cx - 4, cy - 10, 8, 8, 1, '#475569');
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.beginPath(); ctx.arc(cx, cy - 14, 2, 0, Math.PI * 2); ctx.fill();
+                }
+                case 'memory': {
+                    // 暖黄背景
+                    const bg = ctx.createLinearGradient(0, 0, w, h);
+                    bg.addColorStop(0, '#fef3c7');
+                    bg.addColorStop(1, '#fde68a');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 背面牌
+                    drawRoundedRect3D(ctx, cx - 14, cy - 10, 14, 20, 2, '#a78bfa');
+                    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                    ctx.font = 'bold 9px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('?', cx - 7, cy + 2);
+                    // 翻开牌（红心）
+                    drawRoundedRect3D(ctx, cx + 2, cy - 12, 14, 20, 2, '#f8fafc');
+                    ctx.fillStyle = '#ef4444';
+                    ctx.font = '12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('♥', cx + 9, cy + 4);
+                    // 小装饰
+                    star(cx - 2, cy + 18, 2, '#fbbf24');
                     break;
-                default:
-                    // 默认几何
-                    drawGradientCircle(ctx, cx, cy, 12, '#60a5fa', '#3b82f6');
+                }
+                case 'minesweeper': {
+                    // 沙色背景
+                    const bg = ctx.createLinearGradient(0, 0, 0, h);
+                    bg.addColorStop(0, '#fef3c7');
+                    bg.addColorStop(1, '#fde68a');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 4x4 小格子
+                    const gs = 12;
+                    const ox = cx - 22;
+                    const oy = cy - 22;
+                    for (let i = 0; i < 4; i++) {
+                        for (let j = 0; j < 4; j++) {
+                            const x = ox + j * gs;
+                            const y = oy + i * gs;
+                            // 未翻开（灰色）或已翻开（浅色）
+                            if ((i + j) % 3 === 0) {
+                                drawRoundedRect3D(ctx, x + 1, y + 1, gs - 2, gs - 2, 1, '#cbd5e1');
+                            } else {
+                                drawRoundedRect3D(ctx, x + 1, y + 1, gs - 2, gs - 2, 1, '#e2e8f0');
+                                // 数字
+                                if ((i + j) % 5 === 1) {
+                                    ctx.fillStyle = '#3b82f6';
+                                    ctx.font = 'bold 7px sans-serif';
+                                    ctx.textAlign = 'center';
+                                    ctx.fillText('1', x + gs / 2, y + gs / 2 + 2.5);
+                                }
+                                if ((i + j) % 5 === 2) {
+                                    ctx.fillStyle = '#22c55e';
+                                    ctx.font = 'bold 7px sans-serif';
+                                    ctx.textAlign = 'center';
+                                    ctx.fillText('2', x + gs / 2, y + gs / 2 + 2.5);
+                                }
+                            }
+                        }
+                    }
+                    // 地雷
+                    drawGradientCircle(ctx, ox + 30, oy + 18, 4, '#f87171', '#dc2626');
+                    ctx.fillStyle = '#1e293b';
+                    ctx.beginPath(); ctx.arc(ox + 30, oy + 18, 1.5, 0, Math.PI * 2); ctx.fill();
+                    break;
+                }
+                case 'gomoku': {
+                    // 木纹暖色背景
+                    const bg = ctx.createRadialGradient(cx, cy, 5, cx, cy, 35);
+                    bg.addColorStop(0, '#fde68a');
+                    bg.addColorStop(1, '#d97706');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 棋盘网格
+                    ctx.strokeStyle = 'rgba(120,53,15,0.35)';
+                    ctx.lineWidth = 0.8;
+                    const goSize = 32;
+                    const goOff = (w - goSize) / 2;
+                    for (let i = 0; i < 5; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(goOff, goOff + i * goSize / 4);
+                        ctx.lineTo(goOff + goSize, goOff + i * goSize / 4);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(goOff + i * goSize / 4, goOff);
+                        ctx.lineTo(goOff + i * goSize / 4, goOff + goSize);
+                        ctx.stroke();
+                    }
+                    // 棋子
+                    drawGradientCircle(ctx, goOff + 8, goOff + 8, 3.5, '#1e293b', '#0f172a', false);
+                    drawGradientCircle(ctx, goOff + 24, goOff + 8, 3.5, '#e2e8f0', '#cbd5e1', false);
+                    drawGradientCircle(ctx, goOff + 16, goOff + 16, 3.5, '#1e293b', '#0f172a', false);
+                    drawGradientCircle(ctx, goOff + 8, goOff + 24, 3.5, '#e2e8f0', '#cbd5e1', false);
+                    drawGradientCircle(ctx, goOff + 24, goOff + 24, 3.5, '#1e293b', '#0f172a', false);
+                    break;
+                }
+                case 'tetris': {
+                    // 深蓝渐变背景
+                    const bg = ctx.createLinearGradient(0, 0, 0, h);
+                    bg.addColorStop(0, '#0c4a6e');
+                    bg.addColorStop(1, '#164e63');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 底部已堆积方块
+                    drawRoundedRect3D(ctx, cx - 14, cy + 10, 8, 8, 1, '#f472b6');
+                    drawRoundedRect3D(ctx, cx - 6, cy + 10, 8, 8, 1, '#a78bfa');
+                    drawRoundedRect3D(ctx, cx + 2, cy + 10, 8, 8, 1, '#f472b6');
+                    drawRoundedRect3D(ctx, cx + 10, cy + 10, 8, 8, 1, '#34d399');
+                    drawRoundedRect3D(ctx, cx - 6, cy + 2, 8, 8, 1, '#fbbf24');
+                    drawRoundedRect3D(ctx, cx + 2, cy + 2, 8, 8, 1, '#fbbf24');
+                    // 下落中的 L 型方块
+                    drawRoundedRect3D(ctx, cx + 2, cy - 14, 8, 8, 1, '#22d3ee');
+                    drawRoundedRect3D(ctx, cx + 2, cy - 6, 8, 8, 1, '#22d3ee');
+                    drawRoundedRect3D(ctx, cx + 2, cy + 2, 8, 8, 1, '#22d3ee');
+                    drawRoundedRect3D(ctx, cx - 6, cy + 2, 8, 8, 1, '#22d3ee');
+                    // 小星星装饰
+                    star(cx + 18, cy - 16, 2, '#fef08a');
+                    break;
+                }
+                case 'whack': {
+                    // 草绿背景
+                    const bg = ctx.createRadialGradient(cx, cy, 5, cx, cy, 35);
+                    bg.addColorStop(0, '#dcfce7');
+                    bg.addColorStop(1, '#86efac');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 三个地鼠洞
+                    ctx.fillStyle = '#78350f';
+                    ctx.beginPath(); ctx.ellipse(cx - 14, cy + 14, 7, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.ellipse(cx, cy + 14, 7, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.ellipse(cx + 14, cy + 14, 7, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+                    // 中间探头的地鼠
+                    drawGradientCircle(ctx, cx, cy + 4, 7, '#d4a574', '#a8714a');
+                    // 耳朵
+                    ctx.fillStyle = '#a8714a';
+                    ctx.beginPath(); ctx.arc(cx - 5, cy - 1, 2.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + 5, cy - 1, 2.5, 0, Math.PI * 2); ctx.fill();
+                    // 眼睛
+                    ctx.fillStyle = '#1e293b';
+                    ctx.beginPath(); ctx.arc(cx - 2.5, cy + 3, 1.3, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + 2.5, cy + 3, 1.3, 0, Math.PI * 2); ctx.fill();
+                    // 鼻子
+                    ctx.fillStyle = '#f472b6';
+                    ctx.beginPath(); ctx.arc(cx, cy + 6, 1.5, 0, Math.PI * 2); ctx.fill();
+                    // 锤子（右上角）
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillRect(cx + 16, cy - 14, 2.5, 10);
+                    drawRoundedRect3D(ctx, cx + 12, cy - 18, 10, 6, 1, '#ef4444');
+                    break;
+                }
+                case 'tank': {
+                    // 军绿背景
+                    const bg = ctx.createLinearGradient(0, 0, w, h);
+                    bg.addColorStop(0, '#3f6212');
+                    bg.addColorStop(1, '#65a30d');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 网格迷彩感
+                    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i <= 60; i += 15) {
+                        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke();
+                    }
+                    // 我方坦克
+                    drawRoundedRect3D(ctx, cx - 10, cy + 2, 20, 10, 2, '#4ade80');
+                    drawRoundedRect3D(ctx, cx - 6, cy - 4, 12, 8, 2, '#22c55e');
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(cx - 1, cy - 12, 2.5, 10);
+                    // 炮弹
+                    dot(cx + 4, cy - 14, 2, '#fbbf24');
+                    dot(cx + 6, cy - 16, 1.2, '#fef08a');
+                    // 敌方小坦克（右上角）
+                    drawRoundedRect3D(ctx, cx + 14, cy - 16, 8, 5, 1, '#f87171');
+                    break;
+                }
+                case 'puzzle': {
+                    // 彩虹暖色背景
+                    const bg = ctx.createRadialGradient(cx, cy, 5, cx, cy, 35);
+                    bg.addColorStop(0, '#ffedd5');
+                    bg.addColorStop(1, '#fcd34d');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 散落的拼图块
+                    // 块1（红）
+                    ctx.fillStyle = '#f87171';
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 14, cy - 10);
+                    ctx.lineTo(cx - 4, cy - 10);
+                    ctx.arc(cx - 4, cy - 7, 3, -Math.PI / 2, Math.PI / 2);
+                    ctx.lineTo(cx - 14, cy - 4);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    // 块2（蓝）
+                    ctx.fillStyle = '#60a5fa';
+                    ctx.beginPath();
+                    ctx.moveTo(cx + 2, cy - 8);
+                    ctx.lineTo(cx + 12, cy - 8);
+                    ctx.lineTo(cx + 12, cy + 2);
+                    ctx.arc(cx + 9, cy + 2, 3, 0, Math.PI);
+                    ctx.lineTo(cx + 2, cy + 8);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    // 块3（绿）
+                    ctx.fillStyle = '#34d399';
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 10, cy + 6);
+                    ctx.lineTo(cx - 2, cy + 6);
+                    ctx.arc(cx - 2, cy + 9, 3, -Math.PI / 2, Math.PI / 2);
+                    ctx.lineTo(cx - 10, cy + 12);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    break;
+                }
+                case 'tower': {
+                    // 黄昏渐变背景
+                    const bg = ctx.createLinearGradient(0, 0, 0, h);
+                    bg.addColorStop(0, '#fbcfe8');
+                    bg.addColorStop(0.5, '#f5d0fe');
+                    bg.addColorStop(1, '#ddd6fe');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    // 地面
+                    ctx.fillStyle = 'rgba(167,139,250,0.25)';
+                    ctx.fillRect(0, h - 6, w, 6);
+                    // 基地
+                    drawRoundedRect3D(ctx, cx - 10, cy + 10, 20, 8, 2, '#94a3b8');
+                    // 塔身
+                    drawRoundedRect3D(ctx, cx - 6, cy - 2, 12, 14, 2, '#64748b');
+                    drawRoundedRect3D(ctx, cx - 4, cy - 10, 8, 10, 2, '#475569');
+                    // 塔顶宝石
+                    drawGradientCircle(ctx, cx, cy - 14, 3.5, '#fbbf24', '#f59e0b');
+                    star(cx, cy - 14, 1.5, '#fef08a');
+                    // 敌人路径点
+                    dot(cx - 18, cy + 14, 2, 'rgba(248,113,113,0.6)');
+                    dot(cx - 10, cy + 14, 2, 'rgba(248,113,113,0.4)');
+                    dot(cx + 2, cy + 14, 2, 'rgba(248,113,113,0.3)');
+                    break;
+                }
+                default: {
+                    // 默认可爱渐变球
+                    const bg = ctx.createRadialGradient(cx, cy, 5, cx, cy, 35);
+                    bg.addColorStop(0, '#e0f2fe');
+                    bg.addColorStop(1, '#bae6fd');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, w, h);
+                    drawGradientCircle(ctx, cx, cy, 14, '#60a5fa', '#3b82f6');
+                    star(cx - 10, cy - 10, 2.5, '#fbbf24');
+                    star(cx + 12, cy + 8, 2, '#f472b6');
+                }
             }
         }
     </script>

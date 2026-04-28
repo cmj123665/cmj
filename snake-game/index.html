@@ -102,6 +102,17 @@
             cursor: pointer; font-size: 1rem; margin: 0 5px;
             box-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
         }
+        .level-bar { width: 100%; max-width: 600px; margin: 8px auto 0; background: rgba(255,255,255,0.6); border-radius: 10px; padding: 8px 14px; border: 1px solid rgba(34,197,94,0.15); }
+        .level-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+        .level-track { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .level-fill { height: 100%; background: linear-gradient(135deg, #4ade80, #22c55e); border-radius: 3px; transition: width 0.3s; }
+        .level-select-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .level-card { padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.6); border: 1px solid rgba(203,213,225,0.5); cursor: pointer; transition: all 0.2s; text-align: center; }
+        .level-card:hover { transform: translateY(-2px); border-color: #22c55e; }
+        .level-card.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); }
+        .level-card.current { border-color: #22c55e; background: rgba(34,197,94,0.1); }
+        .level-card-num { font-size: 20px; font-weight: bold; color: #22c55e; }
+        .level-card-target { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
         .game-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
@@ -169,17 +180,21 @@
     <div class="game-container">
         <div class="header">
             <h1>贪吃蛇</h1>
-            <div class="score-board">得分: <span id="score">0</span></div>
+            <div class="score-board">得分: <span id="score">0</span> | 速度: <span id="level">1</span></div>
             <div>
                 <button class="btn" onclick="backToHall()">🏠 返回主页</button>
                 <button class="btn" onclick="restartGame()">🔄 重新开始</button>
             </div>
         </div>
+        <div class="level-bar">
+            <div class="level-info"><span id="levelName">第 1 关</span><span id="levelProgress">苹果 0 / 5</span></div>
+            <div class="level-track"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
+        </div>
         <canvas id="gameCanvas" width="600" height="600"></canvas>
         <div class="game-over" id="gameOver">
-            <h2>游戏结束!</h2>
-            <p>你的得分: <span id="finalScore" style="color: #f59e0b; font-weight: bold;">0</span></p>
-            <button class="btn" onclick="restartGame()">再来一局</button>
+            <h2 id="gameOverTitle">游戏结束!</h2>
+            <p id="gameOverMsg">你的得分: <span id="finalScore" style="color: #f59e0b; font-weight: bold;">0</span></p>
+            <div id="gameOverButtons"><button class="btn" onclick="restartGame()">再来一局</button></div>
         </div>
     </div>
 
@@ -194,19 +209,67 @@
         let dx = 0;
         let dy = 0;
         let score = 0;
+        let level = 1;
         let gameLoop;
-        let baseGameSpeed = 100;
+        let baseGameSpeed = 150;
         let time = 0;
         let flowers = [];
+        let applesEaten = 0;
         const particleSystem = new ParticleSystem(100);
+
+        const LEVELS = [
+            { id: 1, name: '青青草原', targetApples: 5 },
+            { id: 2, name: '花丛小径', targetApples: 8 },
+            { id: 3, name: '溪流边缘', targetApples: 12 },
+            { id: 4, name: '森林深处', targetApples: 15 },
+            { id: 5, name: '幽暗沼泽', targetApples: 20 },
+            { id: 6, name: '荆棘之路', targetApples: 25 },
+            { id: 7, name: '迷雾山谷', targetApples: 30 },
+            { id: 8, name: '毒蛇巢穴', targetApples: 40 },
+            { id: 9, name: '巨龙领地', targetApples: 50 },
+            { id: 10, name: '蛇神试炼', targetApples: 60 }
+        ];
+        let currentLevel = 1;
+
+        function getGameData() {
+            const defaults = { maxLevel: 1 };
+            try { const raw = localStorage.getItem('snakeGameData'); if (raw) return { ...defaults, ...JSON.parse(raw) }; } catch(e) {}
+            return defaults;
+        }
+        function saveGameData(data) { localStorage.setItem('snakeGameData', JSON.stringify(data)); }
+        function getLevelConfig() { return LEVELS[Math.min(currentLevel, LEVELS.length) - 1] || LEVELS[0]; }
+        function updateLevelUI() {
+            const cfg = getLevelConfig();
+            document.getElementById('levelName').textContent = `第 ${currentLevel} 关 · ${cfg.name}`;
+            document.getElementById('levelProgress').textContent = `苹果 ${applesEaten} / ${cfg.targetApples}`;
+            const pct = Math.min(100, Math.floor((applesEaten / cfg.targetApples) * 100));
+            document.getElementById('levelFill').style.width = pct + '%';
+        }
+
+        function getGameSpeed(lvl) {
+            const speed = Math.max(60, 150 - (lvl - 1) * 15);
+            return speed;
+        }
+
+        function updateLevel() {
+            const newLevel = Math.floor(score / 50) + 1;
+            if (newLevel !== level) {
+                level = newLevel;
+                document.getElementById('level').textContent = level;
+                startGameLoop();
+            }
+        }
 
         function initGame() {
             snake = [{x: 10, y: 10}];
             food = {x: 15, y: 15};
             dx = 0; dy = 0;
             score = 0;
+            level = 1;
+            applesEaten = 0;
             time = 0;
             document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
             document.getElementById('gameOver').classList.remove('show');
             flowers = [];
             for (let i = 0; i < 15; i++) {
@@ -218,6 +281,7 @@
                 });
             }
             particleSystem.clear();
+            updateLevelUI();
             draw();
             startGameLoop();
         }
@@ -269,7 +333,7 @@
 
         function startGameLoop() {
             clearInterval(gameLoop);
-            gameLoop = setInterval(update, baseGameSpeed);
+            gameLoop = setInterval(update, getGameSpeed(level));
         }
 
         function update() {
@@ -294,7 +358,15 @@
 
             if (head.x === food.x && head.y === food.y) {
                 score += 10;
+                applesEaten++;
                 document.getElementById('score').textContent = score;
+                updateLevel();
+                updateLevelUI();
+                const cfg = getLevelConfig();
+                if (applesEaten >= cfg.targetApples) {
+                    levelComplete();
+                    return;
+                }
                 const fx = food.x * gridSize + gridSize / 2;
                 const fy = food.y * gridSize + gridSize / 2;
                 particleSystem.emit(fx, fy, 15, {
@@ -316,9 +388,30 @@
             } while (snake.some(part => part.x === food.x && part.y === food.y));
         }
 
+        function levelComplete() {
+            clearInterval(gameLoop);
+            const cfg = getLevelConfig();
+            const data = getGameData();
+            const levelBonus = currentLevel * 50;
+            if (currentLevel >= data.maxLevel && currentLevel < LEVELS.length) data.maxLevel = currentLevel + 1;
+            saveGameData(data);
+            document.getElementById('gameOverTitle').textContent = '🎉 关卡完成!';
+            document.getElementById('gameOverTitle').style.color = '#22c55e';
+            document.getElementById('gameOverMsg').innerHTML = `完成 ${cfg.name} · 得分 <span style="color: #f59e0b; font-weight: bold;">${score + levelBonus}</span>`;
+            const btns = document.getElementById('gameOverButtons');
+            if (currentLevel < LEVELS.length) {
+                btns.innerHTML = `<button class="btn" onclick="nextLevel()">下一关</button><button class="btn" onclick="restartGame()">重玩本关</button>`;
+            } else {
+                btns.innerHTML = `<button class="btn" onclick="restartGame()">再次挑战</button>`;
+            }
+            document.getElementById('gameOver').classList.add('show');
+        }
         function gameOver() {
             clearInterval(gameLoop);
-            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOverTitle').textContent = '游戏结束!';
+            document.getElementById('gameOverTitle').style.color = '#ef4444';
+            document.getElementById('gameOverMsg').innerHTML = `你的得分: <span style="color: #f59e0b; font-weight: bold;">${score}</span>`;
+            document.getElementById('gameOverButtons').innerHTML = `<button class="btn" onclick="restartGame()">再来一局</button>`;
             document.getElementById('gameOver').classList.add('show');
             snake.forEach(part => {
                 const x = part.x * gridSize + gridSize / 2;
@@ -328,6 +421,10 @@
                     speed: 2, size: 2.5, life: 25
                 });
             });
+        }
+        function nextLevel() {
+            if (currentLevel < LEVELS.length) currentLevel++;
+            restartGame();
         }
 
         function changeDirection(e) {
@@ -417,9 +514,19 @@
         <div></div>
     </div>
 
+    <div class="modal" id="levelModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:200;">
+        <div class="start-screen" style="max-width:360px;width:90%;">
+            <h2>🗺️ 关卡选择</h2>
+            <div class="level-select-grid" id="levelGrid"></div>
+            <button class="modal-btn" onclick="document.getElementById('levelModal').style.display='none'" style="margin-top:10px;">关闭</button>
+        </div>
+    </div>
     <div class="game-nav">
         <button class="game-nav-btn primary" onclick="backToHall()">
             <span>🏠</span><span>返回大厅</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="document.getElementById('levelModal').style.display='flex'; renderLevelSelect();">
+            <span>🗺️</span><span>关卡</span>
         </button>
         <button class="game-nav-btn secondary" onclick="restartGame()">
             <span>🔄</span><span>重新开始</span>
@@ -428,5 +535,21 @@
             <span>❓</span><span>游戏说明</span>
         </button>
     </div>
+    <script>
+        function renderLevelSelect() {
+            const data = getGameData();
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            LEVELS.forEach(lv => {
+                const unlocked = lv.id <= data.maxLevel;
+                const isCurrent = lv.id === currentLevel;
+                const card = document.createElement('div');
+                card.className = 'level-card' + (isCurrent ? ' current' : '') + (!unlocked ? ' locked' : '');
+                card.innerHTML = `<div class="level-card-num">${lv.id}</div><div class="level-card-target">${lv.name}</div><div class="level-card-target">${lv.targetApples} 苹果</div>`;
+                if (unlocked) card.onclick = () => { currentLevel = lv.id; document.getElementById('levelModal').style.display = 'none'; restartGame(); };
+                grid.appendChild(card);
+            });
+        }
+    </script>
 </body>
 </html>

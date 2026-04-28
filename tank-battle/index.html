@@ -304,6 +304,42 @@
             color: #333;
             border: 1px solid #e0e0e0;
         }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .level-card {
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .level-card.unlocked {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+
+        .level-card.unlocked:hover {
+            transform: scale(1.05);
+        }
+
+        .level-card.current {
+            box-shadow: 0 0 0 3px #fbbf24;
+        }
+
+        .level-card.locked {
+            background: rgba(0, 0, 0, 0.3);
+            color: rgba(255, 255, 255, 0.4);
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -367,6 +403,7 @@
                 <p>你的坦克（绿色）vs 敌方坦克（红色）</p>
                 <p>消灭所有敌人，保护基地（黄色）！</p>
                 <p>基地被毁或生命耗尽则游戏结束</p>
+                <p>当前关卡: <span id="startLevel">1</span></p>
                 <button class="start-btn" id="startBtn">开始游戏</button>
             </div>
         </div>
@@ -380,11 +417,31 @@
                 <button class="modal-btn" id="modalHomeBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">返回首页</button>
             </div>
         </div>
+
+        <div class="modal" id="levelCompleteModal">
+            <div class="modal-content">
+                <h2 id="levelCompleteTitle">恭喜通关！</h2>
+                <p id="levelCompleteMessage"></p>
+                <button class="modal-btn" id="nextLevelBtn" style="display:none;">下一关</button>
+                <button class="modal-btn" id="levelCompleteRestartBtn">重新开始</button>
+            </div>
+        </div>
+
+        <div class="modal" id="levelModal">
+            <div class="modal-content">
+                <h2>选择关卡</h2>
+                <div class="level-grid" id="levelGrid"></div>
+                <button class="modal-btn" id="closeLevelBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">关闭</button>
+            </div>
+        </div>
     </div>
 
     <div class="game-nav">
         <button class="game-nav-btn secondary" id="navHomeBtn">
             <span>返回首页</span>
+        </button>
+        <button class="game-nav-btn secondary" id="navLevelBtn">
+            <span>🗺️ 关卡</span>
         </button>
         <button class="game-nav-btn primary" id="navRestartBtn">
             <span>重新开始</span>
@@ -427,7 +484,9 @@
         let map = [];
         let score = 0;
         let lives = 3;
-        let level = 1;
+        let currentLevel = parseInt(localStorage.getItem('tankBattleLevel')) || 1;
+        let maxUnlockedLevel = parseInt(localStorage.getItem('tankBattleMaxLevel')) || currentLevel;
+        const MAX_LEVEL = 8;
         let gameRunning = false;
         let enemiesToSpawn = 20;
         let enemiesSpawned = 0;
@@ -532,13 +591,23 @@
                 width: TANK_SIZE,
                 height: TANK_SIZE,
                 dir: Math.floor(Math.random() * 4),
-                speed: ENEMY_SPEED + level * 0.2,
+                speed: ENEMY_SPEED + currentLevel * 0.2,
                 color: '#ef4444',
                 moving: true,
                 shootCooldown: 0,
                 changeDirTimer: 0,
                 type: Math.random() < 0.3 ? 'fast' : 'normal'
             };
+        }
+
+        // 保存进度
+        function saveProgress() {
+            localStorage.setItem('tankBattleLevel', currentLevel);
+            const savedMax = parseInt(localStorage.getItem('tankBattleMaxLevel')) || 1;
+            if (currentLevel > savedMax) {
+                localStorage.setItem('tankBattleMaxLevel', currentLevel);
+            }
+            maxUnlockedLevel = parseInt(localStorage.getItem('tankBattleMaxLevel')) || currentLevel;
         }
 
         // 初始化游戏
@@ -553,10 +622,9 @@
             particles = [];
             score = 0;
             lives = 3;
-            level = 1;
             gameRunning = true;
             gameOver = false;
-            enemiesToSpawn = 20;
+            enemiesToSpawn = 15 + currentLevel * 3;
             enemiesSpawned = 0;
             spawnTimer = 0;
             keys = {};
@@ -564,32 +632,61 @@
             updateUI();
             document.getElementById('startModal').classList.remove('show');
             document.getElementById('gameOverModal').classList.remove('show');
+            document.getElementById('levelCompleteModal').classList.remove('show');
+            document.getElementById('levelModal').classList.remove('show');
             gameLoop();
         }
 
-        // 下一关
-        function nextLevel() {
+        // 重新开始当前关卡
+        function restartGame() {
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
-            level++;
-            enemies = [];
-            bullets = [];
-            particles = [];
-            enemiesToSpawn = 20;
-            enemiesSpawned = 0;
-            spawnTimer = 0;
-            gameRunning = true;
-            gameOver = false;
-            player = createPlayer();
-            initMap();
-            updateUI();
-            document.getElementById('gameOverModal').classList.remove('show');
-            gameLoop();
+            initGame();
+        }
+
+        // 显示关卡完成弹窗
+        function showLevelComplete() {
+            gameRunning = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+
+            // 解锁下一关
+            const savedMax = parseInt(localStorage.getItem('tankBattleMaxLevel')) || 1;
+            if (currentLevel >= savedMax) {
+                localStorage.setItem('tankBattleMaxLevel', Math.min(currentLevel + 1, MAX_LEVEL));
+            }
+            saveProgress();
+
+            document.getElementById('levelCompleteTitle').textContent = `恭喜通关第 ${currentLevel} 关！`;
+            const msgEl = document.getElementById('levelCompleteMessage');
+            const nextBtn = document.getElementById('nextLevelBtn');
+
+            if (currentLevel >= MAX_LEVEL) {
+                msgEl.textContent = '🏆 全部通关！';
+                nextBtn.style.display = 'none';
+            } else {
+                msgEl.textContent = '';
+                nextBtn.style.display = 'inline-block';
+            }
+
+            document.getElementById('levelCompleteModal').classList.add('show');
+        }
+
+        // 下一关
+        function nextLevel() {
+            if (currentLevel >= MAX_LEVEL) return;
+            currentLevel++;
+            saveProgress();
+            document.getElementById('levelCompleteModal').classList.remove('show');
+            initGame();
         }
 
         function startGame() {
+            saveProgress();
             initGame();
         }
 
@@ -818,7 +915,7 @@
         function updateUI() {
             document.getElementById('score').textContent = score;
             document.getElementById('lives').textContent = lives;
-            document.getElementById('level').textContent = level;
+            document.getElementById('level').textContent = currentLevel;
             document.getElementById('enemiesLeft').textContent = enemiesToSpawn + enemies.length;
         }
 
@@ -828,7 +925,7 @@
             gameOver = true;
             document.getElementById('gameOverTitle').textContent = victory ? '恭喜通关！' : '游戏结束！';
             document.getElementById('finalScore').textContent = score;
-            document.getElementById('finalLevel').textContent = level;
+            document.getElementById('finalLevel').textContent = currentLevel;
             document.getElementById('gameOverModal').classList.add('show');
         }
 
@@ -993,7 +1090,7 @@
 
             // 检查胜利条件
             if (enemiesToSpawn <= 0 && enemies.length === 0) {
-                nextLevel();
+                showLevelComplete();
                 return;
             }
 
@@ -1021,8 +1118,12 @@
 
         // 按钮事件
         document.getElementById('startBtn').addEventListener('click', startGame);
-        document.getElementById('restartBtn').addEventListener('click', initGame);
-        document.getElementById('modalRestartBtn').addEventListener('click', initGame);
+        document.getElementById('restartBtn').addEventListener('click', restartGame);
+        document.getElementById('modalRestartBtn').addEventListener('click', restartGame);
+        document.getElementById('nextLevelBtn').addEventListener('click', nextLevel);
+        document.getElementById('levelCompleteRestartBtn').addEventListener('click', restartGame);
+        document.getElementById('closeLevelBtn').addEventListener('click', closeLevelSelect);
+        document.getElementById('navLevelBtn').addEventListener('click', openLevelSelect);
 
         function backToHall() {
             window.location.href = '../index.html';
@@ -1031,7 +1132,47 @@
         document.getElementById('homeBtn').addEventListener('click', backToHall);
         document.getElementById('modalHomeBtn').addEventListener('click', backToHall);
         document.getElementById('navHomeBtn').addEventListener('click', backToHall);
-        document.getElementById('navRestartBtn').addEventListener('click', initGame);
+        document.getElementById('navRestartBtn').addEventListener('click', restartGame);
+
+        function handleRestart() {
+            restartGame();
+        }
+
+        function openLevelSelect() {
+            renderLevelSelect();
+            document.getElementById('levelModal').classList.add('show');
+        }
+
+        function closeLevelSelect() {
+            document.getElementById('levelModal').classList.remove('show');
+        }
+
+        function renderLevelSelect() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            const unlocked = parseInt(localStorage.getItem('tankBattleMaxLevel')) || 1;
+            for (let i = 1; i <= MAX_LEVEL; i++) {
+                const card = document.createElement('div');
+                card.className = 'level-card';
+                if (i <= unlocked) {
+                    card.classList.add('unlocked');
+                    card.textContent = i;
+                    if (i === currentLevel) {
+                        card.classList.add('current');
+                    }
+                    card.addEventListener('click', () => {
+                        currentLevel = i;
+                        saveProgress();
+                        closeLevelSelect();
+                        initGame();
+                    });
+                } else {
+                    card.classList.add('locked');
+                    card.textContent = '🔒';
+                }
+                grid.appendChild(card);
+            }
+        }
 
         // 移动端控制
         const mobileDirs = {
@@ -1065,6 +1206,7 @@
         });
 
         // 初始绘制
+        document.getElementById('startLevel').textContent = currentLevel;
         initMap();
         draw();
     </script>

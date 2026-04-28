@@ -71,12 +71,22 @@
         <button class="game-nav-btn primary" onclick="backToHall()">
             <span>🏠</span><span>返回大厅</span>
         </button>
+        <button class="game-nav-btn secondary" onclick="openHardLevelSelect()">
+            <span>🗺️</span><span>关卡</span>
+        </button>
         <button class="game-nav-btn secondary" onclick="location.reload()">
             <span>🔄</span><span>重新开始</span>
         </button>
         <button class="game-nav-btn tertiary" onclick="document.getElementById('helpModal').classList.add('show')">
             <span>❓</span><span>游戏说明</span>
         </button>
+    </div>
+    <div class="modal" id="levelModal">
+        <div class="modal-content" style="max-width:360px;max-height:80vh;overflow:auto;">
+            <h2>🗺️ 关卡选择</h2>
+            <div id="levelGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:15px 0;"></div>
+            <button class="btn" onclick="document.getElementById('levelModal').classList.remove('show')">关闭</button>
+        </div>
     </div>
     <div class="modal" id="helpModal">
         <div class="modal-content">
@@ -112,6 +122,26 @@
     <script>
         function backToHall() {
             window.location.href = '../index.html';
+        }
+        function openHardLevelSelect() { document.getElementById('levelModal').classList.add('show'); renderHardLevelSelect(); }
+        function renderHardLevelSelect() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            const maxLevel = parseInt(localStorage.getItem('tileGameHardMaxLevel')) || 1;
+            for (let i = 1; i <= 30; i++) {
+                const card = document.createElement('div');
+                card.style.cssText = 'padding:10px;border-radius:8px;text-align:center;cursor:pointer;font-weight:bold;';
+                if (i > maxLevel) {
+                    card.style.background = '#e0e0e0'; card.style.color = '#999'; card.style.cursor = 'not-allowed';
+                    card.innerHTML = `<div style="font-size:18px;">🔒</div><div style="font-size:11px;">第${i}关</div>`;
+                } else {
+                    card.style.background = i === maxLevel ? '#fff3e0' : '#e8f5e9';
+                    card.style.color = '#5c4f43';
+                    card.innerHTML = `<div style="font-size:20px;">${i}</div><div style="font-size:11px;">第${i}关</div>`;
+                    card.onclick = () => { selectHardLevel(i); document.getElementById('levelModal').classList.remove('show'); };
+                }
+                grid.appendChild(card);
+            }
         }
     </script>
 </body>

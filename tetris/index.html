@@ -158,6 +158,7 @@
     <canvas id="gameCanvas" width="300" height="600"></canvas>
     <div class="info">
         <p>分数: <span id="score">0</span> &nbsp;&nbsp; 等级: <span id="level">1</span></p>
+        <p id="levelInfo" style="font-size:14px;color:#94a3b8;margin-top:4px;">第1关 初入方块 | 目标: 0/5行</p>
         <button class="btn" onclick="resetGame()">重新开始</button>
     </div>
 
@@ -183,6 +184,20 @@
             [[1,0],[1,1],[0,1],[1,1]]
         ];
 
+        const LEVELS = [
+            { id: 1, name: "初入方块", targetLines: 5, startSpeed: 1000 },
+            { id: 2, name: "初级挑战", targetLines: 8, startSpeed: 900 },
+            { id: 3, name: "渐入佳境", targetLines: 12, startSpeed: 800 },
+            { id: 4, name: "中级高手", targetLines: 15, startSpeed: 700 },
+            { id: 5, name: "快速反应", targetLines: 18, startSpeed: 600 },
+            { id: 6, name: "极限速度", targetLines: 22, startSpeed: 500 },
+            { id: 7, name: "大师之路", targetLines: 25, startSpeed: 400 },
+            { id: 8, name: "方块传说", targetLines: 30, startSpeed: 300 }
+        ];
+        const MAX_LEVEL = 8;
+        let currentLevel = parseInt(localStorage.getItem('tetrisLevel')) || 1;
+        let linesClearedTotal = 0;
+
         let board = [];
         let currentPiece = null;
         let score = 0;
@@ -195,7 +210,8 @@
 
         function init() {
             board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-            score = 0; level = 1; dropInterval = 1000;
+            score = 0; level = 1; linesClearedTotal = 0;
+            dropInterval = LEVELS[currentLevel - 1].startSpeed;
             time = 0; clearEffects = [];
             particleSystem.clear();
             updateScore();
@@ -264,17 +280,25 @@
                 }
             }
             if (linesCleared > 0) {
+                linesClearedTotal += linesCleared;
                 score += linesCleared * 100 * level;
                 level = Math.floor(score / 1000) + 1;
-                dropInterval = Math.max(100, 1000 - (level - 1) * 100);
+                dropInterval = Math.max(100, LEVELS[currentLevel - 1].startSpeed - (level - 1) * 100);
                 updateScore();
                 startGameLoop();
+                if (linesClearedTotal >= LEVELS[currentLevel - 1].targetLines) {
+                    levelComplete();
+                }
             }
         }
 
         function updateScore() {
             document.getElementById('score').textContent = score;
             document.getElementById('level').textContent = level;
+            const levelInfo = document.getElementById('levelInfo');
+            if (levelInfo) {
+                levelInfo.textContent = `第${currentLevel}关 ${LEVELS[currentLevel - 1].name} | 目标: ${linesClearedTotal}/${LEVELS[currentLevel - 1].targetLines}行`;
+            }
         }
 
         function draw() {
@@ -367,8 +391,42 @@
             document.getElementById('gameOverTitle').textContent = '游戏结束!';
             document.getElementById('finalScore').textContent = score;
             document.getElementById('finalLevel').textContent = level;
+            document.getElementById('nextLevelBtn').style.display = 'none';
             document.getElementById('gameOverModal').classList.add('show');
             saveGameResult(score, level, false);
+        }
+
+        function levelComplete() {
+            clearInterval(gameLoop);
+            const maxLevel = parseInt(localStorage.getItem('tetrisMaxLevel')) || 1;
+            if (currentLevel > maxLevel) {
+                localStorage.setItem('tetrisMaxLevel', currentLevel);
+            }
+            document.getElementById('gameOverTitle').textContent = `恭喜通关第 ${currentLevel} 关！`;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalLevel').textContent = level;
+            const nextBtn = document.getElementById('nextLevelBtn');
+            if (currentLevel < MAX_LEVEL) {
+                nextBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'none';
+            }
+            document.getElementById('gameOverModal').classList.add('show');
+            saveGameResult(score, level, true);
+        }
+
+        function nextLevel() {
+            if (currentLevel < MAX_LEVEL) {
+                currentLevel++;
+                localStorage.setItem('tetrisLevel', currentLevel);
+                document.getElementById('gameOverModal').classList.remove('show');
+                init();
+            }
+        }
+
+        function restartGame() {
+            document.getElementById('gameOverModal').classList.remove('show');
+            init();
         }
 
         function resetGame() {
@@ -377,6 +435,39 @@
 
         function backToHall() {
             window.location.href = '../index.html';
+        }
+
+        function openLevelSelect() {
+            renderLevelSelect();
+            document.getElementById('levelModal').classList.add('show');
+        }
+
+        function closeLevelSelect() {
+            document.getElementById('levelModal').classList.remove('show');
+        }
+
+        function renderLevelSelect() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            const maxLevel = parseInt(localStorage.getItem('tetrisMaxLevel')) || 1;
+            LEVELS.forEach(lv => {
+                const card = document.createElement('div');
+                const unlocked = lv.id <= maxLevel;
+                const isCurrent = lv.id === currentLevel;
+                card.style.cssText = `padding:12px;border-radius:12px;text-align:center;cursor:${unlocked ? 'pointer' : 'default'};border:2px solid ${isCurrent ? '#f472b6' : 'transparent'};background:${unlocked ? 'rgba(255,255,255,0.7)' : 'rgba(203,213,225,0.3)'};`;
+                if (unlocked) {
+                    card.innerHTML = `<div style="font-size:1.2rem;font-weight:bold;color:#f472b6;">${lv.id}</div><div style="font-size:0.85rem;color:#475569;">${lv.name}</div>`;
+                    card.onclick = () => {
+                        currentLevel = lv.id;
+                        localStorage.setItem('tetrisLevel', currentLevel);
+                        closeLevelSelect();
+                        init();
+                    };
+                } else {
+                    card.innerHTML = `<div style="font-size:1.2rem;">🔒</div><div style="font-size:0.85rem;color:#94a3b8;">锁定</div>`;
+                }
+                grid.appendChild(card);
+            });
         }
 
         let dropTimer = null;
@@ -474,7 +565,15 @@
             <h2 id="gameOverTitle">游戏结束!</h2>
             <p>最终分数: <span id="finalScore" style="color: #f472b6; font-weight: bold;">0</span></p>
             <p>等级: <span id="finalLevel" style="color: #a78bfa; font-weight: bold;">1</span></p>
-            <button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); resetGame();">再来一局</button>
+            <button class="modal-btn" id="nextLevelBtn" style="display:none;" onclick="nextLevel()">下一关</button>
+            <button class="modal-btn" onclick="restartGame()">重新开始</button>
+        </div>
+    </div>
+    <div class="modal" id="levelModal">
+        <div class="modal-content" style="max-width:400px;">
+            <h2>选择关卡</h2>
+            <div id="levelGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0;"></div>
+            <button class="modal-btn" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>
     <div class="game-nav">
@@ -483,6 +582,9 @@
         </button>
         <button class="game-nav-btn secondary" onclick="resetGame()">
             <span>🔄</span><span>重新开始</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
+            <span>🗺️</span><span>关卡</span>
         </button>
         <button class="game-nav-btn secondary" onclick="document.getElementById('helpModal').classList.add('show')">
             <span>❓</span><span>游戏说明</span>

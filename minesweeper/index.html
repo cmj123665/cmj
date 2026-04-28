@@ -275,12 +275,11 @@ body {
 </head>
 <body>
 <div class="title">扫雷</div>
-<div class="controls">
-    <button class="btn active" onclick="setDifficulty('easy')">简单</button>
-    <button class="btn" onclick="setDifficulty('medium')">中等</button>
-    <button class="btn" onclick="setDifficulty('hard')">困难</button>
-</div>
 <div class="stats">
+    <div class="stat">
+        <div class="label">关卡</div>
+        <div class="value" id="levelDisplay">1/8</div>
+    </div>
     <div class="stat">
         <div class="label">地雷</div>
         <div class="value" id="mines">0</div>
@@ -293,30 +292,64 @@ body {
 <div class="grid" id="grid"></div>
 
 <script>
-const DIFFICULTIES = {
-    easy: { rows: 9, cols: 9, mines: 10 },
-    medium: { rows: 16, cols: 16, mines: 40 },
-    hard: { rows: 16, cols: 30, mines: 99 }
-};
+const LEVELS = [
+    { rows: 8, cols: 8, mines: 10 },
+    { rows: 9, cols: 9, mines: 12 },
+    { rows: 10, cols: 10, mines: 15 },
+    { rows: 12, cols: 12, mines: 20 },
+    { rows: 14, cols: 14, mines: 30 },
+    { rows: 16, cols: 16, mines: 40 },
+    { rows: 18, cols: 18, mines: 55 },
+    { rows: 20, cols: 20, mines: 70 }
+];
+const MAX_LEVEL = 8;
+let currentLevel = parseInt(localStorage.getItem('minesweeperLevel')) || 1;
 
 let grid = [];
 let revealed = [];
 let flagged = [];
 let gameOver = false;
-let difficulty = 'easy';
 let timer = null;
 let time = 0;
 let minesLeft = 0;
 
-function setDifficulty(diff) {
-    difficulty = diff;
-    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+function getMaxUnlockedLevel() {
+    return parseInt(localStorage.getItem('minesweeperMaxLevel')) || 1;
+}
+
+function saveLevelProgress() {
+    const maxLevel = getMaxUnlockedLevel();
+    if (currentLevel >= maxLevel) {
+        const next = Math.min(currentLevel + 1, MAX_LEVEL);
+        localStorage.setItem('minesweeperMaxLevel', next);
+    }
+}
+
+function setLevel(level) {
+    currentLevel = Math.max(1, Math.min(level, MAX_LEVEL));
+    localStorage.setItem('minesweeperLevel', currentLevel);
+    initGame();
+}
+
+function nextLevel() {
+    if (currentLevel < MAX_LEVEL) {
+        currentLevel++;
+        localStorage.setItem('minesweeperLevel', currentLevel);
+        initGame();
+    } else {
+        alert('🏆 全部通关！');
+        currentLevel = 1;
+        localStorage.setItem('minesweeperLevel', currentLevel);
+        initGame();
+    }
+}
+
+function restartGame() {
     initGame();
 }
 
 function initGame() {
-    const config = DIFFICULTIES[difficulty];
+    const config = LEVELS[currentLevel - 1];
 
     grid = [];
     revealed = [];
@@ -373,11 +406,12 @@ function initGame() {
     }
 
     document.getElementById('mines').textContent = minesLeft;
+    document.getElementById('levelDisplay').textContent = currentLevel + '/' + MAX_LEVEL;
     render();
 }
 
 function render() {
-    const config = DIFFICULTIES[difficulty];
+    const config = LEVELS[currentLevel - 1];
     const gridEl = document.getElementById('grid');
 
     gridEl.style.gridTemplateColumns = `repeat(${config.cols}, 35px)`;
@@ -420,7 +454,7 @@ function handleClick(x, y) {
 }
 
 function reveal(x, y) {
-    const config = DIFFICULTIES[difficulty];
+    const config = LEVELS[currentLevel - 1];
     if (x < 0 || x >= config.cols || y < 0 || y >= config.rows) return;
     if (revealed[y][x] || flagged[y][x]) return;
 
@@ -450,7 +484,7 @@ function handleFlag(x, y) {
 }
 
 function checkWin() {
-    const config = DIFFICULTIES[difficulty];
+    const config = LEVELS[currentLevel - 1];
     for (let y = 0; y < config.rows; y++) {
         for (let x = 0; x < config.cols; x++) {
             if (!revealed[y][x] && grid[y][x] !== -1) return false;
@@ -463,7 +497,7 @@ function endGame(won) {
     gameOver = true;
     clearInterval(timer);
 
-    const config = DIFFICULTIES[difficulty];
+    const config = LEVELS[currentLevel - 1];
 
     if (!won) {
         for (let y = 0; y < config.rows; y++) {
@@ -478,10 +512,28 @@ function endGame(won) {
 
     setTimeout(() => {
         const score = won ? Math.max(0, 1000 - time * 10) : 0;
-        document.getElementById('gameOverTitle').textContent = won ? '🎉 恭喜通关！' : '💥 游戏结束！';
-        document.getElementById('gameOverMessage').textContent = won ? `用时: ${formatTime(time)}` : '再试一次吧！';
-        document.getElementById('gameOverModal').classList.add('show');
-        saveGameResult(score, 1, won);
+        const modal = document.getElementById('gameOverModal');
+        const title = document.getElementById('gameOverTitle');
+        const msg = document.getElementById('gameOverMessage');
+        const btnContainer = document.getElementById('gameOverButtons');
+
+        if (won) {
+            saveLevelProgress();
+            title.textContent = `🎉 恭喜通关第 ${currentLevel} 关！`;
+            msg.textContent = `用时: ${formatTime(time)}`;
+            if (currentLevel < MAX_LEVEL) {
+                btnContainer.innerHTML = `<button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); nextLevel();">下一关</button><button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); restartGame();">再来一局</button>`;
+            } else {
+                btnContainer.innerHTML = `<button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); nextLevel();">🏆 全部通关！</button><button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); restartGame();">再来一局</button>`;
+            }
+        } else {
+            title.textContent = '💥 游戏结束！';
+            msg.textContent = '再试一次吧！';
+            btnContainer.innerHTML = `<button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); restartGame();">再来一局</button>`;
+        }
+
+        modal.classList.add('show');
+        saveGameResult(score, currentLevel, won);
     }, 500);
 }
 
@@ -553,6 +605,10 @@ initGame();
             <span>🔄</span>
             <span>重新开始</span>
         </button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
+            <span>🗺️</span>
+            <span>关卡</span>
+        </button>
         <button class="game-nav-btn tertiary" onclick="showHelp()">
             <span>❓</span>
             <span>游戏说明</span>
@@ -577,7 +633,14 @@ initGame();
         <div class="modal-content">
             <h2 id="gameOverTitle">游戏结束!</h2>
             <p id="gameOverMessage"></p>
-            <button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); handleRestart();">再来一局</button>
+            <div id="gameOverButtons"></div>
+        </div>
+    </div>
+    <div class="modal" id="levelModal">
+        <div class="modal-content">
+            <h2>🗺️ 选择关卡</h2>
+            <div id="levelGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0;"></div>
+            <button class="modal-btn" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>
     <style>
@@ -617,6 +680,36 @@ initGame();
 
         function closeHelp() {
             document.getElementById('helpModal').classList.remove('show');
+        }
+
+        function openLevelSelect() {
+            renderLevelSelect();
+            document.getElementById('levelModal').classList.add('show');
+        }
+
+        function closeLevelSelect() {
+            document.getElementById('levelModal').classList.remove('show');
+        }
+
+        function renderLevelSelect() {
+            const container = document.getElementById('levelGrid');
+            const maxUnlocked = parseInt(localStorage.getItem('minesweeperMaxLevel')) || 1;
+            container.innerHTML = '';
+            for (let i = 1; i <= MAX_LEVEL; i++) {
+                const card = document.createElement('div');
+                const unlocked = i <= maxUnlocked;
+                card.style.cssText = 'padding:16px;border-radius:12px;text-align:center;font-weight:700;cursor:' + (unlocked ? 'pointer' : 'default') + ';border:2px solid ' + (unlocked ? '#74b9ff' : 'rgba(255,255,255,0.2)') + ';background:' + (unlocked ? 'rgba(116,185,255,0.15)' : 'rgba(255,255,255,0.05)') + ';color:' + (unlocked ? '#74b9ff' : 'rgba(255,255,255,0.3)') + ';';
+                card.textContent = unlocked ? i : '🔒';
+                if (unlocked) {
+                    card.onclick = function() {
+                        currentLevel = i;
+                        localStorage.setItem('minesweeperLevel', currentLevel);
+                        closeLevelSelect();
+                        initGame();
+                    };
+                }
+                container.appendChild(card);
+            }
         }
 
     </script>

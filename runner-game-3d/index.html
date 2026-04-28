@@ -115,6 +115,10 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             z-index: 1000;
         }
+        .hud div { margin-bottom: 5px; }
+        .level-display {
+            color: #ffd93d;
+        }
         .game-over {
             position: fixed;
             top: 50%;
@@ -129,6 +133,67 @@
             z-index: 2000;
         }
         .game-over.show { display: block; }
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            display: none;
+            z-index: 2000;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal.show { display: block; }
+        .modal h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .level-card {
+            padding: 15px;
+            border-radius: 12px;
+            background: #1a1a2e;
+            border: 2px solid #0f3460;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            min-width: 120px;
+        }
+        .level-card:hover {
+            transform: scale(1.05);
+        }
+        .level-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .level-card.current {
+            border-color: #ffd93d;
+            box-shadow: 0 0 15px rgba(255, 217, 61, 0.3);
+        }
+        .level-card.unlocked {
+            border-color: #e94560;
+        }
+        .level-card .level-num {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e94560;
+        }
+        .level-card .level-name {
+            font-size: 14px;
+            margin-top: 5px;
+            color: #fff;
+        }
         .game-over h2 {
             font-size: 36px;
             margin-bottom: 20px;
@@ -221,6 +286,7 @@
         <div class="hud">
             <div>分数: <span id="score">0</span></div>
             <div>距离: <span id="distance">0</span>m</div>
+            <div class="level-display">关卡: <span id="levelDisplay">1/8</span></div>
         </div>
 
         <div id="world">
@@ -239,9 +305,18 @@
         </div>
 
         <div class="game-over" id="gameOver">
-            <h2>游戏结束!</h2>
-            <p>你跑了 <span id="finalScore">0</span> 米</p>
-            <button class="btn" onclick="restartGame()">再来一局</button>
+            <h2 id="gameOverTitle">游戏结束!</h2>
+            <p id="gameOverText">你跑了 <span id="finalScore">0</span> 米</p>
+            <div id="gameOverButtons">
+                <button class="btn" id="nextLevelBtn" onclick="nextLevel()" style="display:none">下一关</button>
+                <button class="btn" onclick="restartGame()">重新开始</button>
+            </div>
+        </div>
+
+        <div class="modal" id="levelModal">
+            <h2>选择关卡</h2>
+            <div class="level-grid" id="levelGrid"></div>
+            <button class="btn" onclick="closeLevelSelect()">关闭</button>
         </div>
     </div>
 
@@ -252,6 +327,9 @@
         </button>
         <button class="game-nav-btn secondary" onclick="restartGame()">
             <span>🔄</span><span>重新开始</span>
+        </button>
+        <button class="game-nav-btn secondary" onclick="openLevelSelect()">
+            <span>🗺️</span><span>关卡</span>
         </button>
         <button class="game-nav-btn secondary" onclick="document.getElementById('helpModal').classList.add('show')">
             <span>❓</span><span>游戏说明</span>
@@ -276,6 +354,29 @@
         let playerVelocity = 0;
         const gravity = 0.8;
         const jumpForce = -20;
+
+        // 关卡系统
+        const LEVELS = [
+            { name: "新手起跑", targetDistance: 300, obstacleRate: 0.02, startSpeed: 10 },
+            { name: "初次加速", targetDistance: 500, obstacleRate: 0.025, startSpeed: 11 },
+            { name: "障碍训练", targetDistance: 800, obstacleRate: 0.03, startSpeed: 12 },
+            { name: "极速挑战", targetDistance: 1200, obstacleRate: 0.035, startSpeed: 13 },
+            { name: "极限跑酷", targetDistance: 1500, obstacleRate: 0.04, startSpeed: 14 },
+            { name: "地狱赛道", targetDistance: 2000, obstacleRate: 0.045, startSpeed: 15 },
+            { name: "大师之路", targetDistance: 2500, obstacleRate: 0.05, startSpeed: 16 },
+            { name: "传说之巅", targetDistance: 3000, obstacleRate: 0.055, startSpeed: 17 }
+        ];
+        const MAX_LEVEL = 8;
+        let currentLevel = parseInt(localStorage.getItem('runner3dLevel')) || 1;
+        let levelConfig = LEVELS[currentLevel - 1];
+
+        function saveProgress() {
+            const savedMax = parseInt(localStorage.getItem('runner3dMaxLevel')) || 1;
+            if (currentLevel > savedMax) {
+                localStorage.setItem('runner3dMaxLevel', currentLevel);
+            }
+            localStorage.setItem('runner3dLevel', currentLevel);
+        }
 
         function createObstacle() {
             const obstacle = document.createElement('div');
@@ -364,7 +465,7 @@
             });
 
             // 生成新的障碍物和金币
-            if (Math.random() < 0.02) createObstacle();
+            if (Math.random() < levelConfig.obstacleRate) createObstacle();
             if (Math.random() < 0.03) createCoin();
 
             // 更新距离
@@ -372,7 +473,13 @@
             document.getElementById('distance').textContent = Math.floor(distance);
 
             // 增加速度
-            gameSpeed = 10 + distance / 100;
+            gameSpeed = levelConfig.startSpeed + distance / 100;
+
+            // 检查关卡完成
+            if (distance >= levelConfig.targetDistance) {
+                levelComplete();
+                return;
+            }
 
             animationFrameId = requestAnimationFrame(update);
         }
@@ -397,9 +504,34 @@
             }
         }
 
+        function levelComplete() {
+            gameRunning = false;
+            saveProgress();
+            document.getElementById('gameOverTitle').textContent = `恭喜通关第 ${currentLevel} 关！`;
+            document.getElementById('gameOverText').innerHTML = `你跑了 <span id="finalScore">${Math.floor(distance)}</span> 米`;
+            const nextBtn = document.getElementById('nextLevelBtn');
+            if (currentLevel < MAX_LEVEL) {
+                nextBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'none';
+            }
+            document.getElementById('gameOver').classList.add('show');
+        }
+
+        function nextLevel() {
+            if (currentLevel < MAX_LEVEL) {
+                currentLevel++;
+                saveProgress();
+                document.getElementById('gameOver').classList.remove('show');
+                restartGame();
+            }
+        }
+
         function gameOver() {
             gameRunning = false;
-            document.getElementById('finalScore').textContent = Math.floor(distance);
+            document.getElementById('gameOverTitle').textContent = '游戏结束';
+            document.getElementById('gameOverText').innerHTML = `你跑了 <span id="finalScore">${Math.floor(distance)}</span> 米`;
+            document.getElementById('nextLevelBtn').style.display = 'none';
             document.getElementById('gameOver').classList.add('show');
         }
 
@@ -414,9 +546,10 @@
             obstacles = [];
             coins = [];
 
+            levelConfig = LEVELS[currentLevel - 1];
             score = 0;
             distance = 0;
-            gameSpeed = 10;
+            gameSpeed = levelConfig.startSpeed;
             gameRunning = true;
             playerY = 0;
             isJumping = false;
@@ -424,9 +557,49 @@
 
             document.getElementById('score').textContent = '0';
             document.getElementById('distance').textContent = '0';
+            document.getElementById('levelDisplay').textContent = `${currentLevel}/${MAX_LEVEL}`;
             document.getElementById('gameOver').classList.remove('show');
 
             update();
+        }
+
+        function openLevelSelect() {
+            renderLevelSelect();
+            document.getElementById('levelModal').classList.add('show');
+        }
+
+        function closeLevelSelect() {
+            document.getElementById('levelModal').classList.remove('show');
+        }
+
+        function renderLevelSelect() {
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            const maxUnlocked = parseInt(localStorage.getItem('runner3dMaxLevel')) || 1;
+            LEVELS.forEach((level, index) => {
+                const lvlNum = index + 1;
+                const card = document.createElement('div');
+                card.className = 'level-card';
+                if (lvlNum > maxUnlocked) {
+                    card.classList.add('locked');
+                    card.innerHTML = `<div class="level-num">🔒</div>
+                                      <div class="level-name">${level.name}</div>`;
+                } else {
+                    card.classList.add('unlocked');
+                    if (lvlNum === currentLevel) {
+                        card.classList.add('current');
+                    }
+                    card.innerHTML = `<div class="level-num">${lvlNum}</div>
+                                      <div class="level-name">${level.name}</div>`;
+                    card.addEventListener('click', () => {
+                        currentLevel = lvlNum;
+                        saveProgress();
+                        closeLevelSelect();
+                        restartGame();
+                    });
+                }
+                grid.appendChild(card);
+            });
         }
 
         function backToHall() {
@@ -462,6 +635,9 @@
                 jump();
             }
         });
+
+        // 初始化关卡显示
+        document.getElementById('levelDisplay').textContent = `${currentLevel}/${MAX_LEVEL}`;
 
         // 开始游戏
         update();
