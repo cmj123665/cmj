@@ -572,48 +572,70 @@
             ctx.ellipse(x + width/2, y + height + 15, width/2 + 10, 18, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // === 黑长直（自然飘动） ===
-            const hairLength = 85;
-            const hairWave = Math.sin(Date.now() / 300) * 2;
+            // === 金色双马尾大波浪 ===
+            const hairWave = Math.sin(Date.now() / 300) * 4;
 
-            // 左侧主长发
-            const leftHairGradient = ctx.createLinearGradient(x - 10, y, x - 25, y + hairLength);
-            leftHairGradient.addColorStop(0, '#3d3d3d');
-            leftHairGradient.addColorStop(0.5, '#2d2d2d');
-            leftHairGradient.addColorStop(1, '#1a1a1a');
-            ctx.fillStyle = leftHairGradient;
+            // 左侧双马尾
+            const leftPonyGradient = ctx.createLinearGradient(x - 20, y + 10, x - 40, y + 90);
+            leftPonyGradient.addColorStop(0, '#faebd7');
+            leftPonyGradient.addColorStop(0.5, '#f5e6c8');
+            leftPonyGradient.addColorStop(1, '#e8d5b5');
+
+            ctx.fillStyle = leftPonyGradient;
             ctx.beginPath();
-            ctx.moveTo(x + 5, y + 25);
-            ctx.quadraticCurveTo(x - 12 + hairWave, y + 50, x - 10, y + hairLength - 5);
-            ctx.quadraticCurveTo(x - 5, y + hairLength + 8, x + 8, y + height - 5);
+            ctx.moveTo(x + 5, y + 20);
+            ctx.quadraticCurveTo(x - 12, y + 15, x - 8, y + 35);
+            // 第一个大波浪（向外卷）
+            ctx.quadraticCurveTo(x - 28 + hairWave, y + 48, x - 18, y + 62);
+            ctx.quadraticCurveTo(x - 8, y + 72, x - 5, y + 82);
+            // 第二个大波浪（向内卷）
+            ctx.quadraticCurveTo(x + 8 + hairWave * 0.5, y + 95, x + 2, y + 108);
+            ctx.quadraticCurveTo(x - 5, y + 118, x + 8, y + height - 2);
+            // 回到底部内侧
+            ctx.quadraticCurveTo(x + 12, y + height - 12, x + 10, y + 85);
+            ctx.quadraticCurveTo(x + 8, y + 65, x + 12, y + 42);
+            ctx.quadraticCurveTo(x + 10, y + 25, x + 5, y + 20);
             ctx.fill();
 
-            // 左侧自然发丝（增加一点不规则感）
-            ctx.fillStyle = 'rgba(45, 45, 45, 0.7)';
+            // 左侧马尾层次
+            ctx.fillStyle = 'rgba(245, 230, 200, 0.7)';
             ctx.beginPath();
-            ctx.moveTo(x + 2, y + 28);
-            ctx.quadraticCurveTo(x - 18 + hairWave * 0.5, y + 52, x - 14, y + hairLength - 10);
-            ctx.quadraticCurveTo(x - 6, y + hairLength + 3, x + 6, y + height - 8);
+            ctx.moveTo(x + 8, y + 25);
+            ctx.quadraticCurveTo(x - 5, y + 32, x - 2, y + 52);
+            ctx.quadraticCurveTo(x - 12 + hairWave * 0.7, y + 72, x - 5, y + 92);
+            ctx.quadraticCurveTo(x + 5, y + 108, x + 10, y + height - 8);
+            ctx.quadraticCurveTo(x + 8, y + 88, x + 6, y + 68);
+            ctx.quadraticCurveTo(x + 5, y + 42, x + 8, y + 25);
             ctx.fill();
 
-            // 右侧主长发
-            const rightHairGradient = ctx.createLinearGradient(x + width + 10, y, x + width + 25, y + hairLength);
-            rightHairGradient.addColorStop(0, '#3d3d3d');
-            rightHairGradient.addColorStop(0.5, '#2d2d2d');
-            rightHairGradient.addColorStop(1, '#1a1a1a');
-            ctx.fillStyle = rightHairGradient;
+            // 右侧双马尾
+            const rightPonyGradient = ctx.createLinearGradient(x + width + 20, y + 10, x + width + 40, y + 90);
+            rightPonyGradient.addColorStop(0, '#faebd7');
+            rightPonyGradient.addColorStop(0.5, '#f5e6c8');
+            rightPonyGradient.addColorStop(1, '#e8d5b5');
+
+            ctx.fillStyle = rightPonyGradient;
             ctx.beginPath();
-            ctx.moveTo(x + width - 5, y + 25);
-            ctx.quadraticCurveTo(x + width + 12 + hairWave, y + 50, x + width + 10, y + hairLength - 5);
-            ctx.quadraticCurveTo(x + width + 5, y + hairLength + 8, x + width - 8, y + height - 5);
+            ctx.moveTo(x + width - 5, y + 20);
+            ctx.quadraticCurveTo(x + width + 12, y + 15, x + width + 8, y + 35);
+            ctx.quadraticCurveTo(x + width + 28 + hairWave, y + 48, x + width + 18, y + 62);
+            ctx.quadraticCurveTo(x + width + 8, y + 72, x + width + 5, y + 82);
+            ctx.quadraticCurveTo(x + width - 8 + hairWave * 0.5, y + 95, x + width - 2, y + 108);
+            ctx.quadraticCurveTo(x + width + 5, y + 118, x + width - 8, y + height - 2);
+            ctx.quadraticCurveTo(x + width - 12, y + height - 12, x + width - 10, y + 85);
+            ctx.quadraticCurveTo(x + width - 8, y + 65, x + width - 12, y + 42);
+            ctx.quadraticCurveTo(x + width - 10, y + 25, x + width - 5, y + 20);
             ctx.fill();
 
-            // 右侧自然发丝
-            ctx.fillStyle = 'rgba(45, 45, 45, 0.7)';
+            // 右侧马尾层次
+            ctx.fillStyle = 'rgba(245, 230, 200, 0.7)';
             ctx.beginPath();
-            ctx.moveTo(x + width - 2, y + 28);
-            ctx.quadraticCurveTo(x + width + 18 + hairWave * 0.5, y + 52, x + width + 14, y + hairLength - 10);
-            ctx.quadraticCurveTo(x + width + 6, y + hairLength + 3, x + width - 6, y + height - 8);
+            ctx.moveTo(x + width - 8, y + 25);
+            ctx.quadraticCurveTo(x + width + 5, y + 32, x + width + 2, y + 52);
+            ctx.quadraticCurveTo(x + width + 12 + hairWave * 0.7, y + 72, x + width + 5, y + 92);
+            ctx.quadraticCurveTo(x + width - 5, y + 108, x + width - 10, y + height - 8);
+            ctx.quadraticCurveTo(x + width - 8, y + 88, x + width - 6, y + 68);
+            ctx.quadraticCurveTo(x + width - 5, y + 42, x + width - 8, y + 25);
             ctx.fill();
 
             // === 腿部 ===
@@ -705,10 +727,10 @@
             const skirtX = x - 6;
 
             const skirtGradient = ctx.createLinearGradient(skirtX, skirtY, skirtX + skirtWidth, skirtY);
-            skirtGradient.addColorStop(0, '#2c3e50');
-            skirtGradient.addColorStop(0.3, '#34495e');
-            skirtGradient.addColorStop(0.7, '#2c3e50');
-            skirtGradient.addColorStop(1, '#1a252f');
+            skirtGradient.addColorStop(0, '#ffb6d9');
+            skirtGradient.addColorStop(0.3, '#ffcce0');
+            skirtGradient.addColorStop(0.7, '#ffb6d9');
+            skirtGradient.addColorStop(1, '#ff9eb8');
 
             ctx.fillStyle = skirtGradient;
             ctx.beginPath();
@@ -831,16 +853,16 @@
             ctx.fill();
 
             const leftArmGradient = ctx.createLinearGradient(-armWidth/2, 0, armWidth/2, 0);
-            leftArmGradient.addColorStop(0, '#1a252f');
-            leftArmGradient.addColorStop(0.5, '#2c3e50');
-            leftArmGradient.addColorStop(1, '#34495e');
+            leftArmGradient.addColorStop(0, '#ffe4d4');
+            leftArmGradient.addColorStop(0.5, '#ffd4c4');
+            leftArmGradient.addColorStop(1, '#ffe4d4');
 
             ctx.fillStyle = leftArmGradient;
             ctx.beginPath();
             ctx.roundRect(-armWidth/2, armLength * 0.25, armWidth, armLength * 0.75, 6);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.beginPath();
             ctx.roundRect(-armWidth/2 + 2, armLength * 0.25, 3, armLength * 0.75 - 2, 3);
             ctx.fill();
@@ -876,16 +898,16 @@
             ctx.fill();
 
             const rightArmGradient = ctx.createLinearGradient(-armWidth/2, 0, armWidth/2, 0);
-            rightArmGradient.addColorStop(0, '#34495e');
-            rightArmGradient.addColorStop(0.5, '#2c3e50');
-            rightArmGradient.addColorStop(1, '#1a252f');
+            rightArmGradient.addColorStop(0, '#ffe4d4');
+            rightArmGradient.addColorStop(0.5, '#ffd4c4');
+            rightArmGradient.addColorStop(1, '#ffe4d4');
 
             ctx.fillStyle = rightArmGradient;
             ctx.beginPath();
             ctx.roundRect(-armWidth/2, armLength * 0.25, armWidth, armLength * 0.75, 6);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.beginPath();
             ctx.roundRect(armWidth/2 - 5, armLength * 0.25, 3, armLength * 0.75 - 2, 3);
             ctx.fill();
@@ -909,16 +931,16 @@
 
             // 后发
             const hairBackGradient = ctx.createLinearGradient(headX, headY, headX + headSize, headY);
-            hairBackGradient.addColorStop(0, '#2d2d2d');
-            hairBackGradient.addColorStop(0.5, '#3d3d3d');
-            hairBackGradient.addColorStop(1, '#1a1a1a');
+            hairBackGradient.addColorStop(0, '#f5e6c8');
+            hairBackGradient.addColorStop(0.5, '#faebd7');
+            hairBackGradient.addColorStop(1, '#e8d5b5');
 
             ctx.fillStyle = hairBackGradient;
             ctx.beginPath();
-            ctx.ellipse(headX + headSize/2, headY + headSize/2 + 6, headSize/2 + 4, headSize/2 + 10, 0, 0, Math.PI * 2);
+            ctx.ellipse(headX + headSize/2, headY + headSize/2 + 8, headSize/2 + 3, headSize/2 + 6, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(30, 30, 30, 0.3)';
+            ctx.fillStyle = 'rgba(232, 213, 181, 0.3)';
             ctx.beginPath();
             ctx.ellipse(headX + headSize/2 - 5, headY + headSize/2 + 8, headSize/4, headSize/4, 0, 0, Math.PI * 2);
             ctx.fill();
@@ -971,10 +993,10 @@
 
             // === 蓬松八字刘海 ===
             const bangGradient = ctx.createLinearGradient(headX, headY, headX + headSize, headY);
-            bangGradient.addColorStop(0, '#2d2d2d');
-            bangGradient.addColorStop(0.3, '#3d3d3d');
-            bangGradient.addColorStop(0.7, '#3d3d3d');
-            bangGradient.addColorStop(1, '#2d2d2d');
+            bangGradient.addColorStop(0, '#f5e6c8');
+            bangGradient.addColorStop(0.3, '#faebd7');
+            bangGradient.addColorStop(0.7, '#faebd7');
+            bangGradient.addColorStop(1, '#f5e6c8');
 
             // 左侧八字刘海
             ctx.fillStyle = bangGradient;
@@ -994,7 +1016,7 @@
             ctx.fill();
 
             // 中间短刘海（蓬松感）
-            ctx.fillStyle = '#3d3d3d';
+            ctx.fillStyle = '#faebd7';
             ctx.beginPath();
             ctx.moveTo(headX + headSize/2 - 7, headY + 4);
             ctx.quadraticCurveTo(headX + headSize/2, headY + 14, headX + headSize/2 + 7, headY + 4);
@@ -1008,7 +1030,7 @@
 
                 // 左侧发丝
                 const leftX = headX + 8 + i * 4;
-                ctx.fillStyle = i % 2 === 0 ? '#2d2d2d' : '#3d3d3d';
+                ctx.fillStyle = i % 2 === 0 ? '#f5e6c8' : '#faebd7';
                 ctx.beginPath();
                 ctx.moveTo(leftX - 3, headY + 10);
                 ctx.quadraticCurveTo(leftX + wave - 4, headY + strandLen, leftX + 2, headY + 10);
@@ -1016,7 +1038,7 @@
 
                 // 右侧发丝
                 const rightX = headX + headSize - 8 - i * 4;
-                ctx.fillStyle = i % 2 === 0 ? '#2d2d2d' : '#3d3d3d';
+                ctx.fillStyle = i % 2 === 0 ? '#f5e6c8' : '#faebd7';
                 ctx.beginPath();
                 ctx.moveTo(rightX - 2, headY + 10);
                 ctx.quadraticCurveTo(rightX + wave + 4, headY + strandLen, rightX + 3, headY + 10);
@@ -1041,17 +1063,17 @@
                 headX + 14, headY + headSize/2 + 4, 1,
                 headX + 13, headY + headSize/2 + 5, 7
             );
-            leftIrisGradient.addColorStop(0, '#e6b3ff');
-            leftIrisGradient.addColorStop(0.4, '#d89fff');
-            leftIrisGradient.addColorStop(0.7, '#c77dff');
-            leftIrisGradient.addColorStop(1, '#a855f7');
+            leftIrisGradient.addColorStop(0, '#ffb6c1');
+            leftIrisGradient.addColorStop(0.4, '#ffc0cb');
+            leftIrisGradient.addColorStop(0.7, '#ffb6d9');
+            leftIrisGradient.addColorStop(1, '#ff9eb8');
 
             ctx.fillStyle = leftIrisGradient;
             ctx.beginPath();
             ctx.ellipse(headX + 13, headY + headSize/2 + 5, 7, 8, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.strokeStyle = 'rgba(139, 69, 193, 0.3)';
+            ctx.strokeStyle = 'rgba(255, 105, 180, 0.3)';
             ctx.lineWidth = 0.5;
             for (let ring = 2; ring < 6; ring++) {
                 ctx.beginPath();
@@ -1103,17 +1125,17 @@
                 headX + headSize - 12, headY + headSize/2 + 4, 1,
                 headX + headSize - 13, headY + headSize/2 + 5, 7
             );
-            rightIrisGradient.addColorStop(0, '#e6b3ff');
-            rightIrisGradient.addColorStop(0.4, '#d89fff');
-            rightIrisGradient.addColorStop(0.7, '#c77dff');
-            rightIrisGradient.addColorStop(1, '#a855f7');
+            rightIrisGradient.addColorStop(0, '#ffb6c1');
+            rightIrisGradient.addColorStop(0.4, '#ffc0cb');
+            rightIrisGradient.addColorStop(0.7, '#ffb6d9');
+            rightIrisGradient.addColorStop(1, '#ff9eb8');
 
             ctx.fillStyle = rightIrisGradient;
             ctx.beginPath();
             ctx.ellipse(headX + headSize - 13, headY + headSize/2 + 5, 7, 8, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.strokeStyle = 'rgba(139, 69, 193, 0.3)';
+            ctx.strokeStyle = 'rgba(255, 105, 180, 0.3)';
             ctx.lineWidth = 0.5;
             for (let ring = 2; ring < 6; ring++) {
                 ctx.beginPath();
@@ -1149,7 +1171,7 @@
             ctx.fill();
 
             // === 睫毛 ===
-            ctx.strokeStyle = '#3d3d3d';
+            ctx.strokeStyle = '#faebd7';
             ctx.lineWidth = 1.5;
             ctx.lineCap = 'round';
 
@@ -1248,9 +1270,58 @@
                 ctx.fill();
             }
 
-            // === 精致发饰 ===
+            // === 头顶大蝴蝶结 ===
+            const topBowX = headX + headSize/2;
+            const topBowY = headY + 2;
+
+            // 左半边
+            const topBowLeftGrad = ctx.createRadialGradient(topBowX - 10, topBowY, 1, topBowX - 10, topBowY, 14);
+            topBowLeftGrad.addColorStop(0, '#ffcce0');
+            topBowLeftGrad.addColorStop(0.5, '#ffb6d9');
+            topBowLeftGrad.addColorStop(1, '#ff9eb8');
+            ctx.fillStyle = topBowLeftGrad;
+            ctx.beginPath();
+            ctx.ellipse(topBowX - 12, topBowY, 14, 10, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 右半边
+            const topBowRightGrad = ctx.createRadialGradient(topBowX + 10, topBowY, 1, topBowX + 10, topBowY, 14);
+            topBowRightGrad.addColorStop(0, '#ffcce0');
+            topBowRightGrad.addColorStop(0.5, '#ffb6d9');
+            topBowRightGrad.addColorStop(1, '#ff9eb8');
+            ctx.fillStyle = topBowRightGrad;
+            ctx.beginPath();
+            ctx.ellipse(topBowX + 12, topBowY, 14, 10, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 中心
+            ctx.fillStyle = '#ff9eb8';
+            ctx.beginPath();
+            ctx.arc(topBowX, topBowY, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(topBowX - 3, topBowY - 3, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 飘带
+            ctx.strokeStyle = '#ffb6d9';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(topBowX - 2, topBowY + 6);
+            ctx.quadraticCurveTo(topBowX - 8, topBowY + 20, topBowX - 4, topBowY + 30);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(topBowX + 2, topBowY + 6);
+            ctx.quadraticCurveTo(topBowX + 8, topBowY + 20, topBowX + 4, topBowY + 30);
+            ctx.stroke();
+
+            // === 右侧小蝴蝶结发饰 ===
             const bowX = headX + headSize + 4;
-            const bowY = headY + 4;
+            const bowY = headY + 8;
 
             const leftBowGradient = ctx.createRadialGradient(
                 bowX - 7, bowY, 1,
