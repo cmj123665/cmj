@@ -332,6 +332,10 @@ const LEVELS = [
     { id: 7, name: '疯狂农场', targetScore: 1600, time: 18, spawnMin: 60, spawnMax: 300, stayMin: 400, stayMax: 700 },
     { id: 8, name: '终极试炼', targetScore: 2000, time: 15, spawnMin: 50, spawnMax: 250, stayMin: 350, stayMax: 600 }
 ];
+for (let i = 9; i <= 999; i++) {
+    const add = i - 8;
+    LEVELS.push({ id: i, name: `第${i}关`, targetScore: 2000 + add * 200, time: Math.max(15 - Math.floor(add / 10), 10), spawnMin: Math.max(50 - add * 2, 20), spawnMax: Math.max(250 - add * 5, 80), stayMin: Math.max(350 - add * 3, 150), stayMax: Math.max(600 - add * 4, 250) });
+}
 let currentLevel = 1;
 
 function getGameData() {

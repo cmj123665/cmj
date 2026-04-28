@@ -600,7 +600,10 @@
             { target: 8192, name: "大师之路" },
             { target: 16384, name: "数字传说" }
         ];
-        const MAX_LEVEL = 8;
+        for (let i = 9; i <= 999; i++) {
+            LEVELS.push({ target: 5000 + (i - 8) * 1000, name: `第${i}关` });
+        }
+        const MAX_LEVEL = 999;
         let currentLevel = parseInt(localStorage.getItem('2048Level')) || 1;
         let targetValue = LEVELS[currentLevel - 1].target;
 
@@ -861,10 +864,14 @@
 
                 // 检查是否达到目标
                 let reachedTarget = false;
-                for (let i = 0; i < 4; i++) {
-                    for (let j = 0; j < 4; j++) {
-                        if (grid[i][j] === targetValue) {
-                            reachedTarget = true;
+                if (currentLevel > 8) {
+                    if (score >= targetValue) reachedTarget = true;
+                } else {
+                    for (let i = 0; i < 4; i++) {
+                        for (let j = 0; j < 4; j++) {
+                            if (grid[i][j] === targetValue) {
+                                reachedTarget = true;
+                            }
                         }
                     }
                 }

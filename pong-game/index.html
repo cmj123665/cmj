@@ -264,6 +264,9 @@
             { id: 7, name: '极限反应', targetScore: 18, aiSpeed: 0.25, paddleHeight: 60 },
             { id: 8, name: '弹球之神', targetScore: 21, aiSpeed: 0.30, paddleHeight: 55 }
         ];
+        for (let i = 9; i <= 999; i++) {
+            LEVELS.push({ id: i, name: `第${i}关`, targetScore: 21 + (i - 8) * 2, aiSpeed: Math.min(0.30 + (i - 8) * 0.01, 0.95), paddleHeight: Math.max(55 - (i - 8) * 0.5, 20) });
+        }
         let currentLevel = 1;
 
         function getGameData() {

@@ -285,6 +285,10 @@ const LEVELS = [
     { id: 7, name: '七阶地狱', size: 7 },
     { id: 8, name: '拼图之神', size: 7 }
 ];
+for (let i = 9; i <= 999; i++) {
+    const size = Math.min(7 + Math.floor((i - 8) / 3), 12);
+    LEVELS.push({ id: i, name: `第${i}关`, size: size });
+}
 let currentLevel = 1;
 
 function getGameData() {

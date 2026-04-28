@@ -256,6 +256,23 @@
             transform: scale(0.95);
         }
 
+        .login-status-bar .register-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+            margin-left: 8px;
+        }
+
+        .login-status-bar .register-btn:active {
+            transform: scale(0.95);
+        }
+
         /* 搜索框 - 浪漫玻璃质感 */
         .search-container {
             background: rgba(255, 255, 255, 0.6);
@@ -1832,13 +1849,19 @@
             <!-- 登录状态栏 -->
             <div class="login-status-bar" id="loginStatusBar">
                 <div class="user-info">
-                    <div class="user-avatar" id="statusAvatar">🎮</div>
+                    <div class="user-avatar" id="statusAvatar">
+                        <img id="statusAvatarImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                        <span id="statusAvatarEmoji">🎮</span>
+                    </div>
                     <div class="user-details">
                         <div class="user-name" id="statusUserName">游客</div>
                         <div class="user-phone" id="statusUserPhone">点击登录</div>
                     </div>
                 </div>
-                <div class="login-btn" id="loginBtn" onclick="showLoginModal()">登录</div>
+                <div style="display:flex;">
+                    <div class="login-btn" id="loginBtn" onclick="showLoginModal()">登录</div>
+                    <div class="register-btn" id="registerBtn" onclick="showRegisterModal()">注册</div>
+                </div>
             </div>
 
             <!-- 搜索框 -->
@@ -1973,7 +1996,10 @@
             </div>
             <div class="account-card" id="accountCard">
                 <div class="account-info">
-                    <div class="account-avatar" id="settingsAvatar">🎮</div>
+                    <div class="account-avatar" id="settingsAvatar">
+                        <img id="settingsAvatarImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        <span id="settingsAvatarEmoji">🎮</span>
+                    </div>
                     <div class="account-detail">
                         <div class="account-name" id="settingsAccountName">游客</div>
                         <div class="account-phone" id="settingsAccountPhone">未登录</div>
@@ -1983,6 +2009,7 @@
                     <button class="account-btn secondary" id="switchAccountBtn" onclick="switchAccount()" style="display: none;">切换账号</button>
                     <button class="account-btn" id="logoutBtn" onclick="logout()" style="display: none;">退出登录</button>
                     <button class="account-btn" id="loginBtn2" onclick="showLoginModal()">立即登录</button>
+                    <button class="account-btn secondary" id="registerBtn2" onclick="showRegisterModal()">立即注册</button>
                 </div>
             </div>
 
@@ -2105,7 +2132,10 @@
             <div class="login-tip" id="profileLoginTip" style="display: none;">
                 <div class="login-tip-icon">🔒</div>
                 <div class="login-tip-text">登录后可同步游戏进度、查看排行榜</div>
-                <button class="login-tip-btn" onclick="showLoginModal()">立即登录</button>
+                <div style="display:flex;gap:10px;justify-content:center;">
+                    <button class="login-tip-btn" onclick="showLoginModal()">立即登录</button>
+                    <button class="login-tip-btn" onclick="showRegisterModal()" style="background:linear-gradient(135deg,#667eea,#764ba2);box-shadow:0 2px 8px rgba(102,126,234,0.3);">立即注册</button>
+                </div>
             </div>
 
             <div class="profile-header">
@@ -2269,10 +2299,10 @@
         </div>
     </div>
 
-    <!-- 登录/注册弹窗 -->
+    <!-- 登录弹窗 -->
     <div class="modal" id="loginModal">
         <div class="modal-content">
-            <h2 id="loginModalTitle">手机号登录</h2>
+            <h2 id="loginModalTitle">账号登录</h2>
             <p id="offlineHint" style="display:none;font-size:12px;color:#ff6b9d;margin-bottom:8px;text-align:center;">🧪 离线模式 - 验证码将直接显示，无需短信</p>
             <input type="tel" class="modal-input" id="phoneInput" placeholder="请输入手机号" maxlength="11" oninput="formatPhone(this)">
             <div style="display: flex; gap: 8px; margin-bottom: 16px;">
@@ -2280,16 +2310,24 @@
                 <button class="modal-btn" id="sendCodeBtn" onclick="sendCode()" style="margin: 0; padding: 12px 16px; min-width: 100px;">获取验证码</button>
             </div>
             <p id="offlineCodeDisplay" style="display:none;font-size:14px;color:#22c55e;text-align:center;margin-bottom:12px;font-weight:bold;"></p>
-            <button class="modal-btn" onclick="loginOrRegister()">登录/注册</button>
+            <button class="modal-btn" onclick="handleLogin()">登录</button>
+            <p style="text-align:center;margin:10px 0;font-size:13px;color:#888;">还没有账号？<a href="javascript:void(0)" onclick="closeLoginModal();showRegisterModal();" style="color:#667eea;">去注册</a></p>
             <button class="modal-btn secondary" onclick="closeLoginModal()">取消</button>
         </div>
     </div>
 
-    <!-- 个人信息完善弹窗 -->
-    <div class="modal" id="profileModal">
+    <!-- 注册弹窗 -->
+    <div class="modal" id="registerModal">
         <div class="modal-content">
-            <h2>完善个人信息</h2>
-            <input type="text" class="modal-input" id="newUserName" placeholder="设置昵称" maxlength="10">
+            <h2>注册账号</h2>
+            <p id="regOfflineHint" style="display:none;font-size:12px;color:#ff6b9d;margin-bottom:8px;text-align:center;">🧪 离线模式 - 验证码将直接显示，无需短信</p>
+            <input type="tel" class="modal-input" id="regPhoneInput" placeholder="请输入手机号" maxlength="11" oninput="formatPhone(this)">
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <input type="text" class="modal-input" id="regCodeInput" placeholder="验证码" maxlength="6" style="flex: 1;">
+                <button class="modal-btn" id="regSendCodeBtn" onclick="sendRegisterCode()" style="margin: 0; padding: 12px 16px; min-width: 100px;">获取验证码</button>
+            </div>
+            <p id="regOfflineCodeDisplay" style="display:none;font-size:14px;color:#22c55e;text-align:center;margin-bottom:12px;font-weight:bold;"></p>
+            <input type="text" class="modal-input" id="regUserName" placeholder="设置昵称" maxlength="10">
             <div style="margin: 16px 0;">
                 <p style="font-size: 13px; color: #999; margin-bottom: 8px;">选择头像</p>
                 <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
@@ -2301,7 +2339,9 @@
                     <span class="avatar-option" onclick="selectAvatar('🦊')" style="font-size: 28px; cursor: pointer; padding: 8px; border-radius: 8px; border: 2px solid transparent;">🦊</span>
                 </div>
             </div>
-            <button class="modal-btn" onclick="saveProfile()">完成</button>
+            <button class="modal-btn" onclick="handleRegister()">注册</button>
+            <p style="text-align:center;margin:10px 0;font-size:13px;color:#888;">已有账号？<a href="javascript:void(0)" onclick="closeRegisterModal();showLoginModal();" style="color:#667eea;">去登录</a></p>
+            <button class="modal-btn secondary" onclick="closeRegisterModal()">取消</button>
         </div>
     </div>
 
@@ -2495,19 +2535,37 @@
             const statusUserPhone = document.getElementById('statusUserPhone');
             const statusAvatar = document.getElementById('statusAvatar');
             const loginBtn = document.getElementById('loginBtn');
+            const registerBtn = document.getElementById('registerBtn');
 
             if (userData.isLoggedIn) {
                 statusUserName.textContent = userData.userName || '玩家';
                 statusUserPhone.textContent = userData.phone || '';
-                statusAvatar.textContent = userData.avatar || '🎮';
                 loginBtn.textContent = '退出';
                 loginBtn.onclick = logout;
+                if (registerBtn) registerBtn.style.display = 'none';
+                // 头像：优先显示图片
+                const img = document.getElementById('statusAvatarImg');
+                const emoji = document.getElementById('statusAvatarEmoji');
+                if (userData.avatarImage) {
+                    img.src = userData.avatarImage;
+                    img.style.display = 'block';
+                    emoji.style.display = 'none';
+                } else {
+                    img.style.display = 'none';
+                    emoji.style.display = 'block';
+                    emoji.textContent = userData.avatar || '🎮';
+                }
             } else {
                 statusUserName.textContent = '游客';
                 statusUserPhone.textContent = '点击登录';
-                statusAvatar.textContent = '🎮';
                 loginBtn.textContent = '登录';
                 loginBtn.onclick = showLoginModal;
+                if (registerBtn) registerBtn.style.display = 'block';
+                const img = document.getElementById('statusAvatarImg');
+                const emoji = document.getElementById('statusAvatarEmoji');
+                img.style.display = 'none';
+                emoji.style.display = 'block';
+                emoji.textContent = '🎮';
             }
         }
 
@@ -2529,6 +2587,42 @@
             document.getElementById('phoneInput').value = '';
             document.getElementById('codeInput').value = '';
             document.getElementById('offlineCodeDisplay').style.display = 'none';
+            if (codeTimer) {
+                clearInterval(codeTimer);
+                codeTimer = null;
+                const btn = document.getElementById('sendCodeBtn');
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+            }
+        }
+
+        // 显示注册弹窗
+        function showRegisterModal() {
+            document.getElementById('registerModal').classList.add('show');
+            document.getElementById('regOfflineHint').style.display = isOfflineMode ? 'block' : 'none';
+            document.getElementById('regOfflineCodeDisplay').style.display = 'none';
+            document.getElementById('regPhoneInput').focus();
+            selectedAvatar = '🎮';
+            document.querySelectorAll('.avatar-option').forEach(el => {
+                el.style.borderColor = el.textContent === '🎮' ? '#ff6b9d' : 'transparent';
+                el.style.backgroundColor = el.textContent === '🎮' ? '#fff5f8' : 'transparent';
+            });
+        }
+
+        // 关闭注册弹窗
+        function closeRegisterModal() {
+            document.getElementById('registerModal').classList.remove('show');
+            document.getElementById('regPhoneInput').value = '';
+            document.getElementById('regCodeInput').value = '';
+            document.getElementById('regUserName').value = '';
+            document.getElementById('regOfflineCodeDisplay').style.display = 'none';
+            if (codeTimer) {
+                clearInterval(codeTimer);
+                codeTimer = null;
+                const btn = document.getElementById('regSendCodeBtn');
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+            }
         }
 
         // 格式化手机号输入
@@ -2598,9 +2692,10 @@
                 if (result.success) {
                     let countdown = 60;
 
-                    // 开发环境显示验证码
+                    // 开发环境直接显示在登录弹窗内
                     if (result.code) {
-                        showModal('✅ 验证码已发送', `您的验证码是：${result.code}`);
+                        document.getElementById('offlineCodeDisplay').textContent = `🧪 测试验证码: ${result.code}`;
+                        document.getElementById('offlineCodeDisplay').style.display = 'block';
                     } else {
                         showModal('✅ 验证码已发送', '请查收短信获取验证码');
                     }
@@ -2631,8 +2726,100 @@
             }
         }
 
-        // 登录或注册
-        async function loginOrRegister() {
+        // 发送注册验证码
+        async function sendRegisterCode() {
+            const phone = document.getElementById('regPhoneInput').value.trim();
+
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showModal('❌ 手机号格式错误', '请输入正确的11位手机号码');
+                return;
+            }
+
+            const btn = document.getElementById('regSendCodeBtn');
+
+            // 离线模式：直接在前端生成验证码
+            if (isOfflineMode) {
+                const stored = getOfflineCode(phone);
+                if (stored && Date.now() - stored.timestamp < 60000) {
+                    const remaining = Math.ceil((60000 - (Date.now() - stored.timestamp)) / 1000);
+                    showModal('⏳ 请稍后再试', `请${remaining}秒后再获取验证码`);
+                    return;
+                }
+
+                btn.disabled = true;
+                const code = Math.floor(10000 + Math.random() * 90000).toString();
+                setOfflineCode(phone, code);
+
+                document.getElementById('regOfflineCodeDisplay').textContent = `🧪 测试验证码: ${code}`;
+                document.getElementById('regOfflineCodeDisplay').style.display = 'block';
+
+                let countdown = 60;
+                btn.textContent = `${countdown}s`;
+                codeTimer = setInterval(() => {
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(codeTimer);
+                        btn.disabled = false;
+                        btn.textContent = '获取验证码';
+                    } else {
+                        btn.textContent = `${countdown}s`;
+                    }
+                }, 1000);
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.textContent = '发送中...';
+
+                const response = await fetch(`${API_BASE_URL}/send-code`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    let countdown = 60;
+
+                    if (result.code) {
+                        document.getElementById('regOfflineCodeDisplay').textContent = `🧪 测试验证码: ${result.code}`;
+                        document.getElementById('regOfflineCodeDisplay').style.display = 'block';
+                    } else {
+                        showModal('✅ 验证码已发送', '请查收短信获取验证码');
+                    }
+
+                    btn.textContent = `${countdown}s`;
+
+                    codeTimer = setInterval(() => {
+                        countdown--;
+                        if (countdown <= 0) {
+                            clearInterval(codeTimer);
+                            btn.disabled = false;
+                            btn.textContent = '获取验证码';
+                        } else {
+                            btn.textContent = `${countdown}s`;
+                        }
+                    }, 1000);
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                    showModal('❌ 发送失败', result.message);
+                }
+
+            } catch (error) {
+                console.error('发送验证码失败:', error);
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+                showModal('❌ 网络错误', '请检查后端服务器是否启动');
+            }
+        }
+
+        // 登录
+        async function handleLogin() {
             const phone = document.getElementById('phoneInput').value.trim();
             const code = document.getElementById('codeInput').value.trim();
 
@@ -2646,8 +2833,17 @@
                 return;
             }
 
+            // 检查是否已注册
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            if (!users[phone]) {
+                showModal('❌ 该手机号未注册', '请先注册账号');
+                closeLoginModal();
+                setTimeout(() => showRegisterModal(), 300);
+                return;
+            }
+
             try {
-                let verifySuccess = false;
+                let token;
 
                 if (isOfflineMode) {
                     // 离线模式：前端校验验证码
@@ -2666,10 +2862,10 @@
                         return;
                     }
                     clearOfflineCode(phone);
-                    verifySuccess = true;
+                    token = btoa(`${phone}_${Date.now()}_${Math.random()}`);
                 } else {
-                    // 在线模式：后端校验验证码
-                    const verifyResponse = await fetch(`${API_BASE_URL}/verify-code`, {
+                    // 在线模式：直接调用 /api/auth 验证并登录
+                    const response = await fetch(`${API_BASE_URL}/auth`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -2677,47 +2873,34 @@
                         body: JSON.stringify({ phone, code })
                     });
 
-                    const verifyResult = await verifyResponse.json();
+                    const result = await response.json();
 
-                    if (!verifyResult.success) {
-                        showModal('❌ 验证失败', verifyResult.message);
+                    if (!result.success) {
+                        showModal('❌ 登录失败', result.message);
                         return;
                     }
-                    verifySuccess = true;
+                    token = result.data.token;
                 }
 
-                if (!verifySuccess) return;
+                // 登录成功
+                userData.isLoggedIn = true;
+                userData.phone = phone;
+                userData.userName = users[phone].userName;
+                userData.avatar = users[phone].avatar;
+                userData.avatarImage = users[phone].playerData?.avatarImage || null;
+                userData.token = token;
 
-                // 验证码正确，检查是否已注册
-                const users = JSON.parse(localStorage.getItem('users')) || {};
+                // 同步玩家数据
+                playerData = users[phone].playerData || playerData;
+                savePlayerData();
 
-                if (users[phone]) {
-                    // 已注册，登录
-                    userData.isLoggedIn = true;
-                    userData.phone = phone;
-                    userData.userName = users[phone].userName;
-                    userData.avatar = users[phone].avatar;
-
-                    // 同步玩家数据
-                    playerData = users[phone].playerData || playerData;
-                    savePlayerData();
-
-                    saveUserData();
-                    updateLoginStatusBar();
-                    updateSettingsAccountInfo();
-                    updateProfileLoginState();
-                    updateStats();
-                    closeLoginModal();
-                    showModal('🎉 登录成功', `欢迎回来，${userData.userName}！`);
-                } else {
-                    // 新用户，需要完善信息
-                    closeLoginModal();
-                    document.getElementById('profileModal').classList.add('show');
-                    document.getElementById('newUserName').value = '';
-                    selectedAvatar = '🎮';
-                    // 保存当前手机号用于注册
-                    document.getElementById('profileModal').dataset.phone = phone;
-                }
+                saveUserData();
+                updateLoginStatusBar();
+                updateSettingsAccountInfo();
+                updateProfileLoginState();
+                updateStats();
+                closeLoginModal();
+                showModal('🎉 登录成功', `欢迎回来，${userData.userName}！`);
 
             } catch (error) {
                 console.error('登录失败:', error);
@@ -2725,23 +2908,33 @@
             }
         }
 
-        // 选择头像
-        function selectAvatar(avatar) {
-            selectedAvatar = avatar;
-            document.querySelectorAll('.avatar-option').forEach(el => {
-                el.style.borderColor = el.textContent === avatar ? '#ff6b9d' : 'transparent';
-                el.style.backgroundColor = el.textContent === avatar ? '#fff5f8' : 'transparent';
-            });
-        }
+        // 注册
+        async function handleRegister() {
+            const phone = document.getElementById('regPhoneInput').value.trim();
+            const code = document.getElementById('regCodeInput').value.trim();
+            const userName = document.getElementById('regUserName').value.trim();
 
-        // 保存新用户信息
-        async function saveProfile() {
-            const modal = document.getElementById('profileModal');
-            const phone = modal.dataset.phone || document.getElementById('phoneInput').value.trim();
-            const userName = document.getElementById('newUserName').value.trim();
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showModal('❌ 手机号格式错误', '请输入正确的11位手机号码');
+                return;
+            }
+
+            if (!code || code.length !== 5) {
+                showModal('❌ 验证码格式错误', '请输入5位验证码');
+                return;
+            }
 
             if (!userName || userName.length < 1 || userName.length > 10) {
                 showModal('❌ 昵称格式错误', '昵称长度需要在1-10个字符之间');
+                return;
+            }
+
+            // 检查是否已注册
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            if (users[phone]) {
+                showModal('❌ 该手机号已注册', '请直接登录');
+                closeRegisterModal();
+                setTimeout(() => showLoginModal(), 300);
                 return;
             }
 
@@ -2749,12 +2942,25 @@
                 let token;
 
                 if (isOfflineMode) {
-                    // 离线模式：生成本地 mock token
+                    // 离线模式：前端校验验证码
+                    const stored = getOfflineCode(phone);
+                    if (!stored) {
+                        showModal('❌ 验证失败', '验证码不存在，请先获取');
+                        return;
+                    }
+                    if (Date.now() - stored.timestamp > 300000) {
+                        clearOfflineCode(phone);
+                        showModal('❌ 验证失败', '验证码已过期，请重新获取');
+                        return;
+                    }
+                    if (stored.code !== code) {
+                        showModal('❌ 验证失败', '验证码错误');
+                        return;
+                    }
+                    clearOfflineCode(phone);
                     token = btoa(`${phone}_${Date.now()}_${Math.random()}`);
                 } else {
-                    // 在线模式：调用后端API进行用户注册
-                    const code = document.getElementById('codeInput').value.trim();
-
+                    // 在线模式：直接调用 /api/auth 验证并注册
                     const response = await fetch(`${API_BASE_URL}/auth`, {
                         method: 'POST',
                         headers: {
@@ -2782,9 +2988,13 @@
                 userData.phone = phone;
                 userData.userName = userName;
                 userData.avatar = selectedAvatar;
+                userData.avatarImage = playerData.avatarImage || null;
                 userData.token = token;
 
-                const users = JSON.parse(localStorage.getItem('users')) || {};
+                // 同步昵称和头像到 playerData
+                playerData.name = userName;
+                playerData.avatar = selectedAvatar;
+
                 users[phone] = {
                     userName: userName,
                     avatar: selectedAvatar,
@@ -2801,7 +3011,7 @@
                 updateProfileLoginState();
                 updateStats();
 
-                document.getElementById('profileModal').classList.remove('show');
+                closeRegisterModal();
                 showModal('🎉 注册成功', `欢迎加入，${userName}！赠送您100积分`);
 
                 // 新用户赠送积分
@@ -2815,6 +3025,15 @@
             }
         }
 
+        // 选择头像
+        function selectAvatar(avatar) {
+            selectedAvatar = avatar;
+            document.querySelectorAll('.avatar-option').forEach(el => {
+                el.style.borderColor = el.textContent === avatar ? '#ff6b9d' : 'transparent';
+                el.style.backgroundColor = el.textContent === avatar ? '#fff5f8' : 'transparent';
+            });
+        }
+
         // 退出登录
         function logout() {
             if (confirm('确定要退出登录吗？')) {
@@ -2822,6 +3041,7 @@
                 userData.phone = '';
                 userData.userName = '';
                 userData.avatar = '🎮';
+                userData.avatarImage = null;
                 saveUserData();
                 updateLoginStatusBar();
                 updateSettingsAccountInfo();
@@ -2848,6 +3068,7 @@
             userData.phone = '';
             userData.userName = '';
             userData.avatar = '🎮';
+            userData.avatarImage = null;
             saveUserData();
             updateLoginStatusBar();
             updateSettingsAccountInfo();
@@ -3042,21 +3263,26 @@
         function loadProfilePage() {
             updateProfileLoginState();
 
+            // 登录状态下优先使用 userData，保持和登录信息一致
+            const displayName = userData.isLoggedIn ? (userData.userName || '玩家') : (playerData.name || '玩家');
+            const displayAvatar = userData.isLoggedIn ? (userData.avatar || '🎮') : (playerData.avatar || '🎮');
+            const displayAvatarImage = userData.isLoggedIn ? userData.avatarImage : playerData.avatarImage;
+
             // 显示头像
             const avatarImg = document.getElementById('profileAvatar');
             const avatarEmoji = document.getElementById('profileAvatarEmoji');
 
-            if (playerData.avatarImage) {
-                avatarImg.src = playerData.avatarImage;
+            if (displayAvatarImage) {
+                avatarImg.src = displayAvatarImage;
                 avatarImg.style.display = 'block';
                 avatarEmoji.style.display = 'none';
             } else {
                 avatarImg.style.display = 'none';
                 avatarEmoji.style.display = 'block';
-                avatarEmoji.textContent = playerData.avatar;
+                avatarEmoji.textContent = displayAvatar;
             }
 
-            document.getElementById('profileName').textContent = playerData.name;
+            document.getElementById('profileName').textContent = displayName;
             document.getElementById('profileLevel').textContent = playerData.level;
 
             document.getElementById('statTotalScore').textContent = playerData.totalScore.toLocaleString();
@@ -3088,6 +3314,27 @@
             }
         }
 
+        // 同步 playerData 到 userData 和 users
+        function syncUserData() {
+            if (userData.isLoggedIn) {
+                userData.userName = playerData.name || userData.userName;
+                userData.avatar = playerData.avatar || userData.avatar;
+                userData.avatarImage = playerData.avatarImage || null;
+                saveUserData();
+
+                const users = JSON.parse(localStorage.getItem('users')) || {};
+                if (users[userData.phone]) {
+                    users[userData.phone].userName = userData.userName;
+                    users[userData.phone].avatar = userData.avatar;
+                    users[userData.phone].playerData = playerData;
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+
+                updateLoginStatusBar();
+                updateSettingsAccountInfo();
+            }
+        }
+
         // 上传头像
         function uploadAvatar(event) {
             const file = event.target.files[0];
@@ -3096,6 +3343,7 @@
                 reader.onload = function(e) {
                     playerData.avatarImage = e.target.result;
                     savePlayerData();
+                    syncUserData();
                     loadProfilePage();
                     showModal('✅ 上传成功', '你的新头像太可爱了！');
                 };
@@ -3108,7 +3356,8 @@
 
         // 编辑名字
         function editName() {
-            document.getElementById('nameInput').value = playerData.name;
+            const currentName = userData.isLoggedIn ? userData.userName : playerData.name;
+            document.getElementById('nameInput').value = currentName || '';
             document.getElementById('nameModal').classList.add('show');
             document.getElementById('nameInput').focus();
         }
@@ -3119,6 +3368,7 @@
             if (newName && newName.length > 0 && newName.length <= 10) {
                 playerData.name = newName;
                 savePlayerData();
+                syncUserData();
                 document.getElementById('profileName').textContent = newName;
                 closeNameModal();
                 showModal('✅ 修改成功', '你的新昵称超可爱！');
@@ -4003,21 +4253,39 @@
             const switchBtn = document.getElementById('switchAccountBtn');
             const logoutBtn = document.getElementById('logoutBtn');
             const loginBtn2 = document.getElementById('loginBtn2');
+            const registerBtn2 = document.getElementById('registerBtn2');
 
             if (userData.isLoggedIn) {
-                avatarEl.textContent = userData.avatar || '🎮';
                 nameEl.textContent = userData.userName || '玩家';
                 phoneEl.textContent = userData.phone || '';
                 switchBtn.style.display = 'block';
                 logoutBtn.style.display = 'block';
                 loginBtn2.style.display = 'none';
+                if (registerBtn2) registerBtn2.style.display = 'none';
+                // 头像：优先显示图片
+                const img = document.getElementById('settingsAvatarImg');
+                const emoji = document.getElementById('settingsAvatarEmoji');
+                if (userData.avatarImage) {
+                    img.src = userData.avatarImage;
+                    img.style.display = 'block';
+                    emoji.style.display = 'none';
+                } else {
+                    img.style.display = 'none';
+                    emoji.style.display = 'block';
+                    emoji.textContent = userData.avatar || '🎮';
+                }
             } else {
-                avatarEl.textContent = '🎮';
                 nameEl.textContent = '游客';
                 phoneEl.textContent = '未登录';
                 switchBtn.style.display = 'none';
                 logoutBtn.style.display = 'none';
                 loginBtn2.style.display = 'block';
+                if (registerBtn2) registerBtn2.style.display = 'block';
+                const img = document.getElementById('settingsAvatarImg');
+                const emoji = document.getElementById('settingsAvatarEmoji');
+                img.style.display = 'none';
+                emoji.style.display = 'block';
+                emoji.textContent = '🎮';
             }
         }
 

@@ -128,7 +128,7 @@
             const grid = document.getElementById('levelGrid');
             grid.innerHTML = '';
             const maxLevel = parseInt(localStorage.getItem('tileGameHardMaxLevel')) || 1;
-            for (let i = 1; i <= 30; i++) {
+            for (let i = 1; i <= 999; i++) {
                 const card = document.createElement('div');
                 card.style.cssText = 'padding:10px;border-radius:8px;text-align:center;cursor:pointer;font-weight:bold;';
                 if (i > maxLevel) {

@@ -366,7 +366,10 @@
             { name: "大师之路", targetDistance: 2500, obstacleRate: 0.05, startSpeed: 16 },
             { name: "传说之巅", targetDistance: 3000, obstacleRate: 0.055, startSpeed: 17 }
         ];
-        const MAX_LEVEL = 8;
+        for (let i = 9; i <= 999; i++) {
+            LEVELS.push({ name: `第${i}关`, targetDistance: 3000 + (i - 8) * 300, obstacleRate: Math.min(0.055 + (i - 8) * 0.002, 0.3), startSpeed: Math.min(17 + (i - 8) * 0.3, 30) });
+        }
+        const MAX_LEVEL = 999;
         let currentLevel = parseInt(localStorage.getItem('runner3dLevel')) || 1;
         let levelConfig = LEVELS[currentLevel - 1];
 

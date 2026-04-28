@@ -344,6 +344,9 @@
             { id: 7, name: '火山边缘', target: 2000, baseSpeed: 12, obsRate: 0.025 },
             { id: 8, name: '天空之城', target: 3000, baseSpeed: 13, obsRate: 0.028 }
         ];
+        for (let i = 9; i <= 999; i++) {
+            LEVELS.push({ id: i, name: `第${i}关`, target: 3000 + (i - 8) * 300, baseSpeed: Math.min(13 + (i - 8) * 0.3, 25), obsRate: Math.min(0.028 + (i - 8) * 0.002, 0.15) });
+        }
         let currentLevel = 1;
 
         function getGameData() {

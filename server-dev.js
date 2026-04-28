@@ -38,10 +38,6 @@ app.get('/health', (req, res) => {
 app.post('/api/send-code', (req, res) => {
     const { phone } = req.body;
 
-    console.log('\n========== 短信验证码 ==========');
-    console.log(`手机号: ${phone}`);
-    console.log(`验证码: ${generateCode()}`);
-
     // 验证手机号格式
     if (!/^1[3-9]\d{9}$/.test(phone)) {
         return res.json({
@@ -54,6 +50,8 @@ app.post('/api/send-code', (req, res) => {
     const lastSent = verificationCodes.get(phone)?.timestamp;
     if (lastSent && Date.now() - lastSent < 60000) {
         const remaining = Math.ceil((60000 - (Date.now() - lastSent)) / 1000);
+        console.log('\n========== 短信验证码 ==========');
+        console.log(`手机号: ${phone}`);
         console.log(`发送频率限制: 请等待${remaining}秒`);
         console.log('================================\n');
         return res.json({
@@ -65,6 +63,10 @@ app.post('/api/send-code', (req, res) => {
 
     // 生成5位验证码
     const code = generateCode();
+
+    console.log('\n========== 短信验证码 ==========');
+    console.log(`手机号: ${phone}`);
+    console.log(`验证码: ${code}`);
 
     // 存储验证码（5分钟有效）
     verificationCodes.set(phone, {

@@ -488,6 +488,18 @@
                 enemyMultiplier: 5.0
             }
         ];
+        for (let i = 11; i <= 999; i++) {
+            const base = LEVELS[(i - 1) % 10];
+            const add = Math.floor((i - 1) / 10);
+            LEVELS.push({
+                id: i, name: `第${i}关`,
+                targetWaves: base.targetWaves + add * 2,
+                startGold: base.startGold + add * 20,
+                startLives: Math.max(base.startLives - add, 1),
+                path: base.path,
+                enemyMultiplier: base.enemyMultiplier + add * 0.5
+            });
+        }
 
         let currentLevel = 0;
         let towers = [];

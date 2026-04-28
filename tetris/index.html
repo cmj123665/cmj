@@ -194,7 +194,10 @@
             { id: 7, name: "大师之路", targetLines: 25, startSpeed: 400 },
             { id: 8, name: "方块传说", targetLines: 30, startSpeed: 300 }
         ];
-        const MAX_LEVEL = 8;
+        for (let i = 9; i <= 999; i++) {
+            LEVELS.push({ id: i, name: `第${i}关`, targetLines: 30 + (i - 8) * 3, startSpeed: Math.max(300 - (i - 8) * 3, 50) });
+        }
+        const MAX_LEVEL = 999;
         let currentLevel = parseInt(localStorage.getItem('tetrisLevel')) || 1;
         let linesClearedTotal = 0;
 

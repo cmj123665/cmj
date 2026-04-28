@@ -285,9 +285,12 @@ const LEVELS = [
     { name: "高级", aiDepth: 2 },
     { name: "大师", aiDepth: 3 }
 ];
+for (let i = 6; i <= 999; i++) {
+    LEVELS.push({ name: `第${i}关`, aiDepth: Math.min(3 + Math.floor((i - 5) / 2), 5) });
+}
 
 let currentLevel = parseInt(localStorage.getItem('gomokuLevel')) || 1;
-const MAX_LEVEL = 5;
+const MAX_LEVEL = 999;
 let gameMode = 'ai';
 let aiThinking = false;
 

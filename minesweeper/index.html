@@ -302,7 +302,13 @@ const LEVELS = [
     { rows: 18, cols: 18, mines: 55 },
     { rows: 20, cols: 20, mines: 70 }
 ];
-const MAX_LEVEL = 8;
+for (let i = 9; i <= 999; i++) {
+    const rows = Math.min(20 + Math.floor((i - 8) / 2), 30);
+    const cols = rows;
+    const mines = Math.min(70 + (i - 8) * 5, Math.floor(rows * cols * 0.45));
+    LEVELS.push({ rows, cols, mines });
+}
+const MAX_LEVEL = 999;
 let currentLevel = parseInt(localStorage.getItem('minesweeperLevel')) || 1;
 
 let grid = [];

@@ -229,6 +229,9 @@
             { id: 9, name: '巨龙领地', targetApples: 50 },
             { id: 10, name: '蛇神试炼', targetApples: 60 }
         ];
+        for (let i = 11; i <= 999; i++) {
+            LEVELS.push({ id: i, name: `第${i}关`, targetApples: 60 + (i - 10) * 5 });
+        }
         let currentLevel = 1;
 
         function getGameData() {
