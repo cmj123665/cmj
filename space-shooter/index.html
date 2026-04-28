@@ -4,79 +4,153 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>太空射击</title>
+    <script src="../js/game-effects.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #fefce8 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            color: #fff;
+            color: #475569;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(96, 165, 250, 0.2);
+            letter-spacing: 2px;
         }
         #gameCanvas {
-            border: 3px solid #00cec9;
-            border-radius: 10px;
-            background: #000;
-            box-shadow: 0 0 30px rgba(0, 206, 201, 0.3);
+            border: 2px solid rgba(96, 165, 250, 0.2);
+            border-radius: 20px;
+            background: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 40%, #f0f9ff 100%);
+            box-shadow: 0 8px 32px rgba(96, 165, 250, 0.15);
         }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .info {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .info span {
+            color: #60a5fa;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            display: none; justify-content: center; align-items: center; z-index: 100;
+        }
         .modal.show { display: flex; }
-        .modal-content { background: rgba(45,52,54,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 40px; text-align: center; color: white; }
-        .modal-content h2 { font-size: 2rem; margin-bottom: 20px; }
-        .modal-content p { margin: 8px 0; }
-        .modal-btn { padding: 15px 40px; background: linear-gradient(135deg,#22c55e,#16a34a); border: none; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin: 5px; }
-        .info { margin-top: 20px; text-align: center; }
-        .info span { color: #00cec9; font-weight: bold; }
+        .modal-content {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            color: #475569;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            max-width: 320px; width: 90%;
+        }
+        .modal-content h2 {
+            font-size: 1.8rem; margin-bottom: 16px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .modal-content p { margin: 8px 0; color: #94a3b8; }
+        .modal-btn {
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            border: none; border-radius: 14px;
+            color: white; font-size: 1rem; font-weight: bold;
+            cursor: pointer; margin: 8px 5px;
+            box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);
+            transition: all 0.2s;
+        }
+        .modal-btn:hover { transform: scale(1.05); }
         .game-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(20px);
             padding: 12px 20px;
             display: flex; justify-content: center; gap: 12px;
             z-index: 9999 !important;
+            border-top: 1px solid rgba(255,255,255,0.5);
         }
         .game-nav-btn {
-            padding: 10px 20px; border: none; border-radius: 10px;
+            padding: 10px 20px; border: none; border-radius: 12px;
             font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
         }
-        .game-nav-btn.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .game-nav-btn.secondary { background: #f5f5f5; color: #333; }
+        .game-nav-btn.primary {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            color: white;
+            box-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
+        }
+        .game-nav-btn.secondary {
+            background: rgba(255,255,255,0.6);
+            color: #475569;
+            border: 1px solid rgba(203, 213, 225, 0.5);
+        }
     </style>
 </head>
 <body>
+    <div class="title">太空射击</div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <div class="info">
-        <p>分数: <span id="score">0</span> 波次: <span id="wave">1</span></p>
+        <p>分数: <span id="score">0</span> &nbsp;&nbsp; 波次: <span id="wave">1</span></p>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        let player = { x: 400, y: 500, width: 40, height: 40 };
+        let player = { x: 400, y: 500, width: 50, height: 60 };
         let bullets = [];
         let enemies = [];
-        let particles = [];
         let score = 0;
         let wave = 1;
         let gameRunning = true;
         let animationFrameId = null;
+        let time = 0;
+        let clouds = [];
+
+        const particleSystem = new ParticleSystem(150);
+        const floatText = new FloatText();
 
         function init() {
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
-            player = { x: 400, y: 500, width: 40, height: 40 };
+            player = { x: 400, y: 500, width: 50, height: 60 };
             bullets = [];
             enemies = [];
-            particles = [];
             score = 0;
             wave = 1;
             gameRunning = true;
+            time = 0;
+            clouds = [];
+            for (let i = 0; i < 6; i++) {
+                clouds.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 0.6,
+                    w: 80 + Math.random() * 120,
+                    h: 25 + Math.random() * 20,
+                    speed: 0.2 + Math.random() * 0.3
+                });
+            }
+            particleSystem.clear();
             spawnEnemies();
             gameLoop();
         }
@@ -84,35 +158,47 @@
         function spawnEnemies() {
             for (let i = 0; i < 3 + wave; i++) {
                 enemies.push({
-                    x: Math.random() * 700 + 50,
-                    y: -30,
-                    width: 30,
-                    height: 30,
-                    speed: 1 + wave * 0.2
+                    x: Math.random() * 720 + 40,
+                    y: -60,
+                    width: 45,
+                    height: 50,
+                    speed: 1 + wave * 0.2,
+                    rotation: 0
                 });
             }
         }
 
         function update() {
             if (!gameRunning) return;
+            time += 0.016;
 
-            if (keys.left && player.x > 0) player.x -= 5;
-            if (keys.right && player.x < 760) player.x += 5;
+            if (keys.left && player.x > 20) player.x -= 5;
+            if (keys.right && player.x < 730) player.x += 5;
 
-            bullets.forEach(b => b.y -= 10);
+            bullets.forEach(b => { b.y -= 10; });
             bullets = bullets.filter(b => b.y > 0);
 
-            enemies.forEach(e => e.y += e.speed);
-            enemies = enemies.filter(e => e.y < 620);
+            enemies.forEach(e => {
+                e.y += e.speed;
+                e.rotation += 0.02;
+            });
+            enemies = enemies.filter(e => e.y < 650);
 
             bullets.forEach((b, bi) => {
                 enemies.forEach((e, ei) => {
                     if (b.x < e.x + e.width && b.x + 5 > e.x &&
-                        b.y < e.y + e.height && b.y + 5 > e.y) {
+                        b.y < e.y + e.height && b.y + 15 > e.y) {
                         bullets.splice(bi, 1);
                         enemies.splice(ei, 1);
-                        score += 10;
+                        const pts = 10 * wave;
+                        score += pts;
                         document.getElementById('score').textContent = score;
+                        floatText.add(e.x + e.width/2, e.y, '+' + pts, '#fbbf24');
+                        particleSystem.emit(e.x + e.width/2, e.y + e.height/2, 25, {
+                            colors: ['#fbbf24', '#f87171', '#fb923c', '#fde68a'],
+                            speed: 3.5, size: 4, life: 30
+                        });
+                        triggerShake(4, 8);
                     }
                 });
             });
@@ -130,6 +216,16 @@
                 spawnEnemies();
             }
 
+            clouds.forEach(c => {
+                c.y += c.speed;
+                if (c.y > canvas.height + 50) {
+                    c.y = -50;
+                    c.x = Math.random() * canvas.width;
+                }
+            });
+
+            particleSystem.update();
+            floatText.update();
             draw();
         }
 
@@ -138,7 +234,7 @@
             if (e.key === 'ArrowLeft') keys.left = true;
             if (e.key === 'ArrowRight') keys.right = true;
             if (e.key === ' ') {
-                bullets.push({ x: player.x + 17, y: player.y, width: 6, height: 10 });
+                bullets.push({ x: player.x + player.width/2 - 2, y: player.y, width: 4, height: 12 });
             }
         });
         document.addEventListener('keyup', e => {
@@ -146,35 +242,43 @@
             if (e.key === 'ArrowRight') keys.right = false;
         });
 
-        function createExplosion(x, y) {
-            for (let i = 0; i < 10; i++) {
-                particles.push({ x, y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, life: 20 });
-            }
-        }
-
         function draw() {
-            ctx.fillStyle = '#000';
+            ctx.save();
+            applyShake(ctx);
+
+            // 天空背景
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, '#bae6fd');
+            skyGrad.addColorStop(0.4, '#e0f2fe');
+            skyGrad.addColorStop(1, '#f0f9ff');
+            ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#00cec9';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-
-            ctx.fillStyle = '#ffeaa7';
-            bullets.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
-
-            ctx.fillStyle = '#ff7675';
-            enemies.forEach(e => ctx.fillRect(e.x, e.y, e.width, e.height));
-
-            particles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life--;
-                ctx.fillStyle = `rgba(255, 234, 0, ${p.life / 20})`;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-                ctx.fill();
+            // 云朵
+            clouds.forEach(c => {
+                drawCloud(ctx, c.x, c.y, c.w, c.h, 'rgba(255,255,255,0.5)');
             });
-            particles = particles.filter(p => p.life > 0);
+
+            // 玩家飞机
+            drawPlane(ctx, player.x, player.y, player.width, player.height, '#60a5fa', 1);
+
+            // 激光子弹
+            bullets.forEach(b => {
+                drawLaser(ctx, b.x, b.y, b.width, b.height, '#fbbf24', 10);
+            });
+
+            // 敌机
+            enemies.forEach(e => {
+                drawEnemyPlane(ctx, e.x, e.y, e.width, e.height, '#f87171', e.rotation);
+            });
+
+            // 爆炸粒子
+            particleSystem.draw(ctx);
+
+            // 得分飘字
+            floatText.draw(ctx);
+
+            ctx.restore();
         }
 
         function gameLoop() {
@@ -203,8 +307,8 @@
     <div class="modal" id="gameOverModal">
         <div class="modal-content">
             <h2 id="gameOverTitle">游戏结束!</h2>
-            <p>最终分数: <span id="finalScore">0</span></p>
-            <p>波次: <span id="finalWave">1</span></p>
+            <p>最终分数: <span id="finalScore" style="color: #60a5fa; font-weight: bold;">0</span></p>
+            <p>波次: <span id="finalWave" style="color: #a78bfa; font-weight: bold;">1</span></p>
             <button class="modal-btn" onclick="document.getElementById('gameOverModal').classList.remove('show'); init();">再来一局</button>
         </div>
     </div>
@@ -222,7 +326,7 @@
         <button class="game-nav-btn secondary" onclick="location.reload()">
             <span>🔄</span><span>重新开始</span>
         </button>
-        <button class="game-nav-btn tertiary" onclick="document.getElementById('helpModal').classList.add('show')">
+        <button class="game-nav-btn secondary" onclick="document.getElementById('helpModal').classList.add('show')">
             <span>❓</span><span>游戏说明</span>
         </button>
     </div>

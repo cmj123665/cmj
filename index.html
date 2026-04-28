@@ -16,8 +16,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            background: #f7f7f7;
-            color: #333;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f5f3ff 50%, #eff6ff 100%);
+            color: #475569;
             min-height: 100vh;
             padding-bottom: 0;
             padding-top: 44px;
@@ -26,18 +26,31 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 微信小程序顶部导航栏 */
+        /* WebGL粒子背景Canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 微信小程序顶部导航栏 - 浪漫玻璃质感 */
         .mp-navbar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             height: 44px;
-            background: #fff;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: flex;
             align-items: center;
             justify-content: center;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
             z-index: 9999;
             padding-top: env(safe-area-inset-top);
         }
@@ -45,10 +58,10 @@
         .mp-navbar .title {
             font-size: 17px;
             font-weight: 600;
-            color: #000;
+            color: #64748b;
         }
 
-        /* 可爱动态背景图案 - 移动端优化 */
+        /* 可爱浪漫背景 */
         body::before {
             content: '';
             position: fixed;
@@ -56,10 +69,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #ffe8f0 0%, #e8f4ff 50%, #fff0f8 100%);
+            background: linear-gradient(135deg, #fdf2f8 0%, #f5f3ff 50%, #eff6ff 100%);
             pointer-events: none;
             z-index: 0;
-            opacity: 0.5;
         }
 
         /* 页面容器 */
@@ -71,7 +83,7 @@
             display: block;
         }
 
-        /* 背景装饰 - 简化移动端 */
+        /* 背景装饰 - 浪漫光晕 */
         .bg-decoration {
             position: fixed;
             top: 0;
@@ -80,8 +92,10 @@
             height: 100%;
             pointer-events: none;
             z-index: 0;
-            background: linear-gradient(135deg, #ffe8f0 0%, #e8f4ff 50%, #fff0f8 100%);
-            opacity: 0.3;
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(244, 114, 182, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(96, 165, 250, 0.08) 0%, transparent 50%);
         }
 
         /* 漂浮的可爱元素 */
@@ -137,14 +151,17 @@
             display: none;
         }
 
-        /* 标题 - 小程序风格 */
+        /* 标题 - 可爱浪漫玻璃质感 */
         .banner {
             text-align: center;
             margin-bottom: 16px;
             padding: 16px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px rgba(244, 114, 182, 0.1);
             position: relative;
             overflow: hidden;
         }
@@ -156,13 +173,13 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #ff9ecd, #b794f6, #94c5f9);
+            background: linear-gradient(90deg, #f9a8d4, #c4b5fd, #bae6fd);
         }
 
         .banner h1 {
-            font-size: 22px;
+            font-size: 24px;
             margin-bottom: 4px;
-            background: linear-gradient(90deg, #ff9ecd, #b794f6);
+            background: linear-gradient(90deg, #f472b6, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
@@ -171,19 +188,22 @@
         .banner p {
             opacity: 0.7;
             font-size: 13px;
-            color: #999;
+            color: #94a3b8;
         }
 
-        /* 登录状态栏 */
+        /* 登录状态栏 - 浪漫玻璃质感 */
         .login-status-bar {
-            background: #fff;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
             padding: 12px 16px;
             margin-bottom: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.1);
         }
 
         .login-status-bar .user-info {
@@ -212,36 +232,40 @@
         .login-status-bar .user-name {
             font-size: 14px;
             font-weight: 600;
-            color: #333;
+            color: #475569;
         }
 
         .login-status-bar .user-phone {
             font-size: 12px;
-            color: #999;
+            color: #94a3b8;
         }
 
         .login-status-bar .login-btn {
             padding: 8px 16px;
-            background: linear-gradient(135deg, #ff9ecd 0%, #b794f6 100%);
+            background: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%);
             border-radius: 20px;
             color: white;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: 0 2px 10px rgba(244, 114, 182, 0.3);
         }
 
         .login-status-bar .login-btn:active {
             transform: scale(0.95);
         }
 
-        /* 搜索框 */
+        /* 搜索框 - 浪漫玻璃质感 */
         .search-container {
-            background: #fff;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
             padding: 12px 16px;
             margin-bottom: 16px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.1);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -249,7 +273,7 @@
 
         .search-container .search-icon {
             font-size: 18px;
-            color: #999;
+            color: #94a3b8;
         }
 
         .search-container .search-input {
@@ -257,17 +281,17 @@
             border: none;
             outline: none;
             font-size: 14px;
-            color: #333;
+            color: #475569;
             background: transparent;
         }
 
         .search-container .search-input::placeholder {
-            color: #ccc;
+            color: #94a3b8;
         }
 
         .search-container .search-clear {
             font-size: 18px;
-            color: #999;
+            color: #94a3b8;
             cursor: pointer;
             display: none;
         }
@@ -293,7 +317,7 @@
             opacity: 0.5;
         }
 
-        /* 统计卡片 - 小程序风格 */
+        /* 统计卡片 - 浪漫玻璃质感 */
         .stats-bar {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -302,17 +326,20 @@
         }
 
         .stat-card {
-            background: #fff;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
             padding: 12px 8px;
             text-align: center;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.1);
+            transition: all 0.3s;
         }
 
         .stat-card:active {
             transform: scale(0.96);
-            background: #f8f8f8;
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .stat-card .icon {
@@ -323,17 +350,19 @@
         .stat-card .value {
             font-size: 16px;
             font-weight: 700;
-            color: #ff6b9d;
+            background: linear-gradient(135deg, #f472b6, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .stat-card .label {
             font-size: 11px;
             opacity: 0.6;
             margin-top: 2px;
-            color: #999;
+            color: #64748b;
         }
 
-        /* 分类标签 - 小程序风格 */
+        /* 分类标签 - 浪漫玻璃质感 */
         .category-tabs {
             display: flex;
             gap: 8px;
@@ -349,15 +378,17 @@
 
         .category-tab {
             padding: 8px 16px;
-            background: #fff;
-            border: 1px solid #e5e5e5;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 20px;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
             white-space: nowrap;
             font-weight: 500;
-            color: #666;
+            color: #64748b;
             flex-shrink: 0;
         }
 
@@ -366,12 +397,13 @@
         }
 
         .category-tab.active {
-            background: linear-gradient(135deg, #ff9ecd 0%, #b794f6 100%);
-            border-color: transparent;
-            color: #fff;
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.3) 0%, rgba(167, 139, 250, 0.3) 100%);
+            border-color: rgba(244, 114, 182, 0.4);
+            color: #be185d;
+            box-shadow: 0 0 20px rgba(244, 114, 182, 0.15);
         }
 
-        /* 游戏网格 - 小程序风格 */
+        /* 游戏网格 - 3D卡片墙 */
         .games-section {
             margin-bottom: 20px;
         }
@@ -389,41 +421,53 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #333;
+            color: #475569;
         }
 
         .games-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            gap: 12px;
+            perspective: 1500px;
+            transform-style: preserve-3d;
         }
 
+        /* 游戏卡片 - 3D浪漫玻璃质感 */
         .game-card {
-            background: #fff;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid #f0f0f0;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             text-decoration: none;
-            color: #333;
+            color: #475569;
             display: block;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.12);
             position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .game-card:hover {
+            transform: rotateY(8deg) rotateX(-4deg) translateZ(40px) scale(1.03);
+            box-shadow: 0 25px 50px rgba(244, 114, 182, 0.2);
+            border-color: rgba(244, 114, 182, 0.3);
         }
 
         .game-card:active {
             transform: scale(0.97);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .game-cover {
             position: relative;
             height: 100px;
-            background: linear-gradient(135deg, #ffe8f0 0%, #e8f4ff 100%);
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.1) 0%, rgba(167, 139, 250, 0.08) 100%);
             display: flex;
             justify-content: center;
             align-items: center;
+            border-bottom: 1px solid rgba(244, 114, 182, 0.08);
         }
 
         .game-icon {
@@ -438,7 +482,7 @@
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 4px;
-            color: #333;
+            color: #475569;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -446,9 +490,9 @@
 
         .game-desc {
             font-size: 11px;
-            opacity: 0.6;
+            opacity: 0.7;
             margin-bottom: 8px;
-            color: #999;
+            color: #64748b;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -462,22 +506,24 @@
 
         .game-tag {
             padding: 3px 8px;
-            background: #f5f5f5;
+            background: rgba(244, 114, 182, 0.1);
             border-radius: 8px;
             font-size: 10px;
-            color: #999;
+            color: #f472b6;
         }
 
         .hot-badge {
             position: absolute;
             top: 6px;
             left: 6px;
-            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.9) 0%, rgba(245, 158, 11, 0.9) 100%);
             padding: 3px 8px;
             border-radius: 8px;
             font-size: 10px;
             font-weight: 700;
-            color: white;
+            color: #0f172a;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+            z-index: 2;
         }
 
         /* 排行榜 - 小程序风格 */
@@ -797,14 +843,16 @@
             font-weight: 600;
         }
 
-        /* 底部导航 - 小程序风格 */
+        /* 底部导航 - 浪漫玻璃质感 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: #fff;
-            border-top: 1px solid #eee;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(244, 114, 182, 0.15);
             padding: 8px 0;
             padding-bottom: calc(8px + env(safe-area-inset-bottom));
             display: flex;
@@ -825,33 +873,34 @@
         .nav-item .icon {
             font-size: 22px;
             margin-bottom: 2px;
-            opacity: 0.5;
+            opacity: 0.4;
             transition: all 0.2s;
+            color: #94a3b8;
         }
 
         .nav-item .label {
             font-size: 10px;
-            color: #999;
+            color: #64748b;
             font-weight: 500;
         }
 
         .nav-item.active .icon {
             opacity: 1;
-            color: #ff6b9d;
+            color: #f472b6;
         }
 
         .nav-item.active .label {
-            color: #ff6b9d;
+            color: #f472b6;
         }
 
-        /* 浮动添加按钮 - 小程序风格 */
+        /* 浮动添加按钮 - 浪漫玻璃质感 */
         .floating-add-btn {
             position: fixed;
             bottom: 70px;
             right: 16px;
             width: 50px;
             height: 50px;
-            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            background: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%);
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -861,20 +910,20 @@
             color: white;
             cursor: pointer;
             z-index: 999;
-            box-shadow: 0 4px 12px rgba(255, 107, 157, 0.4);
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.4);
             transition: all 0.2s;
-            border: 3px solid #fff;
+            border: 2px solid rgba(255, 255, 255, 0.5);
         }
 
         .floating-add-btn:active {
             transform: scale(0.9);
         }
 
-        /* 弹窗 - 小程序风格 */
+        /* 弹窗 - 浪漫玻璃质感 */
         .modal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.4);
             display: none;
             justify-content: center;
             align-items: center;
@@ -887,27 +936,30 @@
         }
 
         .modal-content {
-            background: #fff;
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
             padding: 24px;
             text-align: center;
-            color: #333;
+            color: #475569;
             max-width: 300px;
             width: 100%;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 60px rgba(244, 114, 182, 0.2);
         }
 
         .modal-content h2 {
             font-size: 18px;
             margin-bottom: 12px;
             font-weight: 700;
-            color: #333;
+            color: #475569;
         }
 
         .modal-content p {
             margin-bottom: 20px;
             line-height: 1.6;
-            color: #666;
+            color: #64748b;
             font-size: 14px;
             white-space: pre-line;
         }
@@ -915,20 +967,20 @@
         .modal-input {
             width: 100%;
             padding: 12px 14px;
-            border: 1px solid #e5e5e5;
+            border: 1px solid rgba(244, 114, 182, 0.2);
             border-radius: 10px;
             font-size: 15px;
             margin-bottom: 16px;
-            background: #f8f8f8;
-            color: #333;
+            background: rgba(255, 255, 255, 0.8);
+            color: #475569;
             font-weight: 500;
             transition: all 0.2s;
         }
 
         .modal-input:focus {
             outline: none;
-            border-color: #ff6b9d;
-            background: #fff;
+            border-color: rgba(244, 114, 182, 0.5);
+            background: rgba(255, 255, 255, 1);
         }
 
         .modal-input[type="url"] {
@@ -951,7 +1003,8 @@
             right: 8px;
             width: 24px;
             height: 24px;
-            background: rgba(255, 107, 157, 0.9);
+            background: rgba(244, 114, 182, 0.8);
+            backdrop-filter: blur(10px);
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -964,7 +1017,7 @@
 
         .modal-btn {
             padding: 12px 32px;
-            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            background: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%);
             border: none;
             border-radius: 10px;
             color: white;
@@ -973,6 +1026,7 @@
             cursor: pointer;
             margin: 4px;
             transition: all 0.2s;
+            box-shadow: 0 2px 10px rgba(244, 114, 182, 0.3);
         }
 
         .modal-btn:active {
@@ -980,8 +1034,9 @@
         }
 
         .modal-btn.secondary {
-            background: #f5f5f5;
-            color: #666;
+            background: rgba(244, 114, 182, 0.1);
+            color: #64748b;
+            border: 1px solid rgba(244, 114, 182, 0.2);
         }
 
         /* ========== 收藏按钮 ========== */
@@ -991,7 +1046,8 @@
             right: 8px;
             width: 32px;
             height: 32px;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -1000,11 +1056,15 @@
             cursor: pointer;
             z-index: 5;
             transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(244, 114, 182, 0.15);
         }
 
         .favorite-btn:active {
             transform: scale(0.9);
+        }
+
+        .favorite-btn.active {
+            color: #f472b6;
         }
 
         .favorite-btn.active {
@@ -1639,6 +1699,7 @@
     </style>
 </head>
 <body>
+    <canvas id="particleCanvas"></canvas>
     <div class="bg-decoration"></div>
 
     <!-- 小程序顶部导航栏 -->
@@ -2154,6 +2215,7 @@
         </div>
     </div>
 
+    <script src="js/game-effects.js"></script>
     <script>
         // ========== 游戏列表 ==========
         const games = [
@@ -2630,7 +2692,7 @@
                     ${deleteBtn}
                     ${favoriteBtn}
                     <div class="game-cover">
-                        <div class="game-icon">${game.icon}</div>
+                        <canvas class="game-preview" data-game="${game.id}" width="60" height="60" style="width: 60px; height: 60px;"></canvas>
                     </div>
                     <div class="game-info">
                         <h3 class="game-title">${game.name}</h3>
@@ -3773,12 +3835,182 @@
             checkGameResult(); // 检查是否有游戏结果需要处理
             loadSettings();
             renderGames();
+            drawGamePreviews();
             updateStats();
             updateLoginStatusBar();
             checkAchievements();
             updateMessageBadge();
+
+            // 初始化WebGL粒子背景
+            const particleCanvas = document.getElementById('particleCanvas');
+            if (particleCanvas && window.WebGLParticles) {
+                try {
+                    new WebGLParticles(particleCanvas);
+                } catch (e) {
+                    console.warn('WebGL粒子背景初始化失败:', e);
+                }
+            }
+
             console.log('主页初始化完成');
         });
+
+        // ========== 游戏卡片迷你预览图绘制 ==========
+        function drawGamePreviews() {
+            document.querySelectorAll('.game-preview').forEach(canvas => {
+                const gameId = canvas.dataset.game;
+                const ctx = canvas.getContext('2d');
+                const w = canvas.width;
+                const h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+                drawGamePreview(ctx, gameId, w, h);
+            });
+        }
+
+        function drawGamePreview(ctx, gameId, w, h) {
+            const cx = w / 2;
+            const cy = h / 2;
+
+            switch (gameId) {
+                case 'snake':
+                    // 蛇头+身体
+                    drawRoundedRect3D(ctx, cx - 12, cy - 4, 10, 10, 2, '#4ade80');
+                    drawRoundedRect3D(ctx, cx - 2, cy - 4, 10, 10, 2, '#22c55e');
+                    drawRoundedRect3D(ctx, cx + 8, cy - 4, 10, 10, 2, '#16a34a');
+                    // 眼睛
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath(); ctx.arc(cx + 10, cy - 2, 2, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.beginPath(); ctx.arc(cx + 11, cy - 2, 1, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case '2048':
+                    // 数字方块
+                    drawRoundedRect3D(ctx, cx - 14, cy - 14, 12, 12, 2, '#fbbf24');
+                    drawRoundedRect3D(ctx, cx + 2, cy - 14, 12, 12, 2, '#f97316');
+                    drawRoundedRect3D(ctx, cx - 14, cy + 2, 12, 12, 2, '#ef4444');
+                    drawRoundedRect3D(ctx, cx + 2, cy + 2, 12, 12, 2, '#8b5cf6');
+                    break;
+                case 'runner':
+                    // 跑步者剪影
+                    ctx.fillStyle = '#f472b6';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy - 8, 5, 0, Math.PI * 2); // 头
+                    ctx.fill();
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#f472b6';
+                    ctx.beginPath(); ctx.moveTo(cx, cy - 3); ctx.lineTo(cx, cy + 5); ctx.stroke(); // 身体
+                    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - 6, cy + 2); ctx.stroke(); // 左臂
+                    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 6, cy - 2); ctx.stroke(); // 右臂
+                    ctx.beginPath(); ctx.moveTo(cx, cy + 5); ctx.lineTo(cx - 5, cy + 12); ctx.stroke(); // 左腿
+                    ctx.beginPath(); ctx.moveTo(cx, cy + 5); ctx.lineTo(cx + 5, cy + 10); ctx.stroke(); // 右腿
+                    break;
+                case 'shooter':
+                    // 小飞船
+                    drawSpaceship(ctx, cx - 10, cy - 12, 20, 24, '#60a5fa', 0.8);
+                    break;
+                case 'pong':
+                    // 球拍和球
+                    drawGlowRect(ctx, cx - 12, cy - 10, 4, 20, '#22d3ee', 5);
+                    drawGlowRect(ctx, cx + 8, cy - 10, 4, 20, '#22d3ee', 5);
+                    drawGradientCircle(ctx, cx, cy, 4, '#a5f3fc', '#22d3ee');
+                    break;
+                case 'breakout':
+                    // 砖块和球
+                    for (let i = 0; i < 3; i++) {
+                        for (let j = 0; j < 3; j++) {
+                            const colors = ['#f87171', '#fbbf24', '#34d399'];
+                            drawRoundedRect3D(ctx, cx - 14 + j * 10, cy - 12 + i * 8, 8, 6, 1, colors[i]);
+                        }
+                    }
+                    drawGradientCircle(ctx, cx, cy + 10, 3, '#fef08a', '#facc15');
+                    break;
+                case 'tile':
+                    // 彩色方块
+                    drawRoundedRect3D(ctx, cx - 12, cy - 12, 10, 10, 2, '#f87171');
+                    drawRoundedRect3D(ctx, cx + 2, cy - 12, 10, 10, 2, '#60a5fa');
+                    drawRoundedRect3D(ctx, cx - 12, cy + 2, 10, 10, 2, '#34d399');
+                    drawRoundedRect3D(ctx, cx + 2, cy + 2, 10, 10, 2, '#fbbf24');
+                    break;
+                case 'memory':
+                    // 扑克牌
+                    drawRoundedRect3D(ctx, cx - 10, cy - 12, 14, 20, 2, '#e2e8f0');
+                    drawRoundedRect3D(ctx, cx - 4, cy - 10, 14, 20, 2, '#f1f5f9');
+                    ctx.fillStyle = '#ef4444';
+                    ctx.font = '10px sans-serif';
+                    ctx.fillText('♥', cx - 2, cy + 2);
+                    break;
+                case 'minesweeper':
+                    // 网格+地雷
+                    for (let i = 0; i < 3; i++) {
+                        for (let j = 0; j < 3; j++) {
+                            drawRoundedRect3D(ctx, cx - 12 + j * 9, cy - 12 + i * 9, 7, 7, 1, '#94a3b8');
+                        }
+                    }
+                    drawGradientCircle(ctx, cx + 2, cy + 2, 4, '#f87171', '#dc2626');
+                    break;
+                case 'gomoku':
+                    // 棋盘+棋子
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < 4; i++) {
+                        ctx.beginPath(); ctx.moveTo(cx - 10, cy - 10 + i * 7); ctx.lineTo(cx + 10, cy - 10 + i * 7); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(cx - 10 + i * 7, cy - 10); ctx.lineTo(cx - 10 + i * 7, cy + 10); ctx.stroke();
+                    }
+                    drawGradientCircle(ctx, cx - 3, cy - 3, 3, '#1e293b', '#0f172a', false);
+                    drawGradientCircle(ctx, cx + 3, cy + 3, 3, '#e2e8f0', '#cbd5e1', false);
+                    break;
+                case 'tetris':
+                    // 俄罗斯方块
+                    drawRoundedRect3D(ctx, cx - 14, cy - 4, 8, 8, 1, '#22d3ee');
+                    drawRoundedRect3D(ctx, cx - 6, cy - 4, 8, 8, 1, '#22d3ee');
+                    drawRoundedRect3D(ctx, cx + 2, cy - 4, 8, 8, 1, '#22d3ee');
+                    drawRoundedRect3D(ctx, cx + 2, cy - 12, 8, 8, 1, '#22d3ee');
+                    break;
+                case 'whack':
+                    // 地鼠洞+地鼠
+                    ctx.fillStyle = '#78350f';
+                    ctx.beginPath(); ctx.ellipse(cx, cy + 8, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
+                    drawGradientCircle(ctx, cx, cy - 2, 6, '#d4a574', '#a8714a');
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.beginPath(); ctx.arc(cx - 2, cy - 3, 1, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(cx + 2, cy - 3, 1, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case 'tank':
+                    // 小坦克
+                    drawRoundedRect3D(ctx, cx - 10, cy - 6, 20, 12, 2, '#4ade80');
+                    drawRoundedRect3D(ctx, cx - 6, cy - 10, 12, 8, 2, '#22c55e');
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.fillRect(cx - 1, cy - 16, 2, 8);
+                    break;
+                case 'puzzle':
+                    // 拼图块
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 10, cy - 10);
+                    ctx.lineTo(cx + 2, cy - 10);
+                    ctx.arc(cx + 2, cy - 7, 3, -Math.PI / 2, Math.PI / 2);
+                    ctx.lineTo(cx + 10, cy - 4);
+                    ctx.lineTo(cx + 10, cy + 4);
+                    ctx.arc(cx + 7, cy + 4, 3, 0, Math.PI);
+                    ctx.lineTo(cx - 10, cy + 10);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    break;
+                case 'tower':
+                    // 塔
+                    drawRoundedRect3D(ctx, cx - 8, cy + 4, 16, 10, 1, '#94a3b8');
+                    drawRoundedRect3D(ctx, cx - 6, cy - 4, 12, 10, 1, '#64748b');
+                    drawRoundedRect3D(ctx, cx - 4, cy - 10, 8, 8, 1, '#475569');
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath(); ctx.arc(cx, cy - 14, 2, 0, Math.PI * 2); ctx.fill();
+                    break;
+                default:
+                    // 默认几何
+                    drawGradientCircle(ctx, cx, cy, 12, '#60a5fa', '#3b82f6');
+            }
+        }
     </script>
 </body>
 </html>
