@@ -1675,6 +1675,11 @@
             color: #c2185b;
         }
 
+        .message-item .type.contact {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
         .message-item .title {
             font-size: 14px;
             font-weight: 600;
@@ -1842,6 +1847,208 @@
             .stat-card .label {
                 font-size: 10px;
             }
+        }
+
+        /* ========== 联系人/好友 ========== */
+        .contact-search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .contact-search-box .modal-input {
+            flex: 1;
+        }
+
+        .contact-search-box .modal-btn {
+            padding: 12px 16px;
+            white-space: nowrap;
+        }
+
+        .contact-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .contact-item:active {
+            transform: scale(0.98);
+        }
+
+        .contact-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff9ecd 0%, #b794f6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .contact-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .contact-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .contact-phone {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .contact-last-msg {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .contact-add-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #ff9ecd 0%, #b794f6 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .contact-add-btn:active {
+            transform: scale(0.95);
+        }
+
+        .contact-add-btn.added {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: default;
+        }
+
+        /* 聊天弹窗 */
+        .chat-modal .modal-content {
+            max-width: 360px;
+            width: 100%;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 70vh;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .chat-header .contact-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+        }
+
+        .chat-header .contact-name {
+            margin-bottom: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 200px;
+        }
+
+        .chat-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .chat-bubble.sent {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #ff9ecd 0%, #b794f6 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-bubble.received {
+            align-self: flex-start;
+            background: #f3f4f6;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-time {
+            font-size: 10px;
+            color: #999;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .chat-bubble.received .chat-time {
+            text-align: left;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+            background: #fff;
+        }
+
+        .chat-input-area .modal-input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .chat-input-area .modal-btn {
+            padding: 10px 18px;
+        }
+
+        .empty-contacts::before {
+            content: '👥';
+            display: block;
+            font-size: 40px;
+            margin-bottom: 12px;
         }
     </style>
 </head>
@@ -2134,6 +2341,9 @@
                 <div class="message-tab" data-type="reward" onclick="filterMessages('reward')">
                     奖励通知
                 </div>
+                <div class="message-tab" data-type="contact" onclick="filterMessages('contact')">
+                    联系人
+                </div>
             </div>
 
             <div class="message-list" id="messageList">
@@ -2424,6 +2634,25 @@
             <p style="margin-bottom: 16px;"><strong>简介</strong><br>精选15+款小游戏，随时随地畅玩<br>支持成就系统、签到奖励、排行榜等功能</p>
             <p style="font-size: 12px; color: #999;">© 2024 游戏大厅 All Rights Reserved</p>
             <button class="modal-btn" onclick="closeAboutModal()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 聊天弹窗 -->
+    <div class="modal chat-modal" id="chatModal">
+        <div class="modal-content">
+            <div class="chat-header">
+                <div class="contact-avatar" id="chatAvatar">🎮</div>
+                <div class="contact-info">
+                    <div class="contact-name" id="chatFriendName">好友</div>
+                    <div class="contact-phone" id="chatFriendPhone"></div>
+                </div>
+                <button class="modal-btn secondary" onclick="closeChatModal()" style="margin-left:auto;padding:8px 14px;font-size:13px;">关闭</button>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" class="modal-input" id="chatInput" placeholder="输入消息..." maxlength="200" onkeypress="if(event.key==='Enter')sendChatMessage()">
+                <button class="modal-btn" onclick="sendChatMessage()">发送</button>
+            </div>
         </div>
     </div>
 
@@ -4136,6 +4365,8 @@
 
         // 加载消息页面
         function loadMessagePage() {
+            loadFriends();
+            loadChatMessages();
             renderMessages();
             updateMessageBadge();
         }
@@ -4143,23 +4374,64 @@
         // 渲染消息列表
         function renderMessages() {
             const list = document.getElementById('messageList');
-            const filtered = currentMessageType === 'all'
-                ? messages
+
+            if (currentMessageType === 'contact') {
+                renderContacts();
+                return;
+            }
+
+            let filtered = currentMessageType === 'all'
+                ? [...messages]
                 : messages.filter(m => m.type === currentMessageType);
+
+            // 在"全部"Tab中混入私信会话预览
+            if (currentMessageType === 'all') {
+                const currentPhone = userData.phone || '';
+                friends.forEach(f => {
+                    const msgs = chatMessages[f.phone] || [];
+                    const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+                    if (lastMsg) {
+                        const unread = msgs.some(m => m.to === currentPhone && !m.read);
+                        filtered.push({
+                            id: `chat_${f.phone}`,
+                            type: 'contact',
+                            title: f.userName || f.phone,
+                            content: lastMsg.content,
+                            time: lastMsg.time,
+                            read: !unread,
+                            _isChatPreview: true,
+                            _friendPhone: f.phone
+                        });
+                    }
+                });
+                filtered.sort((a, b) => b.time - a.time);
+            }
 
             if (filtered.length === 0) {
                 list.innerHTML = '<div class="empty-messages">暂无消息</div>';
                 return;
             }
 
-            list.innerHTML = filtered.map(m => `
-                <div class="message-item ${m.read ? '' : 'unread'}" onclick="readMessage(${m.id})">
-                    <span class="type ${m.type}">${getTypeName(m.type)}</span>
-                    <div class="title">${m.title}</div>
-                    <div class="content">${m.content}</div>
-                    <div class="time">${formatMessageTime(m.time)}</div>
-                </div>
-            `).join('');
+            list.innerHTML = filtered.map(m => {
+                if (m._isChatPreview) {
+                    return `
+                        <div class="message-item ${m.read ? '' : 'unread'}" onclick="openChat('${m._friendPhone}')">
+                            <span class="type ${m.type}">${getTypeName(m.type)}</span>
+                            <div class="title">${m.title}</div>
+                            <div class="content">${m.content}</div>
+                            <div class="time">${formatMessageTime(m.time)}</div>
+                        </div>
+                    `;
+                }
+                return `
+                    <div class="message-item ${m.read ? '' : 'unread'}" onclick="readMessage(${m.id})">
+                        <span class="type ${m.type}">${getTypeName(m.type)}</span>
+                        <div class="title">${m.title}</div>
+                        <div class="content">${m.content}</div>
+                        <div class="time">${formatMessageTime(m.time)}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // 获取类型名称
@@ -4167,7 +4439,8 @@
             const names = {
                 system: '系统',
                 activity: '活动',
-                reward: '奖励'
+                reward: '奖励',
+                contact: '私信'
             };
             return names[type] || '通知';
         }
@@ -4208,7 +4481,10 @@
 
         // 更新消息红点
         function updateMessageBadge() {
-            const unread = messages.filter(m => !m.read).length;
+            const unreadSystem = messages.filter(m => !m.read).length;
+            const unreadChat = getUnreadChatCount();
+            const unread = unreadSystem + unreadChat;
+
             const navItem = document.querySelector('.nav-item[data-page="message"]');
             const redDot = document.getElementById('messageRedDot');
 
@@ -4225,7 +4501,13 @@
                 const type = tab.dataset.type;
                 if (type === 'all') return;
 
-                const count = messages.filter(m => m.type === type && !m.read).length;
+                let count = 0;
+                if (type === 'contact') {
+                    count = unreadChat;
+                } else {
+                    count = messages.filter(m => m.type === type && !m.read).length;
+                }
+
                 let badge = tab.querySelector('.badge');
                 if (count > 0) {
                     if (!badge) {
@@ -4239,6 +4521,247 @@
                     badge.style.display = 'none';
                 }
             });
+        }
+
+        // ========== 联系人/好友系统 ==========
+        let friends = [];
+        let chatMessages = {};
+        let currentChatFriend = null;
+
+        function loadFriends() {
+            try {
+                const saved = localStorage.getItem('friends');
+                if (saved) {
+                    friends = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('加载好友列表失败:', e);
+                friends = [];
+            }
+        }
+
+        function saveFriends() {
+            localStorage.setItem('friends', JSON.stringify(friends));
+        }
+
+        function loadChatMessages() {
+            try {
+                const saved = localStorage.getItem('chatMessages');
+                if (saved) {
+                    chatMessages = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('加载聊天记录失败:', e);
+                chatMessages = {};
+            }
+        }
+
+        function saveChatMessages() {
+            localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+        }
+
+        function getUnreadChatCount() {
+            if (!userData.isLoggedIn || !userData.phone) return 0;
+            let count = 0;
+            for (const phone in chatMessages) {
+                const msgs = chatMessages[phone] || [];
+                count += msgs.filter(m => m.to === userData.phone && !m.read).length;
+            }
+            return count;
+        }
+
+        function renderContacts() {
+            const list = document.getElementById('messageList');
+            list.innerHTML = `
+                <div class="contact-search-box">
+                    <input type="text" class="modal-input" id="friendSearchInput" placeholder="搜索昵称或手机号" maxlength="20" onkeypress="if(event.key==='Enter')searchFriend()">
+                    <button class="modal-btn" onclick="searchFriend()">搜索</button>
+                </div>
+                <div id="searchResults"></div>
+                <div class="contact-list" id="contactList"></div>
+            `;
+            renderFriendList();
+        }
+
+        function renderFriendList() {
+            const list = document.getElementById('contactList');
+            if (friends.length === 0) {
+                list.innerHTML = '<div class="empty-messages empty-contacts">还没有好友，快去搜索添加吧~</div>';
+                return;
+            }
+
+            const currentPhone = userData.phone || '';
+
+            list.innerHTML = friends.map(f => {
+                const msgs = chatMessages[f.phone] || [];
+                const unread = msgs.filter(m => m.to === currentPhone && !m.read).length;
+                const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+
+                return `
+                    <div class="contact-item" onclick="openChat('${f.phone}')">
+                        <div class="contact-avatar">
+                            ${f.avatarImage ? `<img src="${f.avatarImage}" alt="">` : (f.avatar || '🎮')}
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-name">${f.userName || '未知用户'}</div>
+                            <div class="contact-phone">${f.phone}</div>
+                            ${lastMsg ? `<div class="contact-last-msg">${lastMsg.content}</div>` : ''}
+                        </div>
+                        ${unread > 0 ? `<span class="badge" style="position:static;display:block;">${unread}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function searchFriend() {
+            const keyword = document.getElementById('friendSearchInput').value.trim();
+            const resultsDiv = document.getElementById('searchResults');
+            if (!keyword) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            const currentPhone = userData.phone || '';
+            const results = [];
+
+            for (const phone in users) {
+                if (phone === currentPhone) continue;
+                const u = users[phone];
+                if (phone.includes(keyword) || (u.userName && u.userName.includes(keyword))) {
+                    results.push({ phone, ...u });
+                }
+            }
+
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div style="text-align:center;color:#999;padding:16px;font-size:13px;">未找到匹配的用户</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = results.map(u => {
+                const isFriend = friends.some(f => f.phone === u.phone);
+                return `
+                    <div class="contact-item" style="margin-bottom:8px;">
+                        <div class="contact-avatar">
+                            ${u.avatarImage ? `<img src="${u.avatarImage}" alt="">` : (u.avatar || '🎮')}
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-name">${u.userName || '未知用户'}</div>
+                            <div class="contact-phone">${u.phone}</div>
+                        </div>
+                        <button class="contact-add-btn ${isFriend ? 'added' : ''}" onclick="${isFriend ? '' : `addFriend('${u.phone}');event.stopPropagation();`}" ${isFriend ? 'disabled' : ''}>
+                            ${isFriend ? '已添加' : '添加'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addFriend(phone) {
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            const u = users[phone];
+            if (!u) {
+                showModal('❌ 添加失败', '用户不存在');
+                return;
+            }
+            if (friends.some(f => f.phone === phone)) {
+                showModal('提示', '已经是好友了');
+                return;
+            }
+
+            friends.push({
+                phone: phone,
+                userName: u.userName || '未知用户',
+                avatar: u.avatar || '🎮',
+                avatarImage: u.avatarImage || '',
+                addedAt: Date.now()
+            });
+            saveFriends();
+            showModal('✅ 添加成功', `已添加 ${u.userName || phone} 为好友`);
+            renderFriendList();
+            searchFriend();
+        }
+
+        function openChat(phone) {
+            const friend = friends.find(f => f.phone === phone);
+            if (!friend) return;
+
+            currentChatFriend = phone;
+            document.getElementById('chatFriendName').textContent = friend.userName || '好友';
+            document.getElementById('chatFriendPhone').textContent = friend.phone;
+            document.getElementById('chatAvatar').innerHTML = friend.avatarImage ? `<img src="${friend.avatarImage}" alt="">` : (friend.avatar || '🎮');
+
+            renderChatMessages();
+
+            // 标记消息为已读
+            const msgs = chatMessages[phone] || [];
+            let changed = false;
+            msgs.forEach(m => {
+                if (m.to === userData.phone && !m.read) {
+                    m.read = true;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                saveChatMessages();
+                updateMessageBadge();
+            }
+
+            document.getElementById('chatModal').classList.add('show');
+        }
+
+        function closeChatModal() {
+            document.getElementById('chatModal').classList.remove('show');
+            currentChatFriend = null;
+            renderMessages();
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chatMessages');
+            const msgs = chatMessages[currentChatFriend] || [];
+
+            if (msgs.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:13px;">还没有消息，打个招呼吧~</div>';
+                return;
+            }
+
+            container.innerHTML = msgs.map(m => {
+                const isSent = m.from === userData.phone;
+                const time = new Date(m.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                return `
+                    <div class="chat-bubble ${isSent ? 'sent' : 'received'}">
+                        <div>${m.content}</div>
+                        <div class="chat-time">${time}</div>
+                    </div>
+                `;
+            }).join('');
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const content = input.value.trim();
+            if (!content || !currentChatFriend || !userData.phone) return;
+
+            const msg = {
+                id: Date.now(),
+                from: userData.phone,
+                to: currentChatFriend,
+                content: content,
+                time: Date.now(),
+                read: false
+            };
+
+            if (!chatMessages[currentChatFriend]) {
+                chatMessages[currentChatFriend] = [];
+            }
+            chatMessages[currentChatFriend].push(msg);
+            saveChatMessages();
+
+            input.value = '';
+            renderChatMessages();
+            updateMessageBadge();
         }
 
         // ========== 设置页面 ==========
@@ -4457,6 +4980,8 @@
             loadFavorites();
             loadAchievements();
             loadMessages();
+            loadFriends();
+            loadChatMessages();
             checkGameResult(); // 检查是否有游戏结果需要处理
             loadSettings();
             renderGames();
