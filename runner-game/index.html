@@ -316,7 +316,7 @@
 
         let player = {
             x: 120,
-            y: 310,
+            y: 280,
             width: 55,
             height: 90,
             vy: 0,
@@ -488,8 +488,8 @@
             player.vy += gravity;
             player.y += player.vy;
 
-            if (player.y >= groundY - player.height - 35) {
-                player.y = groundY - player.height - 35;
+            if (player.y >= groundY - player.height - 45) {
+                player.y = groundY - player.height - 45;
                 player.vy = 0;
                 player.onGround = true;
                 player.jumps = 0;
@@ -1525,7 +1525,7 @@
         function restartGame() {
             player = {
                 x: 120,
-                y: 290,
+                y: 280,
                 width: 55,
                 height: 90,
                 vy: 0,
