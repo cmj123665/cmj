@@ -450,17 +450,17 @@
 
                 switch(type) {
                     case 0:
-                        obstacle.y = groundY - 15 - 35;
+                        obstacle.y = groundY - 35 - 35;
                         obstacle.width = 35;
                         obstacle.height = 35;
                         break;
                     case 1:
-                        obstacle.y = groundY - 15 - 60;
+                        obstacle.y = groundY - 35 - 60;
                         obstacle.width = 30;
                         obstacle.height = 60;
                         break;
                     case 2:
-                        obstacle.y = groundY - 15 - 40;
+                        obstacle.y = groundY - 35 - 40;
                         obstacle.width = 50;
                         obstacle.height = 40;
                         break;
@@ -474,7 +474,7 @@
             if (Math.random() < 0.025) {
                 coins.push({
                     x: canvas.width,
-                    y: groundY - 15 - 85 - Math.random() * 65,
+                    y: groundY - 35 - 85 - Math.random() * 65,
                     radius: 20,
                     rotation: 0,
                     sparkle: Math.random() * Math.PI * 2
@@ -488,8 +488,8 @@
             player.vy += gravity;
             player.y += player.vy;
 
-            if (player.y >= groundY - player.height - 15) {
-                player.y = groundY - player.height - 15;
+            if (player.y >= groundY - player.height - 35) {
+                player.y = groundY - player.height - 35;
                 player.vy = 0;
                 player.onGround = true;
                 player.jumps = 0;
@@ -1345,25 +1345,25 @@
             });
 
             // 地面
-            const groundGradient = ctx.createLinearGradient(0, groundY - 15, 0, canvas.height);
+            const groundGradient = ctx.createLinearGradient(0, groundY - 35, 0, canvas.height);
             groundGradient.addColorStop(0, '#ffd9eb');
             groundGradient.addColorStop(0.5, '#ffb6d9');
             groundGradient.addColorStop(1, '#ff9eb8');
 
             ctx.fillStyle = groundGradient;
-            ctx.fillRect(0, groundY - 15, canvas.width, canvas.height - groundY + 15);
+            ctx.fillRect(0, groundY - 35, canvas.width, canvas.height - groundY + 15);
 
-            const grassGradient = ctx.createLinearGradient(0, groundY - 15, 0, groundY + 10);
+            const grassGradient = ctx.createLinearGradient(0, groundY - 35, 0, groundY + 10);
             grassGradient.addColorStop(0, '#90EE90');
             grassGradient.addColorStop(1, '#7CCD7C');
 
             ctx.fillStyle = grassGradient;
-            ctx.fillRect(0, groundY - 15, canvas.width, 25);
+            ctx.fillRect(0, groundY - 35, canvas.width, 25);
 
             // 小花装饰
             for (let i = 0; i < 12; i++) {
                 const flowerX = ((i * 100 + time * 0.5) % 1000);
-                const flowerY = groundY - 10 + Math.sin(i) * 8;
+                const flowerY = groundY - 30 + Math.sin(i) * 8;
                 ctx.fillStyle = ['#ffb6d9', '#ffcce0', '#ffd9eb', '#fff'][i % 4];
                 ctx.beginPath();
                 ctx.arc(flowerX, flowerY, 4, 0, Math.PI * 2);
@@ -1525,7 +1525,7 @@
         function restartGame() {
             player = {
                 x: 120,
-                y: 310,
+                y: 290,
                 width: 55,
                 height: 90,
                 vy: 0,
