@@ -169,7 +169,7 @@
                 p.x += p.vx;
                 p.y += p.vy;
                 p.life--;
-                ctx.fillStyle = \`rgba(255, 234, 0, \${p.life / 20})\`;
+                ctx.fillStyle = `rgba(255, 234, 0, ${p.life / 20})`;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
                 ctx.fill();
