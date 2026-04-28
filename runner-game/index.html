@@ -316,7 +316,7 @@
 
         let player = {
             x: 120,
-            y: 325,
+            y: 310,
             width: 55,
             height: 90,
             vy: 0,
@@ -450,17 +450,17 @@
 
                 switch(type) {
                     case 0:
-                        obstacle.y = groundY - 35;
+                        obstacle.y = groundY - 15 - 35;
                         obstacle.width = 35;
                         obstacle.height = 35;
                         break;
                     case 1:
-                        obstacle.y = groundY - 60;
+                        obstacle.y = groundY - 15 - 60;
                         obstacle.width = 30;
                         obstacle.height = 60;
                         break;
                     case 2:
-                        obstacle.y = groundY - 40;
+                        obstacle.y = groundY - 15 - 40;
                         obstacle.width = 50;
                         obstacle.height = 40;
                         break;
@@ -474,7 +474,7 @@
             if (Math.random() < 0.025) {
                 coins.push({
                     x: canvas.width,
-                    y: groundY - 85 - Math.random() * 65,
+                    y: groundY - 15 - 85 - Math.random() * 65,
                     radius: 20,
                     rotation: 0,
                     sparkle: Math.random() * Math.PI * 2
@@ -488,8 +488,8 @@
             player.vy += gravity;
             player.y += player.vy;
 
-            if (player.y >= groundY - player.height) {
-                player.y = groundY - player.height;
+            if (player.y >= groundY - player.height - 15) {
+                player.y = groundY - player.height - 15;
                 player.vy = 0;
                 player.onGround = true;
                 player.jumps = 0;
@@ -497,10 +497,10 @@
             }
 
             if (player.onGround) {
-                player.legAngle += 0.38;
-                player.armAngle += 0.38;
-                player.hairOffset = Math.sin(player.legAngle) * 3;
-                player.skirtOffset = Math.sin(player.legAngle * 2) * 2;
+                player.legAngle += 0.20;
+                player.armAngle += 0.20;
+                player.hairOffset = Math.sin(player.legAngle) * 2;
+                player.skirtOffset = Math.sin(player.legAngle * 2) * 1.5;
             } else {
                 player.legAngle = 0;
                 player.armAngle = 0;
@@ -578,9 +578,9 @@
 
             // 左侧长发
             const leftHairGradient = ctx.createLinearGradient(x - 10, y, x - 30, y + hairLength);
-            leftHairGradient.addColorStop(0, '#6d4c41');
-            leftHairGradient.addColorStop(0.5, '#5d4037');
-            leftHairGradient.addColorStop(1, '#4e342e');
+            leftHairGradient.addColorStop(0, '#e53935');
+            leftHairGradient.addColorStop(0.5, '#c62828');
+            leftHairGradient.addColorStop(1, '#b71c1c');
 
             ctx.fillStyle = leftHairGradient;
             ctx.beginPath();
@@ -590,7 +590,7 @@
             ctx.fill();
 
             // 左发丝层次
-            ctx.fillStyle = '#5d4037';
+            ctx.fillStyle = '#c62828';
             ctx.beginPath();
             ctx.moveTo(x + 8, y + 28);
             ctx.quadraticCurveTo(x - 15 + hairWave * 0.7, y + 50, x - 12, y + hairLength - 15);
@@ -599,9 +599,9 @@
 
             // 右侧长发
             const rightHairGradient = ctx.createLinearGradient(x + width + 10, y, x + width + 30, y + hairLength);
-            rightHairGradient.addColorStop(0, '#6d4c41');
-            rightHairGradient.addColorStop(0.5, '#5d4037');
-            rightHairGradient.addColorStop(1, '#4e342e');
+            rightHairGradient.addColorStop(0, '#e53935');
+            rightHairGradient.addColorStop(0.5, '#c62828');
+            rightHairGradient.addColorStop(1, '#b71c1c');
 
             ctx.fillStyle = rightHairGradient;
             ctx.beginPath();
@@ -611,7 +611,7 @@
             ctx.fill();
 
             // 右发丝层次
-            ctx.fillStyle = '#5d4037';
+            ctx.fillStyle = '#c62828';
             ctx.beginPath();
             ctx.moveTo(x + width - 8, y + 28);
             ctx.quadraticCurveTo(x + width + 15 + hairWave * 0.7, y + 50, x + width + 12, y + hairLength - 15);
@@ -621,7 +621,7 @@
             // === 腿部 ===
             const legWidth = 14;
             const legLength = 45;
-            const legOffset = Math.sin(player.legAngle) * 15;
+            const legOffset = Math.sin(player.legAngle) * 8;
 
             // 白色长袜（左腿）
             const leftSockGradient = ctx.createLinearGradient(x + 10, y + height, x + 24, y + height);
@@ -911,16 +911,16 @@
 
             // 后发
             const hairBackGradient = ctx.createLinearGradient(headX, headY, headX + headSize, headY);
-            hairBackGradient.addColorStop(0, '#5d4037');
-            hairBackGradient.addColorStop(0.5, '#6d4c41');
-            hairBackGradient.addColorStop(1, '#4e342e');
+            hairBackGradient.addColorStop(0, '#c62828');
+            hairBackGradient.addColorStop(0.5, '#e53935');
+            hairBackGradient.addColorStop(1, '#b71c1c');
 
             ctx.fillStyle = hairBackGradient;
             ctx.beginPath();
-            ctx.ellipse(headX + headSize/2, headY + headSize/2 + 12, headSize/2 + 6, headSize/2 + 4, 0, 0, Math.PI * 2);
+            ctx.ellipse(headX + headSize/2, headY + headSize/2 + 6, headSize/2 + 2, headSize/2 + 10, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(139, 90, 43, 0.3)';
+            ctx.fillStyle = 'rgba(229, 57, 53, 0.3)';
             ctx.beginPath();
             ctx.ellipse(headX + headSize/2 - 5, headY + headSize/2 + 8, headSize/4, headSize/4, 0, 0, Math.PI * 2);
             ctx.fill();
@@ -971,44 +971,57 @@
             ctx.ellipse(headX + headSize - 12, headY + headSize/2 + 12, 8, 5, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // === 刘海 ===
+            // === 蓬松八字刘海 ===
             const bangGradient = ctx.createLinearGradient(headX, headY, headX + headSize, headY);
-            bangGradient.addColorStop(0, '#5d4037');
-            bangGradient.addColorStop(0.3, '#6d4c41');
-            bangGradient.addColorStop(0.7, '#6d4c41');
-            bangGradient.addColorStop(1, '#5d4037');
+            bangGradient.addColorStop(0, '#c62828');
+            bangGradient.addColorStop(0.3, '#e53935');
+            bangGradient.addColorStop(0.7, '#e53935');
+            bangGradient.addColorStop(1, '#c62828');
 
+            // 左侧八字刘海
             ctx.fillStyle = bangGradient;
             ctx.beginPath();
-            ctx.moveTo(headX + 4, headY + 14);
-            ctx.quadraticCurveTo(headX + 8, headY, headX + 18, headY + 4);
-            ctx.quadraticCurveTo(headX + headSize/2, headY - 2, headX + headSize - 18, headY + 4);
-            ctx.quadraticCurveTo(headX + headSize - 8, headY, headX + headSize - 4, headY + 14);
-            ctx.quadraticCurveTo(headX + headSize/2, headY + 8, headX + 4, headY + 14);
+            ctx.moveTo(headX + 2, headY + 10);
+            ctx.quadraticCurveTo(headX + 6, headY - 6, headX + 18, headY + 2);
+            ctx.quadraticCurveTo(headX + 24, headY + 12, headX + 20, headY + 24);
+            ctx.quadraticCurveTo(headX + 10, headY + 20, headX + 2, headY + 10);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(139, 90, 43, 0.5)';
+            // 右侧八字刘海
             ctx.beginPath();
-            ctx.moveTo(headX + headSize/2 - 8, headY + 8);
-            ctx.quadraticCurveTo(headX + headSize/2, headY + 4, headX + headSize/2 + 8, headY + 8);
-            ctx.quadraticCurveTo(headX + headSize/2, headY + 12, headX + headSize/2 - 8, headY + 8);
+            ctx.moveTo(headX + headSize - 2, headY + 10);
+            ctx.quadraticCurveTo(headX + headSize - 6, headY - 6, headX + headSize - 18, headY + 2);
+            ctx.quadraticCurveTo(headX + headSize - 24, headY + 12, headX + headSize - 20, headY + 24);
+            ctx.quadraticCurveTo(headX + headSize - 10, headY + 20, headX + headSize - 2, headY + 10);
             ctx.fill();
 
-            // 刘海分叉
-            for (let i = 0; i < 5; i++) {
-                const strandX = headX + 10 + i * 9;
-                const strandLength = 10 + (i % 3) * 4;
+            // 中间短刘海（蓬松感）
+            ctx.fillStyle = '#e53935';
+            ctx.beginPath();
+            ctx.moveTo(headX + headSize/2 - 7, headY + 4);
+            ctx.quadraticCurveTo(headX + headSize/2, headY + 14, headX + headSize/2 + 7, headY + 4);
+            ctx.quadraticCurveTo(headX + headSize/2, headY + 10, headX + headSize/2 - 7, headY + 4);
+            ctx.fill();
+
+            // 蓬松发丝
+            for (let i = 0; i < 4; i++) {
+                const strandLen = 10 + i * 6;
                 const wave = Math.sin(i + Date.now() / 300) * 2;
-                ctx.fillStyle = '#5d4037';
+
+                // 左侧发丝
+                const leftX = headX + 8 + i * 4;
+                ctx.fillStyle = i % 2 === 0 ? '#c62828' : '#e53935';
                 ctx.beginPath();
-                ctx.moveTo(strandX - 4, headY + 12);
-                ctx.quadraticCurveTo(strandX + wave, headY + strandLength, strandX + 5, headY + 12);
+                ctx.moveTo(leftX - 3, headY + 10);
+                ctx.quadraticCurveTo(leftX + wave - 5, headY + strandLen, leftX + 2, headY + 10);
                 ctx.fill();
 
-                ctx.fillStyle = 'rgba(139, 90, 43, 0.6)';
+                // 右侧发丝
+                const rightX = headX + headSize - 8 - i * 4;
+                ctx.fillStyle = i % 2 === 0 ? '#c62828' : '#e53935';
                 ctx.beginPath();
-                ctx.moveTo(strandX - 3, headY + 12);
-                ctx.quadraticCurveTo(strandX + wave, headY + strandLength - 3, strandX + 3, headY + 12);
+                ctx.moveTo(rightX - 2, headY + 10);
+                ctx.quadraticCurveTo(rightX + wave + 5, headY + strandLen, rightX + 3, headY + 10);
                 ctx.fill();
             }
 
@@ -1138,7 +1151,7 @@
             ctx.fill();
 
             // === 睫毛 ===
-            ctx.strokeStyle = '#6d4c41';
+            ctx.strokeStyle = '#e53935';
             ctx.lineWidth = 1.5;
             ctx.lineCap = 'round';
 
@@ -1169,7 +1182,7 @@
             }
 
             // === 眉毛 ===
-            ctx.strokeStyle = 'rgba(109, 76, 65, 0.6)';
+            ctx.strokeStyle = 'rgba(183, 28, 28, 0.6)';
             ctx.lineWidth = 1.5;
 
             ctx.beginPath();
@@ -1312,25 +1325,25 @@
             });
 
             // 地面
-            const groundGradient = ctx.createLinearGradient(0, groundY, 0, canvas.height);
+            const groundGradient = ctx.createLinearGradient(0, groundY - 15, 0, canvas.height);
             groundGradient.addColorStop(0, '#ffd9eb');
             groundGradient.addColorStop(0.5, '#ffb6d9');
             groundGradient.addColorStop(1, '#ff9eb8');
 
             ctx.fillStyle = groundGradient;
-            ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+            ctx.fillRect(0, groundY - 15, canvas.width, canvas.height - groundY + 15);
 
-            const grassGradient = ctx.createLinearGradient(0, groundY, 0, groundY + 18);
+            const grassGradient = ctx.createLinearGradient(0, groundY - 15, 0, groundY + 10);
             grassGradient.addColorStop(0, '#90EE90');
             grassGradient.addColorStop(1, '#7CCD7C');
 
             ctx.fillStyle = grassGradient;
-            ctx.fillRect(0, groundY, canvas.width, 18);
+            ctx.fillRect(0, groundY - 15, canvas.width, 25);
 
             // 小花装饰
             for (let i = 0; i < 12; i++) {
                 const flowerX = ((i * 100 + time * 0.5) % 1000);
-                const flowerY = groundY + 5 + Math.sin(i) * 8;
+                const flowerY = groundY - 10 + Math.sin(i) * 8;
                 ctx.fillStyle = ['#ffb6d9', '#ffcce0', '#ffd9eb', '#fff'][i % 4];
                 ctx.beginPath();
                 ctx.arc(flowerX, flowerY, 4, 0, Math.PI * 2);
@@ -1492,7 +1505,7 @@
         function restartGame() {
             player = {
                 x: 120,
-                y: 325,
+                y: 310,
                 width: 55,
                 height: 90,
                 vy: 0,
