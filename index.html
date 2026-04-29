@@ -1954,23 +1954,64 @@
             cursor: default;
         }
 
-        /* 聊天弹窗 */
+        /* 聊天全屏 */
+        .chat-modal {
+            padding: 0;
+            align-items: stretch;
+            justify-content: stretch;
+            z-index: 10000;
+        }
+
         .chat-modal .modal-content {
-            max-width: 360px;
+            max-width: 100%;
             width: 100%;
+            height: 100vh;
+            max-height: 100vh;
             padding: 0;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            max-height: 70vh;
+            border-radius: 0;
+            background: #fff;
         }
 
         .chat-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 16px 20px;
+            padding: 12px 16px;
+            padding-top: max(12px, env(safe-area-inset-top));
             border-bottom: 1px solid rgba(0,0,0,0.06);
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .chat-header .back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid rgba(0,0,0,0.08);
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 8px 14px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-weight: 500;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-header .back-btn:active {
+            background: #f3f4f6;
+            transform: scale(0.96);
         }
 
         .chat-header .contact-avatar {
@@ -1990,7 +2031,22 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            min-height: 200px;
+            min-height: 0;
+            background: url('chat-bg2.jpg') center/cover no-repeat;
+            position: relative;
+        }
+
+        .chat-messages::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.25);
+            pointer-events: none;
+        }
+
+        .chat-messages > * {
+            position: relative;
+            z-index: 1;
         }
 
         .chat-bubble {
@@ -2011,9 +2067,10 @@
 
         .chat-bubble.received {
             align-self: flex-start;
-            background: #f3f4f6;
+            background: rgba(255,255,255,0.92);
             color: #333;
             border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
         .chat-time {
@@ -2031,17 +2088,26 @@
             display: flex;
             gap: 8px;
             padding: 12px 16px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
             border-top: 1px solid rgba(0,0,0,0.06);
             background: #fff;
+            flex-shrink: 0;
         }
 
         .chat-input-area .modal-input {
             flex: 1;
             margin-bottom: 0;
+            background: #f3f4f6;
+            border-color: transparent;
+        }
+
+        .chat-input-area .modal-input:focus {
+            border-color: #ff9ecd;
+            background: #fff;
         }
 
         .chat-input-area .modal-btn {
-            padding: 10px 18px;
+            padding: 10px 20px;
         }
 
         .empty-contacts::before {
@@ -2049,6 +2115,72 @@
             display: block;
             font-size: 40px;
             margin-bottom: 12px;
+        }
+
+        /* 表情面板 */
+        .emoji-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .emoji-btn:active {
+            background: #e5e7eb;
+            transform: scale(0.95);
+        }
+
+        .emoji-panel {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 16px;
+            right: 16px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+            display: none;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .emoji-panel.show {
+            display: grid;
+        }
+
+        .emoji-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            padding: 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            user-select: none;
+        }
+
+        .emoji-item:active {
+            background: #f3f4f6;
+            transform: scale(1.15);
+        }
+
+        .chat-input-wrapper {
+            position: relative;
+            display: flex;
+            flex: 1;
+            gap: 8px;
         }
     </style>
 </head>
@@ -2637,20 +2769,24 @@
         </div>
     </div>
 
-    <!-- 聊天弹窗 -->
+    <!-- 聊天全屏 -->
     <div class="modal chat-modal" id="chatModal">
         <div class="modal-content">
             <div class="chat-header">
+                <button class="back-btn" onclick="closeChatModal()">← 返回</button>
                 <div class="contact-avatar" id="chatAvatar">🎮</div>
                 <div class="contact-info">
                     <div class="contact-name" id="chatFriendName">好友</div>
                     <div class="contact-phone" id="chatFriendPhone"></div>
                 </div>
-                <button class="modal-btn secondary" onclick="closeChatModal()" style="margin-left:auto;padding:8px 14px;font-size:13px;">关闭</button>
             </div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-area">
-                <input type="text" class="modal-input" id="chatInput" placeholder="输入消息..." maxlength="200" onkeypress="if(event.key==='Enter')sendChatMessage()">
+                <div class="chat-input-wrapper">
+                    <button class="emoji-btn" onclick="toggleEmojiPanel()" title="表情">😊</button>
+                    <input type="text" class="modal-input" id="chatInput" placeholder="输入消息..." maxlength="200" onkeypress="if(event.key==='Enter')sendChatMessage()">
+                    <div class="emoji-panel" id="emojiPanel"></div>
+                </div>
                 <button class="modal-btn" onclick="sendChatMessage()">发送</button>
             </div>
         </div>
@@ -4528,6 +4664,38 @@
         let chatMessages = {};
         let currentChatFriend = null;
 
+        const chatEmojis = ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿️','🦔','🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🍈','🍒','🍑','🍍','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🌽','🥕','🧄','🧅','🥔','🍠','🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🦴','🌭','🍔','🍟','🍕','🥪','🥙','🧆','🌮','🌯','🥗','🥘','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥠','🥮','🍢','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🥛','🍼','☕','🍵','🧃','🥤','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','🍾','🧊','🥄','🍴','🍽️','🥣','🥡','🥢','🧂','⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🏓','🏸','🏒','🏑','🥍','🏏','🥅','⛳','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛷','⛸️','🥌','🎿','⛷️','🏂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🎖️','🏅','🎫','🎟️','🎪','🤹','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🎷','🎺','🎸','🪕','🎻','🎲','♟️','🎯','🎳','🎮','🎰','🧩'];
+
+        function initEmojiPanel() {
+            const panel = document.getElementById('emojiPanel');
+            if (!panel || panel.children.length > 0) return;
+            panel.innerHTML = chatEmojis.map(e => `<div class="emoji-item" onclick="insertEmoji('${e}')">${e}</div>`).join('');
+        }
+
+        function toggleEmojiPanel() {
+            const panel = document.getElementById('emojiPanel');
+            panel.classList.toggle('show');
+        }
+
+        function insertEmoji(emoji) {
+            const input = document.getElementById('chatInput');
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const text = input.value;
+            input.value = text.slice(0, start) + emoji + text.slice(end);
+            input.focus();
+            input.setSelectionRange(start + emoji.length, start + emoji.length);
+        }
+
+        // 点击消息区域关闭表情面板
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('emojiPanel');
+            const btn = document.querySelector('.emoji-btn');
+            if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.classList.remove('show');
+            }
+        });
+
         function loadFriends() {
             try {
                 const saved = localStorage.getItem('friends');
@@ -4692,6 +4860,7 @@
             document.getElementById('chatAvatar').innerHTML = friend.avatarImage ? `<img src="${friend.avatarImage}" alt="">` : (friend.avatar || '🎮');
 
             renderChatMessages();
+            initEmojiPanel();
 
             // 标记消息为已读
             const msgs = chatMessages[phone] || [];
