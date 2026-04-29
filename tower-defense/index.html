@@ -294,26 +294,39 @@
                 <button class="sell-btn" id="sellBtn" onclick="sellSelectedTower()">出售 - 💰 25</button>
             </div>
         </div>
+        <div style="display:flex;gap:10px;align-items:center;justify-content:center;margin-top:10px;">
+            <button class="btn" onclick="openItemShop()" style="padding:10px 20px;font-size:0.9rem;font-weight:600;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;">🛒 商店</button>
+        </div>
         <div class="bottom-shop" id="towerShop">
-            <div class="shop-item selected" data-tower="arrow">
+            <div class="shop-item selected" data-tower="arrow" title="攻击: 15 | 范围: 150 | 冷却: 25">
                 <div class="shop-icon">🏹</div>
                 <div class="shop-name">箭塔</div>
                 <div class="shop-cost">💰 50</div>
             </div>
-            <div class="shop-item" data-tower="cannon">
+            <div class="shop-item" data-tower="cannon" title="攻击: 40 | 范围: 120 | 冷却: 60 | 溅射: 60">
                 <div class="shop-icon">💣</div>
                 <div class="shop-name">炮塔</div>
                 <div class="shop-cost">💰 100</div>
             </div>
-            <div class="shop-item" data-tower="magic">
+            <div class="shop-item" data-tower="magic" title="攻击: 8 | 范围: 180 | 冷却: 20 | 减速">
                 <div class="shop-icon">✨</div>
                 <div class="shop-name">魔塔</div>
                 <div class="shop-cost">💰 150</div>
             </div>
-            <div class="shop-item" data-tower="laser">
+            <div class="shop-item" data-tower="laser" title="攻击: 5 | 范围: 200 | 冷却: 5 | 穿透">
                 <div class="shop-icon">⚡</div>
                 <div class="shop-name">激光塔</div>
                 <div class="shop-cost">💰 200</div>
+            </div>
+            <div class="shop-item" data-tower="sniper" title="攻击: 80 | 范围: 250 | 冷却: 70">
+                <div class="shop-icon">🎯</div>
+                <div class="shop-name">狙击塔</div>
+                <div class="shop-cost">💰 250</div>
+            </div>
+            <div class="shop-item" data-tower="rocket" title="攻击: 60 | 范围: 160 | 冷却: 55 | 溅射: 100">
+                <div class="shop-icon">🚀</div>
+                <div class="shop-name">火箭塔</div>
+                <div class="shop-cost">💰 300</div>
             </div>
         </div>
     </div>
@@ -329,6 +342,8 @@
             <p>💣 炮塔 - 范围爆炸伤害</p>
             <p>✨ 魔塔 - 减速敌人移动</p>
             <p>⚡ 激光塔 - 穿透多个敌人</p>
+            <p>🎯 狙击塔 - 超远超高伤害</p>
+            <p>🚀 火箭塔 - 大范围高伤害</p>
             <button class="start-btn" onclick="startGame()">开始游戏</button>
             <button class="start-btn" style="background:#3b82f6;margin-top:8px;" onclick="openLevelSelect()">选择关卡</button>
         </div>
@@ -356,6 +371,34 @@
                 <button class="btn" onclick="nextLevelPage()" style="padding:8px 16px;font-size:14px;">下一页</button>
             </div>
             <button class="modal-btn" style="margin-top:14px;background:#6b7280;" onclick="closeLevelSelect()">关闭</button>
+        </div>
+    </div>
+
+    <div class="modal" id="itemShopModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:400;">
+        <div class="modal-content" style="max-width:480px;width:90%;padding:24px;">
+            <h2>🛒 道具商店</h2>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;">
+                <div class="shop-item" onclick="buyItem('heal')" style="cursor:pointer;">
+                    <div class="shop-icon">❤️</div>
+                    <div class="shop-name">生命药水</div>
+                    <div class="shop-cost">💰 50</div>
+                    <div style="font-size:0.7rem;color:#6b7280;margin-top:2px;">+5 生命</div>
+                </div>
+                <div class="shop-item" onclick="buyItem('goldBuff')" style="cursor:pointer;">
+                    <div class="shop-icon">💰</div>
+                    <div class="shop-name">金币加成</div>
+                    <div class="shop-cost">💰 80</div>
+                    <div style="font-size:0.7rem;color:#6b7280;margin-top:2px;">下波双倍金币</div>
+                </div>
+                <div class="shop-item" onclick="buyItem('speedBuff')" style="cursor:pointer;">
+                    <div class="shop-icon">⚡</div>
+                    <div class="shop-name">攻速符文</div>
+                    <div class="shop-cost">💰 120</div>
+                    <div style="font-size:0.7rem;color:#6b7280;margin-top:2px;">攻速+50% 10秒</div>
+                </div>
+            </div>
+            <div id="itemShopMsg" style="color:#ef4444;font-size:0.85rem;height:20px;text-align:center;"></div>
+            <button class="modal-btn" style="background:#6b7280;" onclick="document.getElementById('itemShopModal').style.display='none'">关闭</button>
         </div>
     </div>
 
@@ -528,6 +571,9 @@
         let comboTimer = null;
         let totalScore = 0;
         let hoverGrid = null;
+        let floatingTexts = [];
+        let goldMultiplier = 1;
+        let attackSpeedBuffTimer = 0;
 
         function saveProgress() {
             const maxLevel = Math.max(parseInt(localStorage.getItem('towerDefenseMaxLevel') || '1', 10), currentLevel + 1);
@@ -558,7 +604,9 @@
             arrow: { name: '箭塔', cost: 50, damage: 15, range: 150, cooldown: 25, color: '#4ecdc4', bulletColor: '#a7f3d0', bulletSpeed: 8, upgrade: { damage: 8, range: 15, cooldown: -3 }, upgradeCost: 40, maxLevel: 3 },
             cannon: { name: '炮塔', cost: 100, damage: 40, range: 120, cooldown: 60, color: '#f59e0b', bulletColor: '#fcd34d', bulletSpeed: 5, splash: 60, upgrade: { damage: 20, range: 10, cooldown: -5 }, upgradeCost: 80, maxLevel: 3 },
             magic: { name: '魔塔', cost: 150, damage: 8, range: 180, cooldown: 20, color: '#a78bfa', bulletColor: '#c4b5fd', bulletSpeed: 6, slow: 0.5, upgrade: { damage: 4, range: 15, cooldown: -2 }, upgradeCost: 100, maxLevel: 3 },
-            laser: { name: '激光塔', cost: 200, damage: 5, range: 200, cooldown: 5, color: '#f472b6', bulletColor: '#fbcfe8', bulletSpeed: 20, pierce: true, upgrade: { damage: 3, range: 20, cooldown: -1 }, upgradeCost: 120, maxLevel: 3 }
+            laser: { name: '激光塔', cost: 200, damage: 5, range: 200, cooldown: 5, color: '#f472b6', bulletColor: '#fbcfe8', bulletSpeed: 20, pierce: true, upgrade: { damage: 3, range: 20, cooldown: -1 }, upgradeCost: 120, maxLevel: 3 },
+            sniper: { name: '狙击塔', cost: 250, damage: 80, range: 250, cooldown: 70, color: '#1e40af', bulletColor: '#60a5fa', bulletSpeed: 15, upgrade: { damage: 40, range: 20, cooldown: -5 }, upgradeCost: 150, maxLevel: 3 },
+            rocket: { name: '火箭塔', cost: 300, damage: 60, range: 160, cooldown: 55, color: '#dc2626', bulletColor: '#fca5a5', bulletSpeed: 6, splash: 100, upgrade: { damage: 30, range: 15, cooldown: -5 }, upgradeCost: 180, maxLevel: 3 }
         };
 
         const ENEMY_TYPES = {
@@ -577,10 +625,11 @@
             if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
             if (spawnTimer) { clearTimeout(spawnTimer); spawnTimer = null; }
             const level = LEVELS[currentLevel];
-            towers = []; enemies = []; bullets = []; particles = [];
+            towers = []; enemies = []; bullets = []; particles = []; floatingTexts = [];
             score = level.startGold; wave = 1; lives = level.startLives;
             enemiesSpawned = 0; enemiesPerWave = 4 + Math.floor(level.id * 1.5);
             waveInProgress = true; gameRunning = true; combo = 0; selectedTowerIndex = -1;
+            goldMultiplier = 1; attackSpeedBuffTimer = 0;
             document.getElementById('startModal').classList.remove('show');
             document.getElementById('gameOverModal').classList.remove('show');
             document.getElementById('levelModal').classList.remove('show');
@@ -681,7 +730,7 @@
             if (!waveInProgress && enemies.length === 0 && wave <= level.targetWaves) {
                 wave++; enemiesSpawned = 0;
                 enemiesPerWave = 4 + Math.floor(wave * 1.5) + level.id * 2;
-                waveInProgress = true; updateUI();
+                waveInProgress = true; goldMultiplier = 1; updateUI();
                 const path = LEVELS[currentLevel].path;
                 const startPixel = gridToPixel(path[0].col, path[0].row);
                 spawnParticles(startPixel.x, startPixel.y, '#22c55e', 20);
@@ -727,6 +776,13 @@
                 p.vx *= 0.95; p.vy *= 0.95;
                 if (p.life <= 0) particles.splice(i, 1);
             }
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ft.y += ft.vy;
+                ft.life--;
+                if (ft.life <= 0) floatingTexts.splice(i, 1);
+            }
+            if (attackSpeedBuffTimer > 0) attackSpeedBuffTimer--;
             towers.forEach(t => {
                 if (t.cooldown > 0) { t.cooldown--; return; }
                 const type = TOWER_TYPES[t.type];
@@ -741,7 +797,8 @@
                     if (dist < rng && dist < minDist) { minDist = dist; target = e; }
                 });
                 if (target) {
-                    const cd = Math.max(3, type.cooldown + (t.level - 1) * type.upgrade.cooldown);
+                    let cd = Math.max(3, type.cooldown + (t.level - 1) * type.upgrade.cooldown);
+                    if (attackSpeedBuffTimer > 0) cd = Math.max(2, Math.floor(cd * 0.5));
                     t.cooldown = cd;
                     if (type.pierce) {
                         enemies.forEach(e => {
@@ -762,7 +819,7 @@
         function hitEnemy(e, damage, type, tower) {
             const tType = TOWER_TYPES[type];
             e.hp -= damage; e.hitFlash = 6;
-            if (type === 'cannon' && tType.splash) {
+            if ((type === 'cannon' || type === 'rocket') && tType.splash) {
                 enemies.forEach(neighbor => {
                     if (neighbor === e) return;
                     const dx = neighbor.x - e.x, dy = neighbor.y - e.y;
@@ -780,10 +837,11 @@
                 e.dying = true; e.deathTimer = 22;
                 combo++;
                 const comboBonus = Math.min(combo * 2, 20);
-                const totalReward = e.reward + comboBonus;
+                const totalReward = (e.reward + comboBonus) * goldMultiplier;
                 score += totalReward; totalScore += totalReward;
                 if (combo >= 2) showCombo();
                 spawnParticles(e.x, e.y, e.color, e.enemyType === 'boss' ? 40 : 18, 10);
+                floatingTexts.push({ x: e.x, y: e.y - 10, text: `+${totalReward}💰`, life: 40, maxLife: 40, vy: -1 });
                 updateUI();
             }
         }
@@ -924,15 +982,9 @@
             ctx.moveTo(pathPixels[0].x, pathPixels[0].y);
             for (let i = 1; i < pathPixels.length; i++) ctx.lineTo(pathPixels[i].x, pathPixels[i].y);
             ctx.stroke();
-            // 起点终点
-            ctx.fillStyle = '#22c55e';
-            ctx.beginPath(); ctx.arc(pathPixels[0].x, pathPixels[0].y, 10, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = 'white'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('起', pathPixels[0].x, pathPixels[0].y);
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath(); ctx.arc(pathPixels[pathPixels.length - 1].x, pathPixels[pathPixels.length - 1].y, 10, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = 'white';
-            ctx.fillText('终', pathPixels[pathPixels.length - 1].x, pathPixels[pathPixels.length - 1].y);
+            // 起点终点建筑
+            drawStartGate(pathPixels[0].x, pathPixels[0].y);
+            drawEndCastle(pathPixels[pathPixels.length - 1].x, pathPixels[pathPixels.length - 1].y);
             // 悬浮高亮
             if (hoverGrid && gameRunning) {
                 let isPath = false;
@@ -951,6 +1003,77 @@
             enemies.forEach(e => drawEnemy(e));
             bullets.forEach(b => drawBullet(b));
             particles.forEach(p => drawParticle(p));
+
+            // 浮动金币文字
+            floatingTexts.forEach(ft => {
+                const alpha = ft.life / ft.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = ft.color || '#f59e0b';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(ft.text, ft.x, ft.y);
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function drawStartGate(x, y) {
+            const s = 18;
+            // 城墙
+            ctx.fillStyle = '#6b7280';
+            ctx.fillRect(x - s, y - s, s * 0.6, s * 1.8);
+            ctx.fillRect(x + s * 0.4, y - s, s * 0.6, s * 1.8);
+            // 门楣
+            ctx.fillStyle = '#4b5563';
+            ctx.fillRect(x - s, y - s, s * 2, s * 0.5);
+            // 拱形门洞
+            ctx.fillStyle = '#1f2937';
+            ctx.beginPath();
+            ctx.arc(x, y + s * 0.3, s * 0.45, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(x - s * 0.45, y + s * 0.3, s * 0.9, s * 0.6);
+            // 绿色旗帜
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath();
+            ctx.moveTo(x, y - s);
+            ctx.lineTo(x + s * 0.8, y - s * 0.7);
+            ctx.lineTo(x, y - s * 0.4);
+            ctx.fill();
+            ctx.strokeStyle = '#16a34a';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(x, y - s); ctx.lineTo(x, y - s * 0.1); ctx.stroke();
+        }
+
+        function drawEndCastle(x, y) {
+            const s = 18;
+            // 主塔楼
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(x - s * 0.6, y - s * 0.8, s * 1.2, s * 1.6);
+            // 城垛
+            ctx.fillStyle = '#b91c1c';
+            for (let i = -1; i <= 1; i++) {
+                ctx.fillRect(x + i * s * 0.5 - s * 0.15, y - s * 0.8 - s * 0.25, s * 0.3, s * 0.25);
+            }
+            // 侧塔
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(x - s * 1.1, y - s * 0.3, s * 0.5, s * 1.1);
+            ctx.fillRect(x + s * 0.6, y - s * 0.3, s * 0.5, s * 1.1);
+            // 侧塔城垛
+            ctx.fillStyle = '#b91c1c';
+            ctx.fillRect(x - s * 1.1, y - s * 0.55, s * 0.5, s * 0.25);
+            ctx.fillRect(x + s * 0.6, y - s * 0.55, s * 0.5, s * 0.25);
+            // 旗帜
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(x, y - s * 1.1);
+            ctx.lineTo(x + s * 0.7, y - s * 0.85);
+            ctx.lineTo(x, y - s * 0.6);
+            ctx.fill();
+            ctx.strokeStyle = '#991b1b';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(x, y - s * 1.1); ctx.lineTo(x, y - s * 0.3); ctx.stroke();
+            // 窗户
+            ctx.fillStyle = '#7f1d1d';
+            ctx.beginPath(); ctx.arc(x, y - s * 0.2, s * 0.2, 0, Math.PI * 2); ctx.fill();
         }
 
         function drawTower(t, idx) {
@@ -985,6 +1108,8 @@
             if (t.type === 'cannon') icon = '💥';
             if (t.type === 'magic') icon = '✦';
             if (t.type === 'laser') icon = '⚡';
+            if (t.type === 'sniper') icon = '🎯';
+            if (t.type === 'rocket') icon = '🚀';
             ctx.fillText(icon, x, y);
             if (t.level > 1) {
                 ctx.fillStyle = '#f59e0b';
@@ -1068,17 +1193,25 @@
         }
 
         function drawBullet(b) {
+            const isSniper = b.type === 'sniper';
+            const isRocket = b.type === 'rocket';
+            const radius = isSniper ? 6 : (isRocket ? 5 : 4);
+            const tailLen = isSniper ? 20 : (isRocket ? 18 : 12);
+            const lineWidth = isSniper ? 4 : (isRocket ? 3 : 2);
             ctx.fillStyle = b.color;
-            ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(b.x, b.y, radius, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = 'white';
-            ctx.beginPath(); ctx.arc(b.x, b.y, 1.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(b.x, b.y, isSniper ? 2.5 : (isRocket ? 2 : 1.5), 0, Math.PI * 2); ctx.fill();
             const dx = b.target.x - b.x, dy = b.target.y - b.y;
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-            const tailLen = 12;
             const tailGrad = ctx.createLinearGradient(b.x, b.y, b.x - (dx / dist) * tailLen, b.y - (dy / dist) * tailLen);
             tailGrad.addColorStop(0, b.color); tailGrad.addColorStop(1, 'rgba(255,255,255,0)');
-            ctx.strokeStyle = tailGrad; ctx.lineWidth = 2;
+            ctx.strokeStyle = tailGrad; ctx.lineWidth = lineWidth;
             ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x - (dx / dist) * tailLen, b.y - (dy / dist) * tailLen); ctx.stroke();
+            if (isRocket) {
+                ctx.fillStyle = 'rgba(251, 146, 60, 0.4)';
+                ctx.beginPath(); ctx.arc(b.x - (dx / dist) * tailLen * 0.5, b.y - (dy / dist) * tailLen * 0.5, 6, 0, Math.PI * 2); ctx.fill();
+            }
         }
 
         function drawParticle(p) {
@@ -1103,6 +1236,37 @@
 
         function closeLevelSelect() {
             document.getElementById('levelModal').classList.remove('show');
+        }
+
+        function openItemShop() {
+            document.getElementById('itemShopModal').style.display = 'flex';
+            document.getElementById('itemShopMsg').textContent = '';
+        }
+
+        function buyItem(itemType) {
+            const msg = document.getElementById('itemShopMsg');
+            if (itemType === 'heal') {
+                if (score < 50) { msg.textContent = '金币不足！'; return; }
+                score -= 50;
+                lives += 5;
+                updateUI();
+                msg.textContent = '❤️ 生命 +5';
+                msg.style.color = '#22c55e';
+            } else if (itemType === 'goldBuff') {
+                if (score < 80) { msg.textContent = '金币不足！'; return; }
+                score -= 80;
+                goldMultiplier = 2;
+                updateUI();
+                msg.textContent = '💰 下波击杀双倍金币';
+                msg.style.color = '#f59e0b';
+            } else if (itemType === 'speedBuff') {
+                if (score < 120) { msg.textContent = '金币不足！'; return; }
+                score -= 120;
+                attackSpeedBuffTimer = 600; // 10秒 @ 60fps
+                updateUI();
+                msg.textContent = '⚡ 攻速提升 10秒';
+                msg.style.color = '#a855f7';
+            }
         }
 
         function prevLevelPage() {
@@ -1145,9 +1309,9 @@
         }
 
         // 事件绑定
-        document.querySelectorAll('.shop-item').forEach(item => {
+        document.querySelectorAll('#towerShop .shop-item').forEach(item => {
             item.addEventListener('click', () => {
-                document.querySelectorAll('.shop-item').forEach(i => i.classList.remove('selected'));
+                document.querySelectorAll('#towerShop .shop-item').forEach(i => i.classList.remove('selected'));
                 item.classList.add('selected');
                 selectedTowerType = item.dataset.tower;
             });
@@ -1173,7 +1337,11 @@
             selectedTowerIndex = -1;
             document.getElementById('upgradePanel').classList.remove('show');
             const type = TOWER_TYPES[selectedTowerType];
-            if (!type || score < type.cost) return;
+            if (!type || score < type.cost) {
+                const pos = gridToPixel(g.col, g.row);
+                floatingTexts.push({ x: pos.x, y: pos.y, text: '金币不足!', life: 30, maxLife: 30, vy: -1, color: '#ef4444' });
+                return;
+            }
             for (let p of LEVELS[currentLevel].path) {
                 if (p.col === g.col && p.row === g.row) return;
             }

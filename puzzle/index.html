@@ -260,6 +260,11 @@ body {
 </div>
 <canvas id="puzzleCanvas" width="400" height="400"></canvas>
 <button class="btn" onclick="initGame()">重新开始</button>
+<div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;justify-content:center;">
+    <button class="btn" onclick="changeImage()" style="margin-top:0;">换一张</button>
+    <button class="btn" onclick="document.getElementById('imgUpload').click()" style="margin-top:0;">上传图片</button>
+    <input type="file" id="imgUpload" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+</div>
 
 <script>
 const canvas = document.getElementById('puzzleCanvas');
@@ -308,6 +313,21 @@ function updateLevelUI() {
 }
 
 function initGame() {
+    if (!originalImage) {
+        const randomSrc = `https://picsum.photos/400/400?random=${Date.now()}`;
+        loadImage(randomSrc).then(img => {
+            originalImage = img;
+            startGame();
+        }).catch(() => {
+            originalImage = createPuzzleImage();
+            startGame();
+        });
+    } else {
+        startGame();
+    }
+}
+
+function startGame() {
     const cfg = getLevelConfig();
     GRID_SIZE = cfg.size;
     TILE_SIZE = Math.floor(400 / GRID_SIZE);
@@ -331,8 +351,7 @@ function initGame() {
                 x: x,
                 y: y,
                 origX: x,
-                origY: y,
-                color: `hsl(${(x + y) * 30}, 70%, 50%)`
+                origY: y
             });
         }
     }
@@ -342,6 +361,43 @@ function initGame() {
     updateMoves();
     updateLevelUI();
     draw();
+}
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        if (src.startsWith('http')) {
+            img.crossOrigin = 'anonymous';
+        }
+        img.onload = () => resolve(img);
+        img.onerror = () => reject();
+        img.src = src;
+    });
+}
+
+function changeImage() {
+    const randomSrc = `https://picsum.photos/400/400?random=${Date.now()}`;
+    loadImage(randomSrc).then(img => {
+        originalImage = img;
+        startGame();
+    }).catch(() => {
+        alert('网络图片加载失败，请检查网络');
+    });
+}
+
+function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        loadImage(ev.target.result).then(img => {
+            originalImage = img;
+            startGame();
+        }).catch(() => {
+            alert('图片加载失败');
+        });
+    };
+    reader.readAsDataURL(file);
 }
 
 function shuffle() {
@@ -432,32 +488,44 @@ function draw() {
         const x = tile.x * TILE_SIZE;
         const y = tile.y * TILE_SIZE;
 
-        // 渐变背景
-        const gradient = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE);
-        gradient.addColorStop(0, tile.color);
-        gradient.addColorStop(1, shadeColor(tile.color, -20));
-
-        ctx.fillStyle = gradient;
-        ctx.shadowColor = tile.color;
-        ctx.shadowBlur = 10;
+        // 图片切片（圆角裁切）
+        ctx.save();
         ctx.beginPath();
         ctx.roundRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4, 8);
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.clip();
+        ctx.drawImage(
+            originalImage,
+            tile.origX * TILE_SIZE, tile.origY * TILE_SIZE, TILE_SIZE, TILE_SIZE,
+            x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4
+        );
+        ctx.restore();
 
-        // 数字
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 32px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(tile.origY * GRID_SIZE + tile.origX + 1, x + TILE_SIZE/2, y + TILE_SIZE/2);
+        // 边框
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4, 8);
+        ctx.stroke();
 
         // 高光
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
         ctx.beginPath();
-        ctx.ellipse(x + 25, y + 25, 20, 10, -0.5, 0, Math.PI * 2);
+        ctx.ellipse(x + TILE_SIZE * 0.3, y + TILE_SIZE * 0.25, TILE_SIZE * 0.25, TILE_SIZE * 0.12, -0.5, 0, Math.PI * 2);
         ctx.fill();
     }
+
+    // 绘制空白格（黑色）
+    const ex = emptyPos.x * TILE_SIZE;
+    const ey = emptyPos.y * TILE_SIZE;
+    ctx.fillStyle = '#0a0a0a';
+    ctx.beginPath();
+    ctx.roundRect(ex + 2, ey + 2, TILE_SIZE - 4, TILE_SIZE - 4, 8);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(ex + 2, ey + 2, TILE_SIZE - 4, TILE_SIZE - 4, 8);
+    ctx.stroke();
 }
 
 function shadeColor(color, percent) {
@@ -469,6 +537,90 @@ function shadeColor(color, percent) {
     const l = Math.max(0, Math.min(100, parseInt(match[3]) + percent));
 
     return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
+function createPuzzleImage() {
+    const c = document.createElement('canvas');
+    c.width = 400;
+    c.height = 400;
+    const ictx = c.getContext('2d');
+
+    // 白色底色
+    ictx.fillStyle = '#fff';
+    ictx.fillRect(0, 0, 400, 400);
+
+    // 彩色斜条纹背景（让每个区域底色不同）
+    for (let i = -5; i < 20; i++) {
+        ictx.fillStyle = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff'][Math.abs(i) % 5];
+        ictx.beginPath();
+        ictx.moveTo(i * 40, 0);
+        ictx.lineTo((i + 1) * 40, 0);
+        ictx.lineTo((i - 3) * 40, 400);
+        ictx.lineTo((i - 4) * 40, 400);
+        ictx.fill();
+    }
+
+    // 多个不同颜色、不同位置、不同形状的大色块（带黑边）
+    const shapes = [
+        { type: 'rect', x: 20, y: 20, w: 110, h: 130, c: '#e74c3c' },
+        { type: 'rect', x: 270, y: 25, w: 110, h: 110, c: '#3498db' },
+        { type: 'rect', x: 25, y: 260, w: 130, h: 120, c: '#2ecc71' },
+        { type: 'rect', x: 260, y: 270, w: 120, h: 100, c: '#f39c12' },
+        { type: 'rect', x: 150, y: 160, w: 100, h: 80, c: '#34495e' },
+        { type: 'circle', x: 140, y: 100, r: 55, c: '#9b59b6' },
+        { type: 'circle', x: 300, y: 180, r: 50, c: '#1abc9c' },
+        { type: 'circle', x: 90, y: 220, r: 45, c: '#e91e63' },
+        { type: 'circle', x: 210, y: 310, r: 40, c: '#00cec9' }
+    ];
+
+    shapes.forEach(s => {
+        ictx.fillStyle = s.c;
+        if (s.type === 'rect') {
+            ictx.fillRect(s.x, s.y, s.w, s.h);
+        } else {
+            ictx.beginPath();
+            ictx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ictx.fill();
+        }
+        // 黑色边框，明确区分各个形状
+        ictx.strokeStyle = '#000';
+        ictx.lineWidth = 4;
+        if (s.type === 'rect') {
+            ictx.strokeRect(s.x, s.y, s.w, s.h);
+        } else {
+            ictx.stroke();
+        }
+    });
+
+    // 细线网格增加纹理细节
+    ictx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ictx.lineWidth = 2;
+    for (let i = 0; i < 400; i += 40) {
+        ictx.beginPath(); ictx.moveTo(i, 0); ictx.lineTo(i, 400); ictx.stroke();
+        ictx.beginPath(); ictx.moveTo(0, i); ictx.lineTo(400, i); ictx.stroke();
+    }
+
+    // 小圆点装饰（固定位置，增加局部辨识度）
+    const dots = [
+        [35, 45], [95, 160], [180, 55], [330, 80], [55, 310],
+        [130, 360], [240, 120], [360, 240], [190, 210], [310, 340],
+        [80, 120], [250, 180], [150, 280], [370, 150], [45, 200]
+    ];
+    const dotColors = ['#fff', '#000', '#ff6b6b', '#feca57', '#48dbfb'];
+    dots.forEach(([dx, dy], i) => {
+        ictx.fillStyle = dotColors[i % dotColors.length];
+        ictx.beginPath();
+        ictx.arc(dx, dy, 5 + (i % 3), 0, Math.PI * 2);
+        ictx.fill();
+    });
+
+    // 交叉对角线
+    ictx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ictx.lineWidth = 3;
+    ictx.beginPath(); ictx.moveTo(0, 0); ictx.lineTo(400, 400); ictx.stroke();
+    ictx.beginPath(); ictx.moveTo(400, 0); ictx.lineTo(0, 400); ictx.stroke();
+
+    return c;
 }
 
 function levelComplete() {

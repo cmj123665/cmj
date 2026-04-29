@@ -340,17 +340,17 @@
         let groundY = 380;
 
         const LEVELS = [
-            { id: 1, name: '公园晨跑', target: 300, baseSpeed: 6, obsRate: 0.008 },
-            { id: 2, name: '城市街道', target: 500, baseSpeed: 7, obsRate: 0.012 },
-            { id: 3, name: '山间小径', target: 700, baseSpeed: 8, obsRate: 0.015 },
-            { id: 4, name: '森林穿越', target: 900, baseSpeed: 9, obsRate: 0.018 },
-            { id: 5, name: '沙漠疾驰', target: 1200, baseSpeed: 10, obsRate: 0.020 },
-            { id: 6, name: '冰川奔跑', target: 1500, baseSpeed: 11, obsRate: 0.022 },
-            { id: 7, name: '火山边缘', target: 2000, baseSpeed: 12, obsRate: 0.025 },
-            { id: 8, name: '天空之城', target: 3000, baseSpeed: 13, obsRate: 0.028 }
+            { id: 1, name: '公园晨跑', target: 300, baseSpeed: 6, obsRate: 0.006 },
+            { id: 2, name: '城市街道', target: 500, baseSpeed: 7, obsRate: 0.009 },
+            { id: 3, name: '山间小径', target: 700, baseSpeed: 8, obsRate: 0.011 },
+            { id: 4, name: '森林穿越', target: 900, baseSpeed: 9, obsRate: 0.013 },
+            { id: 5, name: '沙漠疾驰', target: 1200, baseSpeed: 10, obsRate: 0.015 },
+            { id: 6, name: '冰川奔跑', target: 1500, baseSpeed: 11, obsRate: 0.017 },
+            { id: 7, name: '火山边缘', target: 2000, baseSpeed: 12, obsRate: 0.019 },
+            { id: 8, name: '天空之城', target: 3000, baseSpeed: 13, obsRate: 0.022 }
         ];
         for (let i = 9; i <= 999; i++) {
-            LEVELS.push({ id: i, name: `第${i}关`, target: 3000 + (i - 8) * 300, baseSpeed: Math.min(13 + (i - 8) * 0.3, 25), obsRate: Math.min(0.028 + (i - 8) * 0.002, 0.15) });
+            LEVELS.push({ id: i, name: `第${i}关`, target: 3000 + (i - 8) * 300, baseSpeed: Math.min(13 + (i - 8) * 0.3, 25), obsRate: Math.min(0.022 + (i - 8) * 0.0015, 0.09) });
         }
         let levelPage = 0;
         const LEVELS_PER_PAGE = 30;
@@ -500,7 +500,7 @@
                 player.legAngle += 0.20;
                 player.armAngle += 0.20;
                 player.hairOffset = Math.sin(player.legAngle) * 2;
-                player.skirtOffset = Math.sin(player.legAngle * 2) * 1.5;
+                player.skirtOffset = -1.5 + Math.sin(player.legAngle * 2) * 0.5;
             } else {
                 player.legAngle = 0;
                 player.armAngle = 0;
@@ -573,7 +573,7 @@
             ctx.fill();
 
             // === 金色双马尾大波浪 ===
-            const hairWave = Math.sin(Date.now() / 300) * 4;
+            const hairWave = -4 + Math.sin(Date.now() / 300) * 1;
 
             // 左侧双马尾
             const leftPonyGradient = ctx.createLinearGradient(x - 20, y + 10, x - 40, y + 90);
@@ -744,7 +744,7 @@
             ctx.lineWidth = 2;
             for (let i = 0; i < 7; i++) {
                 const foldX = skirtX + (skirtWidth / 6) * i;
-                const wave = Math.sin(i + Date.now() / 200) * 3;
+                const wave = -2 + Math.sin(i + Date.now() / 200) * 1;
                 ctx.beginPath();
                 ctx.moveTo(foldX, skirtY);
                 ctx.quadraticCurveTo(foldX + wave, skirtY + skirtLength/2, foldX, skirtY + skirtLength + player.skirtOffset);
@@ -777,7 +777,7 @@
             // 脖子阴影
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.beginPath();
-            ctx.roundRect(neckX + 8, neckY, neckWidth/2 - 2, neckHeight, 5);
+            ctx.roundRect(neckX + 2, neckY, neckWidth/2 - 2, neckHeight, 5);
             ctx.fill();
 
             // === 身体 ===
@@ -1026,7 +1026,7 @@
             // 蓬松发丝
             for (let i = 0; i < 5; i++) {
                 const strandLen = 10 + i * 4;
-                const wave = Math.sin(i + Date.now() / 400) * 1.5;
+                const wave = -1 + Math.sin(i + Date.now() / 400) * 0.5;
 
                 // 左侧发丝
                 const leftX = headX + 8 + i * 4;
@@ -1041,7 +1041,7 @@
                 ctx.fillStyle = i % 2 === 0 ? '#f5e6c8' : '#faebd7';
                 ctx.beginPath();
                 ctx.moveTo(rightX - 2, headY + 10);
-                ctx.quadraticCurveTo(rightX + wave + 4, headY + strandLen, rightX + 3, headY + 10);
+                ctx.quadraticCurveTo(rightX + wave - 4, headY + strandLen, rightX + 3, headY + 10);
                 ctx.fill();
             }
 
@@ -1270,8 +1270,8 @@
                 ctx.fill();
             }
 
-            // === 右侧小蝴蝶结发饰 ===
-            const bowX = headX + headSize + 4;
+            // === 左侧小蝴蝶结发饰 ===
+            const bowX = headX - 4;
             const bowY = headY + 8;
 
             const leftBowGradient = ctx.createRadialGradient(
