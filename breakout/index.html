@@ -389,7 +389,7 @@
             <h2>🧱 打砖块</h2>
             <p>左右移动挡板，弹球消除砖块</p>
             <p>收集道具，挑战高分!</p>
-            <button class="modal-btn" onclick="startGameReal()">开始游戏</button>
+            <button class="modal-btn" onclick="startGame()">开始游戏</button>
         </div>
     </div>
     <div class="container">
@@ -453,6 +453,25 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // roundRect 兼容性补丁
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                if (typeof r === 'number') r = [r, r, r, r];
+                const [tl = 0, tr = 0, br = 0, bl = 0] = r;
+                this.moveTo(x + tl, y);
+                this.lineTo(x + w - tr, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + tr);
+                this.lineTo(x + w, y + h - br);
+                this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+                this.lineTo(x + bl, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - bl);
+                this.lineTo(x, y + tl);
+                this.quadraticCurveTo(x, y, x + tl, y);
+                this.closePath();
+                return this;
+            };
+        }
 
         function resizeCanvas() {
             canvas.width = Math.min(800, canvas.parentElement.clientWidth);
@@ -709,7 +728,7 @@
         }
 
         function draw() {
-            ctx.fillStyle = 'rgba(15, 12, 41, 0.3)';
+            ctx.fillStyle = '#0f0c29';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // 绘制砖块
@@ -942,9 +961,10 @@
 
         function startGame() {
             init();
+            document.getElementById('startModal').classList.remove('show');
             document.getElementById('gameOver').classList.remove('show');
 
-            if (gameLoop) cancelAnimationFrame(gameLoop);
+            if (gameLoop) clearInterval(gameLoop);
             gameLoop = setInterval(update, 1000 / 60);
         }
 
@@ -967,13 +987,13 @@
         const keys = { left: false, right: false };
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') keys.left = true;
-            if (e.key === 'ArrowRight') keys.right = true;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
         });
 
         document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft') keys.left = false;
-            if (e.key === 'ArrowRight') keys.right = false;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
         });
 
         // 触摸控制
@@ -1010,8 +1030,8 @@
             sessionStorage.setItem('lastGameResult', JSON.stringify(result));
         }
 
-        draw();
         init();
+        draw();
     </script>
 
     <!-- 游戏导航栏 -->
@@ -1092,8 +1112,6 @@
             document.getElementById('helpModal').classList.remove('show');
         }
 
-        // 初始化游戏
-        init();
     </script>
 </body>
 </html>

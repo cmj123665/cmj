@@ -36,7 +36,6 @@
             box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
         }
         .btn {
-            margin-top: 20px;
             padding: 12px 30px;
             border: none;
             border-radius: 8px;
@@ -45,6 +44,17 @@
             background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
             color: #000;
             cursor: pointer;
+        }
+        .game-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 120px;
         }
         .level-bar { width: 320px; margin: 10px auto; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 14px; border: 1px solid rgba(0,212,255,0.2); }
         .level-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #00d4ff; margin-bottom: 4px; }
@@ -227,6 +237,14 @@
         @media (min-width: 768px) {
             .d-pad { display: none; }
         }
+        @media (max-width: 767px) {
+            .game-area {
+                flex-direction: column;
+            }
+            .left-panel {
+                min-width: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -239,8 +257,12 @@
         <div class="level-info"><span id="levelName">第 1 关</span><span id="levelProgress">0 / 3</span></div>
         <div class="level-track"><div class="level-fill" id="levelFill" style="width:0%"></div></div>
     </div>
-    <canvas id="gameCanvas" width="600" height="400"></canvas>
-    <button class="btn" onclick="startGame()">开始游戏</button>
+    <div class="game-area">
+        <div class="left-panel">
+            <button class="btn" onclick="startGame()">开始游戏</button>
+        </div>
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -427,7 +449,7 @@
         }
 
         function draw() {
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.2)';
+            ctx.fillStyle = '#0a0a0a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // 中线
@@ -489,6 +511,7 @@
             init();
             gameRunning = true;
             updateLevelUI();
+            draw();
         }
 
         // 触摸支持
@@ -515,8 +538,8 @@
             sessionStorage.setItem('lastGameResult', JSON.stringify(result));
         }
 
-        draw();
         init();
+        draw();
         setInterval(update, 1000 / 60);
     </script>
 

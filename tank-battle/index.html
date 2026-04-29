@@ -572,7 +572,7 @@
         // 创建玩家坦克
         function createPlayer() {
             return {
-                x: 9 * TILE_SIZE + 2,
+                x: 5 * TILE_SIZE + 2,
                 y: 17 * TILE_SIZE + 2,
                 width: TANK_SIZE,
                 height: TANK_SIZE,
@@ -1087,6 +1087,9 @@
                     moved = moveTank(player, DIR_DOWN);
                 } else if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
                     moved = moveTank(player, DIR_LEFT);
+                }
+                if ((keys[' '] || keys['j'] || keys['J']) && player.shootCooldown <= 0) {
+                    shoot(player, true);
                 }
             }
 

@@ -63,16 +63,16 @@ class ParticleSystem {
     }
 
     draw(ctx) {
+        const prevAlpha = ctx.globalAlpha;
         for (const p of this.particles) {
             const alpha = p.fade ? Math.max(0, p.life / p.maxLife) : 1;
-            ctx.save();
             ctx.globalAlpha = alpha;
             ctx.fillStyle = p.color;
             ctx.beginPath();
             ctx.arc(p.x, p.y, Math.max(0.5, p.size * alpha), 0, Math.PI * 2);
             ctx.fill();
-            ctx.restore();
         }
+        ctx.globalAlpha = prevAlpha;
     }
 
     clear() {

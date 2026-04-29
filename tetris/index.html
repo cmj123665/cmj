@@ -176,12 +176,12 @@
 
         const SHAPES = [
             [[1,1,1,1]],
-            [[1,1,1,1],[1]],
-            [[0,1,1,0],[1,1,1,0]],
-            [[1,1,0],[0,1,1],[1,0,1]],
-            [[0,1,0],[1,1,1],[0,1,0]],
             [[1,1],[1,1]],
-            [[1,0],[1,1],[0,1],[1,1]]
+            [[0,1,0],[1,1,1]],
+            [[0,1,1],[1,1,0]],
+            [[1,1,0],[0,1,1]],
+            [[1,0,0],[1,1,1]],
+            [[0,0,1],[1,1,1]]
         ];
 
         const LEVELS = [
@@ -212,6 +212,45 @@
         let time = 0;
         let clearEffects = [];
         const particleSystem = new ParticleSystem(100);
+        const blockCache = {};
+
+        function initBlockCache() {
+            for (const color of COLORS) {
+                const c = document.createElement('canvas');
+                c.width = BLOCK_SIZE;
+                c.height = BLOCK_SIZE;
+                const cctx = c.getContext('2d');
+                cctx.save();
+                const grad = cctx.createLinearGradient(0, 0, BLOCK_SIZE, BLOCK_SIZE);
+                grad.addColorStop(0, lighten(color, 20));
+                grad.addColorStop(0.5, color);
+                grad.addColorStop(1, darken(color, 10));
+                cctx.fillStyle = grad;
+                roundRect(cctx, 0, 0, BLOCK_SIZE, BLOCK_SIZE, 6);
+                cctx.fill();
+                const innerGrad = cctx.createRadialGradient(BLOCK_SIZE * 0.3, BLOCK_SIZE * 0.3, 0, BLOCK_SIZE * 0.5, BLOCK_SIZE * 0.5, BLOCK_SIZE * 0.6);
+                innerGrad.addColorStop(0, 'rgba(255,255,255,0.25)');
+                innerGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                cctx.fillStyle = innerGrad;
+                roundRect(cctx, 2, 2, BLOCK_SIZE - 4, BLOCK_SIZE - 4, 4);
+                cctx.fill();
+                cctx.fillStyle = 'rgba(255,255,255,0.35)';
+                roundRect(cctx, 3, 2, BLOCK_SIZE - 6, BLOCK_SIZE * 0.35, 4);
+                cctx.fill();
+                cctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                cctx.lineWidth = 1.5;
+                roundRect(cctx, 0.5, 0.5, BLOCK_SIZE - 1, BLOCK_SIZE - 1, 6);
+                cctx.stroke();
+                if (BLOCK_SIZE > 15) {
+                    cctx.fillStyle = 'rgba(255,255,255,0.6)';
+                    cctx.beginPath();
+                    cctx.arc(BLOCK_SIZE * 0.75, BLOCK_SIZE * 0.25, 2, 0, Math.PI * 2);
+                    cctx.fill();
+                }
+                cctx.restore();
+                blockCache[color] = c;
+            }
+        }
 
         function init() {
             board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
@@ -219,6 +258,7 @@
             dropInterval = LEVELS[currentLevel - 1].startSpeed;
             time = 0; clearEffects = [];
             particleSystem.clear();
+            if (Object.keys(blockCache).length === 0) initBlockCache();
             updateScore();
             spawnPiece();
             draw();
@@ -242,6 +282,7 @@
         function isValidMove(piece, offsetX, offsetY) {
             return piece.shape.every((row, dy) => {
                 return row.every((value, dx) => {
+                    if (!value) return true;
                     const newX = piece.x + dx + offsetX;
                     const newY = piece.y + dy + offsetY;
                     return newX >= 0 && newX < COLS && newY < ROWS &&
@@ -306,6 +347,16 @@
             }
         }
 
+        function drawTetrisBlock(ctx, x, y, w, h, r, color) {
+            const cached = blockCache[color];
+            if (cached) {
+                ctx.drawImage(cached, x, y, w, h);
+            } else {
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, w, h);
+            }
+        }
+
         function draw() {
             // 梦幻背景
             const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -334,11 +385,11 @@
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
                     if (board[y][x]) {
-                        const px = x * BLOCK_SIZE + 1;
-                        const py = y * BLOCK_SIZE + 1;
-                        const pw = BLOCK_SIZE - 2;
-                        const ph = BLOCK_SIZE - 2;
-                        drawCandyBlock(ctx, px, py, pw, ph, 6, board[y][x]);
+                        const px = x * BLOCK_SIZE;
+                        const py = y * BLOCK_SIZE;
+                        const pw = BLOCK_SIZE;
+                        const ph = BLOCK_SIZE;
+                        drawTetrisBlock(ctx, px, py, pw, ph, 6, board[y][x]);
                     }
                 }
             }
@@ -362,17 +413,18 @@
                 currentPiece.shape.forEach((row, dy) => {
                     row.forEach((value, dx) => {
                         if (value) {
-                            const px = (currentPiece.x + dx) * BLOCK_SIZE + 1;
-                            const py = (currentPiece.y + dy) * BLOCK_SIZE + 1;
-                            const pw = BLOCK_SIZE - 2;
-                            const ph = BLOCK_SIZE - 2;
-                            drawCandyBlock(ctx, px, py, pw, ph, 6, currentPiece.color);
+                            const px = (currentPiece.x + dx) * BLOCK_SIZE;
+                            const py = (currentPiece.y + dy) * BLOCK_SIZE;
+                            const pw = BLOCK_SIZE;
+                            const ph = BLOCK_SIZE;
+                            drawTetrisBlock(ctx, px, py, pw, ph, 6, currentPiece.color);
                         }
                     });
                 });
             }
 
             // 粒子效果
+            particleSystem.update();
             particleSystem.draw(ctx);
         }
 
@@ -509,19 +561,40 @@
                     currentPiece.y++;
                 }
             } else if (e.key === 'ArrowUp') {
-                const rows = currentPiece.shape.length;
-                const cols = currentPiece.shape[0].length;
-                const rotated = [];
-                for (let i = 0; i < cols; i++) {
-                    rotated[i] = [];
-                    for (let j = 0; j < rows; j++) {
-                        rotated[i][j] = currentPiece.shape[rows - 1 - j][i];
-                    }
-                }
-                currentPiece.shape = rotated;
+                rotatePiece();
             }
             draw();
         });
+
+        function rotatePiece() {
+            if (!currentPiece) return false;
+            const oldShape = currentPiece.shape;
+            const rows = oldShape.length;
+            const cols = oldShape[0].length;
+            const rotated = [];
+            for (let i = 0; i < cols; i++) {
+                rotated[i] = [];
+                for (let j = 0; j < rows; j++) {
+                    rotated[i][j] = oldShape[rows - 1 - j][i];
+                }
+            }
+            currentPiece.shape = rotated;
+            if (!isValidMove(currentPiece, 0, 0)) {
+                let kickWorked = false;
+                for (const kick of [-1, 1, -2, 2]) {
+                    if (isValidMove(currentPiece, kick, 0)) {
+                        currentPiece.x += kick;
+                        kickWorked = true;
+                        break;
+                    }
+                }
+                if (!kickWorked) {
+                    currentPiece.shape = oldShape;
+                    return false;
+                }
+            }
+            return true;
+        }
 
         function moveTetris(dir) {
             if (!currentPiece) return;
@@ -535,16 +608,7 @@
                     currentPiece.y++;
                 }
             } else if (dir === 'rotate') {
-                const rows = currentPiece.shape.length;
-                const cols = currentPiece.shape[0].length;
-                const rotated = [];
-                for (let i = 0; i < cols; i++) {
-                    rotated[i] = [];
-                    for (let j = 0; j < rows; j++) {
-                        rotated[i][j] = currentPiece.shape[rows - 1 - j][i];
-                    }
-                }
-                currentPiece.shape = rotated;
+                rotatePiece();
             }
             draw();
         }
