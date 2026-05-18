@@ -436,36 +436,129 @@
             box-shadow: 0 0 20px rgba(244, 114, 182, 0.15);
         }
 
-        /* 游戏网格 - 3D卡片墙 */
+        /* 游戏区域 */
         .games-section {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .section-title {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 800;
             display: flex;
             align-items: center;
             gap: 8px;
             color: #475569;
+            letter-spacing: -0.3px;
         }
 
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            perspective: 1500px;
-            transform-style: preserve-3d;
+        /* 热门推荐 - 横向滚动大卡片 */
+        .featured-scroll {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding: 4px 4px 16px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* 游戏卡片 - 3D浪漫玻璃质感 */
+        .featured-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .featured-card {
+            flex: 0 0 260px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            color: #475569;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.12);
+        }
+
+        .featured-card:active {
+            transform: scale(0.97);
+        }
+
+        .featured-card .featured-cover {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.1) 0%, rgba(167, 139, 250, 0.08) 100%);
+        }
+
+        .featured-card .featured-cover::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 40%, rgba(255, 255, 255, 0.9) 100%);
+        }
+
+        .featured-card .featured-icon {
+            font-size: 52px;
+            z-index: 1;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+        }
+
+        .featured-card .featured-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 14px 16px;
+            z-index: 2;
+        }
+
+        .featured-card .featured-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #475569;
+        }
+
+        .featured-card .featured-desc {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .featured-card .featured-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            z-index: 3;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        /* 全部游戏 - 横向列表卡片 */
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
         .game-card {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(20px);
@@ -473,48 +566,65 @@
             border-radius: 16px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             border: 1px solid rgba(255, 255, 255, 0.8);
             text-decoration: none;
             color: #475569;
-            display: block;
+            display: flex;
+            align-items: stretch;
             box-shadow: 0 4px 20px rgba(244, 114, 182, 0.12);
             position: relative;
-            transform-style: preserve-3d;
+            height: 100px;
         }
 
         .game-card:hover {
-            transform: rotateY(8deg) rotateX(-4deg) translateZ(40px) scale(1.03);
-            box-shadow: 0 25px 50px rgba(244, 114, 182, 0.2);
             border-color: rgba(244, 114, 182, 0.3);
+            box-shadow: 0 8px 30px rgba(244, 114, 182, 0.15);
+            transform: translateX(4px);
         }
 
         .game-card:active {
-            transform: scale(0.97);
+            transform: scale(0.98);
         }
 
         .game-cover {
-            position: relative;
-            height: 100px;
+            flex-shrink: 0;
+            width: 100px;
+            height: 100%;
             background: linear-gradient(135deg, rgba(244, 114, 182, 0.1) 0%, rgba(167, 139, 250, 0.08) 100%);
             display: flex;
             justify-content: center;
             align-items: center;
-            border-bottom: 1px solid rgba(244, 114, 182, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-cover::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 70%, rgba(255,255,255,0.3) 100%);
         }
 
         .game-icon {
-            font-size: 40px;
+            font-size: 44px;
+            z-index: 1;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
         }
 
         .game-info {
-            padding: 10px;
+            flex: 1;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
         }
 
         .game-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
             color: #475569;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -522,10 +632,9 @@
         }
 
         .game-desc {
-            font-size: 11px;
-            opacity: 0.7;
-            margin-bottom: 8px;
+            font-size: 12px;
             color: #64748b;
+            margin-bottom: 10px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -533,25 +642,35 @@
 
         .game-meta {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
+            gap: 10px;
         }
 
         .game-tag {
-            padding: 3px 8px;
+            padding: 3px 10px;
             background: rgba(244, 114, 182, 0.1);
-            border-radius: 8px;
-            font-size: 10px;
+            border-radius: 6px;
+            font-size: 11px;
             color: #f472b6;
+            font-weight: 500;
+        }
+
+        .game-players {
+            font-size: 11px;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .hot-badge {
             position: absolute;
-            top: 6px;
-            left: 6px;
+            top: 8px;
+            left: 8px;
             background: linear-gradient(135deg, rgba(251, 191, 36, 0.9) 0%, rgba(245, 158, 11, 0.9) 100%);
             padding: 3px 8px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 10px;
             font-weight: 700;
             color: #0f172a;
@@ -2323,18 +2442,18 @@
                 <div class="category-tab" data-category="strategy">策略</div>
             </div>
 
-            <div class="games-section">
+            <div class="games-section" id="hotSection">
                 <div class="section-header">
-                    <h2 class="section-title">热门推荐</h2>
+                    <h2 class="section-title">🔥 热门推荐</h2>
                 </div>
-                <div class="games-grid" id="hotGames"></div>
+                <div class="featured-scroll" id="hotGames"></div>
             </div>
 
-            <div class="games-section">
+            <div class="games-section" id="allSection">
                 <div class="section-header">
-                    <h2 class="section-title">全部游戏</h2>
+                    <h2 class="section-title">🎮 全部游戏</h2>
                 </div>
-                <div class="games-grid" id="allGames"></div>
+                <div class="games-list" id="allGames"></div>
             </div>
         </div>
     </div>
@@ -2929,7 +3048,7 @@
             { id: 'whack', name: '打地鼠', icon: '🔨', desc: '反应力挑战+连击', category: 'arcade', url: 'whack-a-mole/index.html' },
             { id: 'tank', name: '坦克大战', icon: '🎮', desc: '经典坦克+关卡系统', category: 'action', url: 'tank-battle/index.html' },
             { id: 'puzzle', name: '拼图游戏', icon: '🧩', desc: '多难度+计时挑战', category: 'puzzle', url: 'puzzle/index.html' },
-            { id: 'tower', name: '塔防大战', icon: '🏰', desc: '4种塔+波次系统', category: 'strategy', hot: true, url: 'tower-defense/index.html' }
+            { id: 'tower', name: '塔防大战', icon: '🏰', desc: '6种塔+波次系统', category: 'strategy', hot: true, url: 'tower-defense/index.html' }
         ];
 
         // 分类名称
@@ -3657,6 +3776,8 @@
         function filterGames() {
             const hotGamesEl = document.getElementById('hotGames');
             const allGamesEl = document.getElementById('allGames');
+            const hotSection = document.getElementById('hotSection');
+            const allSection = document.getElementById('allSection');
             const activeCategory = document.querySelector('.category-tab.active')?.dataset.category || 'all';
 
             // 获取所有游戏（包括自定义游戏）
@@ -3682,18 +3803,30 @@
                 );
             }
 
-            // 渲染热门游戏
-            const hotFiltered = filteredGames.filter(g => g.hot);
             if (currentSearchTerm || activeCategory === 'favorite') {
-                // 搜索模式或收藏模式，热门游戏区域也显示所有结果
-                hotGamesEl.innerHTML = filteredGames.length > 0
+                // 搜索模式或收藏模式：隐藏热门推荐，全部结果显示在列表中
+                if (hotSection) hotSection.style.display = 'none';
+                if (allSection) {
+                    allSection.style.display = 'block';
+                    const title = allSection.querySelector('.section-title');
+                    if (title) title.textContent = currentSearchTerm ? '🔍 搜索结果' : '❤️ 我的收藏';
+                }
+                hotGamesEl.innerHTML = '';
+                allGamesEl.innerHTML = filteredGames.length > 0
                     ? filteredGames.map(game => createGameCard(game, false)).join('')
-                    : '<div class="no-results">没有找到相关游戏换个关键词试试吧</div>';
-                allGamesEl.innerHTML = '';
+                    : '<div class="no-results">没有找到相关游戏\n换个关键词试试吧</div>';
             } else {
+                // 正常模式：显示热门推荐 + 全部游戏
+                if (hotSection) hotSection.style.display = 'block';
+                if (allSection) {
+                    allSection.style.display = 'block';
+                    const title = allSection.querySelector('.section-title');
+                    if (title) title.textContent = '🎮 全部游戏';
+                }
+                const hotFiltered = filteredGames.filter(g => g.hot);
                 hotGamesEl.innerHTML = hotFiltered.length > 0
                     ? hotFiltered.map(game => createGameCard(game, true)).join('')
-                    : '<p style="grid-column: 1/-1; text-align: center; padding: 40px; opacity: 0.7;">该分类暂无热门游戏</p>';
+                    : '<p style="text-align: center; padding: 40px; opacity: 0.7; color: #94a3b8;">该分类暂无热门游戏</p>';
                 allGamesEl.innerHTML = filteredGames.map(game => createGameCard(game, false)).join('');
             }
         }
@@ -3717,6 +3850,17 @@
                 ? Math.round((playerData.levelsCompleted / playerData.gamesPlayed) * 100)
                 : 0;
             document.getElementById('winRate').textContent = winRate + '%';
+        }
+
+        // 生成固定伪随机玩家数
+        function getGamePlayers(gameId) {
+            let hash = 0;
+            for (let i = 0; i < gameId.length; i++) {
+                hash = gameId.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const base = Math.abs(hash) % 8000 + 500;
+            if (base >= 1000) return (base / 1000).toFixed(1) + 'k';
+            return base;
         }
 
         // 渲染游戏列表
@@ -3748,20 +3892,40 @@
         function createGameCard(game, isHot) {
             const deleteBtn = game.isCustom ? `<div class="delete-game-btn" onclick="event.preventDefault(); event.stopPropagation(); deleteCustomGame('${game.id}')">×</div>` : '';
             const favoriteBtn = `<div class="favorite-btn ${isFavorite(game.id) ? 'active' : ''}" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite('${game.id}')">${isFavorite(game.id) ? '❤️' : '🤍'}</div>`;
+            const players = getGamePlayers(game.id);
 
+            if (isHot) {
+                // 热门推荐大卡片（横向滚动）
+                return `
+                    <a href="${game.url}" class="featured-card">
+                        <div class="featured-tag">HOT</div>
+                        ${deleteBtn}
+                        ${favoriteBtn}
+                        <div class="featured-cover">
+                            <span class="featured-icon">${game.icon}</span>
+                        </div>
+                        <div class="featured-info">
+                            <div class="featured-title">${game.name}</div>
+                            <div class="featured-desc">${game.desc}</div>
+                        </div>
+                    </a>
+                `;
+            }
+
+            // 全部游戏横向列表卡片
             return `
-                <a href="${game.url}" class="game-card" style="position: relative;">
-                    ${isHot ? '<div class="hot-badge">HOT</div>' : ''}
+                <a href="${game.url}" class="game-card">
                     ${deleteBtn}
                     ${favoriteBtn}
                     <div class="game-cover">
-                        <canvas class="game-preview" data-game="${game.id}" width="60" height="60" style="width: 60px; height: 60px;"></canvas>
+                        <span class="game-icon">${game.icon}</span>
                     </div>
                     <div class="game-info">
                         <h3 class="game-title">${game.name}</h3>
                         <p class="game-desc">${game.desc}</p>
                         <div class="game-meta">
                             <span class="game-tag">${categoryNames[game.category]}</span>
+                            <span class="game-players">👤 ${players}</span>
                         </div>
                     </div>
                 </a>
