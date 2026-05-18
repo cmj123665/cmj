@@ -24,6 +24,147 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -webkit-tap-highlight-color: transparent;
+            touch-action: pan-y pan-x;
+            overscroll-behavior-y: none;
+        }
+
+        /* 触摸设备检测 */
+        @media (hover: none) and (pointer: coarse) {
+            body {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* PC端样式优化 */
+        @media (hover: hover) and (pointer: fine) {
+            body {
+                padding-top: 0;
+            }
+            .mp-navbar {
+                display: none;
+            }
+            .main-container {
+                max-width: 1200px;
+                padding: 24px;
+                padding-bottom: 100px;
+            }
+            .bottom-nav {
+                max-width: 600px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 20px 20px 0 0;
+            }
+        }
+
+        /* 移动端安全区域适配 */
+        @supports (padding: max(0px)) {
+            .main-container {
+                padding-left: max(12px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+            }
+
+            .search-container {
+                margin-left: max(0px, env(safe-area-inset-left));
+                margin-right: max(0px, env(safe-area-inset-right));
+            }
+
+            .category-tabs {
+                padding-left: max(4px, env(safe-area-inset-left));
+                padding-right: max(4px, env(safe-area-inset-right));
+            }
+        }
+
+        /* 防止橡皮筋效果（移动端） */
+        .main-container {
+            overscroll-behavior: contain;
+        }
+
+        .featured-scroll,
+        .category-tabs,
+        .games-list {
+            overscroll-behavior-x: contain;
+        }
+
+        /* 优化滚动条样式 */
+        .featured-scroll::-webkit-scrollbar,
+        .category-tabs::-webkit-scrollbar {
+            height: 0;
+            background: transparent;
+        }
+
+        /* 移动端横屏优化 */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .mp-navbar {
+                height: 36px;
+            }
+
+            .bottom-nav {
+                min-height: 56px;
+                padding: 4px 0 8px;
+            }
+
+            .nav-item {
+                min-height: 44px;
+                padding: 4px 8px;
+            }
+
+            .nav-item .icon {
+                font-size: 20px;
+            }
+
+            .nav-item .label {
+                font-size: 10px;
+            }
+
+            .featured-card {
+                height: 120px;
+            }
+
+            .game-card {
+                height: 80px;
+            }
+
+            .banner {
+                padding: 10px 16px;
+                margin-bottom: 10px;
+            }
+
+            .banner h1 {
+                font-size: 18px;
+            }
+        }
+
+        /* 触摸反馈动画 */
+        @keyframes touchPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .game-card,
+            .featured-card,
+            .category-tab,
+            .nav-item,
+            .favorite-btn,
+            .stat-card {
+                animation-duration: 0.15s;
+                animation-fill-mode: forwards;
+            }
+
+            .game-card:active,
+            .featured-card:active,
+            .category-tab:active,
+            .nav-item:active,
+            .favorite-btn:active,
+            .stat-card:active {
+                animation: touchPulse 0.15s ease-out;
+            }
+        }
+
+        /* 暗色模式支持（系统级） */
+        @media (prefers-color-scheme: dark) {
+            /* 可以在这里添加暗色模式样式 */
         }
 
         /* WebGL粒子背景Canvas */
@@ -289,33 +430,44 @@
             transform: scale(0.95);
         }
 
-        /* 搜索框 - 浪漫玻璃质感 */
+        /* 搜索框 - 浪漫玻璃质感 + 触摸优化 */
         .search-container {
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 16px;
-            padding: 12px 16px;
+            padding: 14px 18px;
             margin-bottom: 16px;
             border: 1px solid rgba(255, 255, 255, 0.6);
             box-shadow: 0 4px 20px rgba(244, 114, 182, 0.1);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            transition: all 0.3s;
+            min-height: 52px;
+        }
+
+        .search-container:focus-within {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(244, 114, 182, 0.3);
+            box-shadow: 0 8px 30px rgba(244, 114, 182, 0.15);
         }
 
         .search-container .search-icon {
-            font-size: 18px;
+            font-size: 20px;
             color: #94a3b8;
+            flex-shrink: 0;
         }
 
         .search-container .search-input {
             flex: 1;
             border: none;
             outline: none;
-            font-size: 14px;
+            font-size: 16px;
             color: #475569;
             background: transparent;
+            min-height: 24px;
+            padding: 0;
         }
 
         .search-container .search-input::placeholder {
@@ -323,10 +475,34 @@
         }
 
         .search-container .search-clear {
-            font-size: 18px;
+            font-size: 20px;
             color: #94a3b8;
             cursor: pointer;
             display: none;
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        /* 触摸设备上的清除按钮效果 */
+        @media (hover: none) and (pointer: coarse) {
+            .search-container .search-clear:active {
+                background: rgba(0, 0, 0, 0.05);
+                transform: scale(0.9);
+            }
+        }
+
+        /* PC端上的悬停效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .search-container .search-clear:hover {
+                background: rgba(0, 0, 0, 0.05);
+            }
+        }
         }
 
         .search-container .search-clear.show {
@@ -395,14 +571,17 @@
             color: #64748b;
         }
 
-        /* 分类标签 - 浪漫玻璃质感 */
+        /* 分类标签 - 浪漫玻璃质感 + 触摸优化 */
         .category-tabs {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
             overflow-x: auto;
-            padding: 4px 0;
+            overflow-y: hidden;
+            padding: 8px 4px;
             scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
         }
 
         .category-tabs::-webkit-scrollbar {
@@ -410,23 +589,43 @@
         }
 
         .category-tab {
-            padding: 8px 16px;
+            padding: 10px 18px;
             background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 20px;
+            border-radius: 22px;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             white-space: nowrap;
             font-weight: 500;
             color: #64748b;
             flex-shrink: 0;
+            scroll-snap-align: start;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        .category-tab:active {
-            transform: scale(0.95);
+        /* 触摸设备上的标签效果 */
+        @media (hover: none) and (pointer: coarse) {
+            .category-tab:active {
+                transform: scale(0.94);
+                background: rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        /* PC端上的悬停效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .category-tab:hover {
+                transform: translateY(-2px);
+                background: rgba(255, 255, 255, 0.7);
+            }
         }
 
         .category-tab.active {
@@ -434,6 +633,7 @@
             border-color: rgba(244, 114, 182, 0.4);
             color: #be185d;
             box-shadow: 0 0 20px rgba(244, 114, 182, 0.15);
+            transform: scale(1.05);
         }
 
         /* 游戏区域 */
@@ -458,14 +658,16 @@
             letter-spacing: -0.3px;
         }
 
-        /* 热门推荐 - 横向滚动大卡片 */
+        /* 热门推荐 - 横向滚动大卡片 + 触摸优化 */
         .featured-scroll {
             display: flex;
             gap: 14px;
             overflow-x: auto;
+            overflow-y: hidden;
             padding: 4px 4px 16px;
             scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
         }
 
         .featured-scroll::-webkit-scrollbar {
@@ -489,10 +691,26 @@
             flex-direction: column;
             position: relative;
             box-shadow: 0 4px 20px rgba(244, 114, 182, 0.12);
+            scroll-snap-align: start;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        .featured-card:active {
-            transform: scale(0.97);
+        /* 触摸设备上的卡片效果 */
+        @media (hover: none) and (pointer: coarse) {
+            .featured-card:active {
+                transform: scale(0.96);
+                box-shadow: 0 2px 12px rgba(244, 114, 182, 0.1);
+            }
+        }
+
+        /* PC端上的悬停效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .featured-card:hover {
+                transform: translateY(-4px) scale(1.02);
+                box-shadow: 0 12px 40px rgba(244, 114, 182, 0.2);
+            }
         }
 
         .featured-card .featured-cover {
@@ -566,7 +784,7 @@
             border-radius: 16px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
             border: 1px solid rgba(255, 255, 255, 0.8);
             text-decoration: none;
             color: #475569;
@@ -575,16 +793,29 @@
             box-shadow: 0 4px 20px rgba(244, 114, 182, 0.12);
             position: relative;
             height: 100px;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        .game-card:hover {
-            border-color: rgba(244, 114, 182, 0.3);
-            box-shadow: 0 8px 30px rgba(244, 114, 182, 0.15);
-            transform: translateX(4px);
+        /* 触摸设备上的卡片效果 */
+        @media (hover: none) and (pointer: coarse) {
+            .game-card:active {
+                transform: scale(0.98);
+                box-shadow: 0 2px 12px rgba(244, 114, 182, 0.1);
+            }
+            .game-card {
+                transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+            }
         }
 
-        .game-card:active {
-            transform: scale(0.98);
+        /* PC端上的悬停效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .game-card:hover {
+                border-color: rgba(244, 114, 182, 0.3);
+                box-shadow: 0 8px 30px rgba(244, 114, 182, 0.15);
+                transform: translateX(6px) scale(1.01);
+            }
         }
 
         .game-cover {
@@ -995,7 +1226,7 @@
             font-weight: 600;
         }
 
-        /* 底部导航 - 浪漫玻璃质感 */
+        /* 底部导航 - 浪漫玻璃质感 + 触摸优化 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -1005,44 +1236,85 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid rgba(244, 114, 182, 0.15);
-            padding: 8px 0;
-            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            padding: 6px 0 10px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom) + 6px);
             display: flex;
             justify-content: space-around;
             z-index: 1000;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 4px 16px;
+            justify-content: center;
+            padding: 8px 12px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
             flex: 1;
+            min-height: 56px;
+            border-radius: 16px;
+            margin: 0 2px;
+        }
+
+        /* 触摸设备上的按压效果 */
+        @media (hover: none) and (pointer: coarse) {
+            .nav-item:active {
+                transform: scale(0.92);
+                background: rgba(244, 114, 182, 0.1);
+            }
+            .nav-item {
+                transition: transform 0.15s ease-out, background 0.15s ease-out;
+            }
+        }
+
+        /* PC端上的悬停效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .nav-item:hover {
+                transform: translateY(-2px);
+                background: rgba(244, 114, 182, 0.08);
+            }
         }
 
         .nav-item .icon {
-            font-size: 22px;
-            margin-bottom: 2px;
-            opacity: 0.4;
-            transition: all 0.2s;
+            font-size: 24px;
+            margin-bottom: 3px;
+            opacity: 0.5;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             color: #94a3b8;
         }
 
         .nav-item .label {
-            font-size: 10px;
+            font-size: 11px;
             color: #64748b;
             font-weight: 500;
+            transition: all 0.3s;
         }
 
         .nav-item.active .icon {
             opacity: 1;
             color: #f472b6;
+            transform: scale(1.1);
         }
 
         .nav-item.active .label {
             color: #f472b6;
+            font-weight: 600;
+        }
+
+        /* 活跃指示器 */
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: linear-gradient(90deg, #f472b6, #a78bfa);
+            border-radius: 2px;
         }
 
         /* 浮动添加按钮 - 浪漫玻璃质感 */
@@ -1071,7 +1343,7 @@
             transform: scale(0.9);
         }
 
-        /* 弹窗 - 浪漫玻璃质感 */
+        /* 弹窗 - 浪漫玻璃质感 + 触摸优化 */
         .modal {
             position: fixed;
             inset: 0;
@@ -1081,10 +1353,31 @@
             align-items: center;
             z-index: 2000;
             padding: 20px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .modal.show {
             display: flex;
+        }
+
+        /* 移动端模态框优化 */
+        @media (max-width: 768px) {
+            .modal {
+                padding: 16px;
+                padding-top: max(16px, env(safe-area-inset-top));
+                padding-bottom: max(16px, env(safe-area-inset-bottom));
+                align-items: flex-end;
+            }
+
+            .modal:not(.chat-modal) {
+                align-items: center;
+            }
+
+            .modal-content {
+                max-height: 80vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
 
         .modal-content {
@@ -1099,6 +1392,7 @@
             width: 100%;
             border: 1px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 20px 60px rgba(244, 114, 182, 0.2);
+            -webkit-tap-highlight-color: transparent;
         }
 
         .modal-content h2 {
@@ -1148,13 +1442,15 @@
             padding-right: 36px;
         }
 
-        /* 删除游戏按钮 */
+        /* 删除游戏按钮 - 触摸优化 */
         .delete-game-btn {
             position: absolute;
             top: 8px;
             right: 8px;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            min-height: 28px;
             background: rgba(244, 114, 182, 0.8);
             backdrop-filter: blur(10px);
             border-radius: 50%;
@@ -1191,13 +1487,15 @@
             border: 1px solid rgba(244, 114, 182, 0.2);
         }
 
-        /* ========== 收藏按钮 ========== */
+        /* ========== 收藏按钮 - 触摸优化 ========== */
         .favorite-btn {
             position: absolute;
             top: 8px;
             right: 8px;
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             border-radius: 50%;
@@ -1207,12 +1505,24 @@
             font-size: 16px;
             cursor: pointer;
             z-index: 5;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 1px solid rgba(244, 114, 182, 0.15);
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .favorite-btn:active {
-            transform: scale(0.9);
+        /* 触摸设备上的收藏按钮效果 */
+        @media (hover: none) and (pointer: coarse) {
+            .favorite-btn:active {
+                transform: scale(0.85);
+            }
+        }
+
+        /* PC端上的悬停效果 */
+        @media (hover: hover) and (pointer: fine) {
+            .favorite-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 4px 12px rgba(244, 114, 182, 0.3);
+            }
         }
 
         .favorite-btn.active {
@@ -1946,6 +2256,63 @@
 
             .stats-grid {
                 grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* PC端优化 */
+        @media (min-width: 769px) {
+            body {
+                background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 50%, #eff6ff 100%);
+            }
+
+            .main-container {
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+
+            .featured-scroll {
+                gap: 20px;
+            }
+
+            .featured-card {
+                flex: 0 0 300px;
+                height: 170px;
+            }
+
+            .game-card {
+                height: 110px;
+            }
+
+            .game-cover {
+                width: 110px;
+            }
+
+            .banner {
+                padding: 24px;
+                margin-bottom: 24px;
+            }
+
+            .banner h1 {
+                font-size: 28px;
+            }
+        }
+
+        /* 超大屏幕优化 */
+        @media (min-width: 1200px) {
+            .main-container {
+                padding: 32px;
+            }
+
+            .games-list {
+                gap: 16px;
+            }
+
+            .section-header {
+                margin-bottom: 20px;
+            }
+
+            .section-title {
+                font-size: 20px;
             }
         }
 
@@ -3059,6 +3426,244 @@
             arcade: '街机',
             strategy: '策略'
         };
+
+        // ========== 移动端增强功能 ==========
+        // 检测是否为触摸设备
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // 触觉反馈函数（震动）
+        function vibrate(pattern = 10) {
+            if ('vibrate' in navigator && isTouchDevice) {
+                try {
+                    navigator.vibrate(pattern);
+                } catch (e) {
+                    // 某些浏览器可能抛出异常
+                }
+            }
+        }
+
+        // 增强触摸反馈
+        function addTouchFeedback() {
+            if (!isTouchDevice) return;
+
+            // 为所有可点击元素添加触摸反馈
+            const touchElements = document.querySelectorAll('.game-card, .featured-card, .category-tab, .nav-item, .favorite-btn, .delete-game-btn, .stat-card, button');
+
+            touchElements.forEach(el => {
+                el.addEventListener('touchstart', function(e) {
+                    this.classList.add('touching');
+                    vibrate(10);
+                }, { passive: true });
+
+                el.addEventListener('touchend', function() {
+                    this.classList.remove('touching');
+                    setTimeout(() => vibrate([5, 10, 5]), 50);
+                }, { passive: true });
+
+                el.addEventListener('touchcancel', function() {
+                    this.classList.remove('touching');
+                }, { passive: true });
+            });
+        }
+
+        // 优化搜索框体验
+        function optimizeSearch() {
+            const searchInput = document.querySelector('.search-input');
+            if (!searchInput) return;
+
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    performSearch(this.value);
+                    vibrate(5);
+                }, 300);
+            });
+
+            // 清空按钮增强
+            const clearBtn = document.querySelector('.search-clear');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    performSearch('');
+                    searchInput.focus();
+                    vibrate([10, 20, 10]);
+                });
+            }
+        }
+
+        // 增强滚动体验
+        function enhanceScrolling() {
+            if (!isTouchDevice) return;
+
+            const scrollContainers = document.querySelectorAll('.featured-scroll, .category-tabs, .games-list');
+
+            scrollContainers.forEach(container => {
+                let startY, startX, scrollLeft, scrollTop;
+                let isScrolling = false;
+                let scrollTimeout;
+
+                container.addEventListener('touchstart', function(e) {
+                    startY = e.touches[0].pageY;
+                    startX = e.touches[0].pageX;
+                    scrollLeft = this.scrollLeft;
+                    scrollTop = this.scrollTop;
+                    isScrolling = false;
+                }, { passive: true });
+
+                container.addEventListener('touchmove', function(e) {
+                    const deltaY = Math.abs(e.touches[0].pageY - startY);
+                    const deltaX = Math.abs(e.touches[0].pageX - startX);
+
+                    if (deltaX > deltaY && deltaX > 10) {
+                        isScrolling = true;
+                    }
+
+                    if (isScrolling) {
+                        clearTimeout(scrollTimeout);
+                        scrollTimeout = setTimeout(() => vibrate(5), 100);
+                    }
+                }, { passive: true });
+
+                // 滚动边界回弹效果
+                container.addEventListener('touchend', function() {
+                    if (this.scrollLeft < 0) {
+                        this.scrollTo({ left: 0, behavior: 'smooth' });
+                    }
+                }, { passive: true });
+            });
+        }
+
+        // 长按功能
+        function addLongPress() {
+            if (!isTouchDevice) return;
+
+            const gameCards = document.querySelectorAll('.game-card, .featured-card');
+
+            gameCards.forEach(card => {
+                let pressTimer;
+                let isLongPress = false;
+
+                card.addEventListener('touchstart', (e) => {
+                    isLongPress = false;
+                    pressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        vibrate([50, 100, 50]);
+                        // 可以在这里添加长按菜单
+                        const gameName = card.querySelector('.game-title, .featured-title')?.textContent;
+                        if (gameName) {
+                            // 长按反馈
+                            card.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                card.style.transform = '';
+                            }, 200);
+                        }
+                    }, 500);
+                }, { passive: true });
+
+                card.addEventListener('touchend', (e) => {
+                    clearTimeout(pressTimer);
+                    if (isLongPress) {
+                        e.preventDefault();
+                    }
+                });
+
+                card.addEventListener('touchmove', () => {
+                    clearTimeout(pressTimer);
+                }, { passive: true });
+            });
+        }
+
+        // 添加触摸样式
+        const touchStyles = document.createElement('style');
+        touchStyles.textContent = `
+            .touching {
+                opacity: 0.7 !important;
+            }
+            @media (hover: none) and (pointer: coarse) {
+                .game-card, .featured-card, .category-tab, .nav-item {
+                    -webkit-tap-highlight-color: rgba(244, 114, 182, 0.2);
+                }
+                .modal {
+                    -webkit-overflow-scrolling: touch;
+                }
+            }
+
+            /* 滑动返回指示器 */
+            .swipe-indicator {
+                position: absolute;
+                top: 8px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 36px;
+                height: 5px;
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 3px;
+                display: none;
+            }
+
+            @media (max-width: 768px) {
+                .modal.show .swipe-indicator {
+                    display: block;
+                }
+            }
+        `;
+        document.head.appendChild(touchStyles);
+
+        // 模态框关闭手势优化
+        function enhanceModalGestures() {
+            const modals = document.querySelectorAll('.modal');
+
+            modals.forEach(modal => {
+                let startY = 0;
+                let currentY = 0;
+                let isDragging = false;
+                const modalContent = modal.querySelector('.modal-content');
+
+                modal.addEventListener('touchstart', (e) => {
+                    if (e.target === modal || modalContent.contains(e.target)) {
+                        startY = e.touches[0].clientY;
+                        isDragging = true;
+                    }
+                }, { passive: true });
+
+                modal.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    currentY = e.touches[0].clientY;
+                    const deltaY = currentY - startY;
+
+                    if (deltaY > 0 && modalContent) {
+                        modalContent.style.transform = `translateY(${deltaY}px)`;
+                        modalContent.style.opacity = 1 - (deltaY / 500);
+                    }
+                }, { passive: true });
+
+                modal.addEventListener('touchend', (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    const deltaY = currentY - startY;
+
+                    if (deltaY > 150) {
+                        // 关闭模态框
+                        modal.classList.remove('show');
+                        vibrate([10, 20, 10]);
+                    }
+
+                    // 重置样式
+                    if (modalContent) {
+                        modalContent.style.transform = '';
+                        modalContent.style.opacity = '';
+                    }
+                }, { passive: true });
+            });
+        }
+
+        // 在页面加载后初始化模态框手势
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', enhanceModalGestures);
+        } else {
+            enhanceModalGestures();
+        }
 
         // 玩家数据
         let playerData = {
@@ -6485,6 +7090,17 @@
         }
     </script>
     <script>
+        // ========== 移动端增强功能初始化 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            // 延迟初始化以确保DOM完全加载
+            setTimeout(() => {
+                if (typeof addTouchFeedback === 'function') addTouchFeedback();
+                if (typeof optimizeSearch === 'function') optimizeSearch();
+                if (typeof enhanceScrolling === 'function') enhanceScrolling();
+                if (typeof addLongPress === 'function') addLongPress();
+            }, 100);
+        });
+
         // 背景轮播
         (function() {
             const bgImages = [
