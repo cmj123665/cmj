@@ -469,49 +469,86 @@ function drawSnake(ctx, segments, gridSize, color, direction) {
         ctx.fill();
     }
 
-    // 头部
+    // 头部（增强版）
     const headGrad = ctx.createRadialGradient(hx - radius * 0.2, hy - radius * 0.2, 0, hx, hy, radius * 1.1);
     headGrad.addColorStop(0, lighten(color, 25));
-    headGrad.addColorStop(1, color);
+    headGrad.addColorStop(0.7, color);
+    headGrad.addColorStop(1, darken(color, 12));
     ctx.fillStyle = headGrad;
     ctx.beginPath();
     ctx.arc(hx, hy, radius * 1.05, 0, Math.PI * 2);
     ctx.fill();
 
-    // 头部高光
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    // 头部鳞片纹理
+    drawDetailedHeadScales(ctx, hx, hy, radius, color);
+
+    // 头部高光（增强）
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.beginPath();
-    ctx.ellipse(hx - radius * 0.15, hy - radius * 0.2, radius * 0.3, radius * 0.15, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(hx - radius * 0.15, hy - radius * 0.25, radius * 0.4, radius * 0.2, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 下巴阴影
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.beginPath();
+    ctx.ellipse(hx, hy + radius * 0.7, radius * 0.6, radius * 0.15, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // 眼睛方向
     const dir = direction || {dx: 0, dy: -1};
-    const eyeOffset = radius * 0.35;
-    const eyeX1 = hx + dir.dx * eyeOffset - dir.dy * eyeOffset * 0.5;
-    const eyeY1 = hy + dir.dy * eyeOffset + dir.dx * eyeOffset * 0.5;
-    const eyeX2 = hx + dir.dx * eyeOffset + dir.dy * eyeOffset * 0.5;
-    const eyeY2 = hy + dir.dy * eyeOffset - dir.dx * eyeOffset * 0.5;
+    const eyeOffset = radius * 0.38;
+    const eyeX1 = hx + dir.dx * eyeOffset - dir.dy * eyeOffset * 0.45;
+    const eyeY1 = hy + dir.dy * eyeOffset + dir.dx * eyeOffset * 0.45;
+    const eyeX2 = hx + dir.dx * eyeOffset + dir.dy * eyeOffset * 0.45;
+    const eyeY2 = hy + dir.dy * eyeOffset - dir.dx * eyeOffset * 0.45;
 
-    // 眼白
-    ctx.fillStyle = 'white';
+    // 眼窝
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
-    ctx.arc(eyeX1, eyeY1, radius * 0.22, 0, Math.PI * 2);
-    ctx.arc(eyeX2, eyeY2, radius * 0.22, 0, Math.PI * 2);
+    ctx.ellipse(eyeX1, eyeY1, radius * 0.28, radius * 0.2, Math.atan2(dir.dy, dir.dx) + 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(eyeX2, eyeY2, radius * 0.28, radius * 0.2, Math.atan2(dir.dy, dir.dx) - 0.3, 0, Math.PI * 2);
     ctx.fill();
 
-    // 眼珠
-    ctx.fillStyle = '#1e293b';
-    const pupilOffset = radius * 0.06;
+    // 眼白（略带黄色，更真实）
+    ctx.fillStyle = '#fffae3';
     ctx.beginPath();
-    ctx.arc(eyeX1 + dir.dx * pupilOffset, eyeY1 + dir.dy * pupilOffset, radius * 0.1, 0, Math.PI * 2);
-    ctx.arc(eyeX2 + dir.dx * pupilOffset, eyeY2 + dir.dy * pupilOffset, radius * 0.1, 0, Math.PI * 2);
+    ctx.ellipse(eyeX1, eyeY1, radius * 0.22, radius * 0.16, 0, 0, Math.PI * 2);
+    ctx.ellipse(eyeX2, eyeY2, radius * 0.22, radius * 0.16, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 眼睛高光
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    // 眼珠（更大更真实）
+    ctx.fillStyle = '#1a1a1a';
+    const pupilOffset = radius * 0.05;
     ctx.beginPath();
-    ctx.arc(eyeX1 - radius * 0.05, eyeY1 - radius * 0.08, radius * 0.05, 0, Math.PI * 2);
-    ctx.arc(eyeX2 - radius * 0.05, eyeY2 - radius * 0.08, radius * 0.05, 0, Math.PI * 2);
+    ctx.ellipse(eyeX1 + dir.dx * pupilOffset, eyeY1 + dir.dy * pupilOffset, radius * 0.11, radius * 0.08, 0, 0, Math.PI * 2);
+    ctx.ellipse(eyeX2 + dir.dx * pupilOffset, eyeY2 + dir.dy * pupilOffset, radius * 0.11, radius * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 眼睛高光（主高光）
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.beginPath();
+    ctx.arc(eyeX1 - radius * 0.06, eyeY1 - radius * 0.09, radius * 0.06, 0, Math.PI * 2);
+    ctx.arc(eyeX2 - radius * 0.06, eyeY2 - radius * 0.09, radius * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 眼睛副高光（更立体）
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath();
+    ctx.arc(eyeX1 + radius * 0.03, eyeY1 + radius * 0.05, radius * 0.025, 0, Math.PI * 2);
+    ctx.arc(eyeX2 + radius * 0.03, eyeY2 + radius * 0.05, radius * 0.025, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 鼻孔
+    const nostrilX = hx + dir.dx * radius * 0.65;
+    const nostrilY = hy + dir.dy * radius * 0.65;
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(nostrilX - dir.dy * radius * 0.1, nostrilY + dir.dx * radius * 0.1, radius * 0.04, radius * 0.03, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(nostrilX + dir.dy * radius * 0.1, nostrilY - dir.dx * radius * 0.1, radius * 0.04, radius * 0.03, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // 舌头
@@ -945,4 +982,44 @@ if (typeof window !== 'undefined') {
     window.lighten = lighten;
     window.darken = darken;
     window.roundRect = roundRect;
+    window.drawDetailedHeadScales = drawDetailedHeadScales;
+}
+
+// ============ 蛇头细节增强函数 ============
+
+// 绘制头部鳞片纹理（增强版）
+function drawDetailedHeadScales(ctx, cx, cy, radius, baseColor) {
+    const scaleColor = darken(baseColor, 12);
+    ctx.strokeStyle = scaleColor;
+    ctx.lineWidth = 0.8;
+
+    // 绘制多层次的鳞片图案
+    // 外层鳞片
+    for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const scaleRadius = radius * 0.65;
+        const sx = cx + Math.cos(angle) * scaleRadius * 0.5;
+        const sy = cy + Math.sin(angle) * scaleRadius * 0.5;
+
+        ctx.beginPath();
+        ctx.arc(sx, sy, radius * 0.15, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    // 中层鳞片
+    for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const scaleRadius = radius * 0.4;
+        const sx = cx + Math.cos(angle) * scaleRadius * 0.4;
+        const sy = cy + Math.sin(angle) * scaleRadius * 0.4;
+
+        ctx.beginPath();
+        ctx.arc(sx, sy, radius * 0.12, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    // 中心鳞片
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 0.2, 0, Math.PI * 2);
+    ctx.stroke();
 }
