@@ -1230,8 +1230,8 @@
         .bottom-nav {
             position: fixed;
             bottom: 0;
-            left: 0;
-            right: 0;
+            left: 20px;
+            right: 20px;
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -1253,10 +1253,10 @@
             padding: 8px 12px;
             cursor: pointer;
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
-            flex: 1;
+            flex: 0 1 auto;
             min-height: 56px;
             border-radius: 16px;
-            margin: 0 2px;
+            margin: 0 6px;
         }
 
         /* 触摸设备上的按压效果 */
@@ -6538,19 +6538,6 @@
                 console.log('✅ 后端已连接，使用在线模式');
             }
 
-            // 自动清除可能导致重复的自定义游戏数据
-            try {
-                const customGames = localStorage.getItem('customGames');
-                if (customGames) {
-                    const games = JSON.parse(customGames);
-                    if (games.length > 0) {
-                        console.log('清除重复的自定义游戏数据:', games.length);
-                        localStorage.removeItem('customGames');
-                    }
-                }
-            } catch (e) {
-                console.error('清除自定义游戏数据失败:', e);
-            }
 
             loadPlayerData();
             loadUserData();
