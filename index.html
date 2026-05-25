@@ -3413,6 +3413,68 @@
         </div>
     </div>
 
+    <!-- 联系人管理菜单 -->
+    <div class="contact-dropdown-menu" id="contactDropdownMenu">
+        <div class="dropdown-item" onclick="openChatFromMenu()">💬 发消息</div>
+        <div class="dropdown-item" onclick="deleteFriendFromMenu()">🗑️ 删除好友</div>
+        <div class="dropdown-item" id="contactBlockItem" onclick="toggleBlockFromMenu()">🚫 拉黑</div>
+    </div>
+
+    <style>
+        .contact-actions {
+            position: relative;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .contact-action-btn {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            color: #999;
+            padding: 8px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            line-height: 1;
+        }
+
+        .contact-action-btn:hover {
+            opacity: 1;
+        }
+
+        .contact-dropdown-menu {
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            display: none;
+            min-width: 150px;
+            overflow: hidden;
+        }
+
+        .contact-dropdown-menu.show {
+            display: block;
+        }
+
+        .contact-dropdown-menu .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: background 0.2s;
+        }
+
+        .contact-dropdown-menu .dropdown-item:hover {
+            background: #f5f5f5;
+        }
+
+        .contact-dropdown-menu .dropdown-item:active {
+            background: #eee;
+        }
+    </style>
+
     <script src="js/game-effects.js"></script>
     <script>
         // ========== 游戏列表 ==========
@@ -5531,21 +5593,27 @@
                 return;
             }
 
+            const blockList = getBlockList();
+
             list.innerHTML = friends.map(f => {
                 const msgs = chatMessages[f.phone] || [];
                 const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
                 const unread = msgs.filter(m => m.to === userData.phone && !m.read).length;
+                const blocked = blockList[f.phone];
 
                 return `
-                    <div class="contact-item" onclick="openChat('${f.phone}')">
+                    <div class="contact-item">
                         <div class="contact-avatar">${f.avatar || '🎮'}</div>
-                        <div class="contact-info">
-                            <div class="contact-name">${f.userName || f.phone}</div>
+                        <div class="contact-info" onclick="openChat('${f.phone}')">
+                            <div class="contact-name">${f.userName || f.phone}${blocked ? ' <span style="color:#ff6b6b;font-size:11px;">[已拉黑]</span>' : ''}</div>
                             <div class="contact-phone">${f.phone}</div>
                         </div>
-                        <div class="contact-preview">
+                        <div class="contact-preview" onclick="openChat('${f.phone}')">
                             ${lastMsg ? `<div class="contact-last-msg">${lastMsg.content}</div>` : ''}
                             ${unread > 0 ? `<div class="contact-unread">${unread}</div>` : ''}
+                        </div>
+                        <div class="contact-actions">
+                            <button class="contact-action-btn" onclick="showContactMenu('${f.phone}', event)">⋮</button>
                         </div>
                     </div>
                 `;
@@ -5568,6 +5636,104 @@
                 }
             }
         }
+
+        // ========== 联系人菜单管理 ==========
+        let currentContactPhone = null;
+
+        // 显示联系人菜单
+        function showContactMenu(phone, event) {
+            event.stopPropagation();
+            currentContactPhone = phone;
+
+            const menu = document.getElementById('contactDropdownMenu');
+            const rect = event.target.getBoundingClientRect();
+            const blockList = getBlockList();
+            const blockItem = document.getElementById('contactBlockItem');
+
+            // 更新拉黑菜单项文本
+            if (blockList[phone]) {
+                blockItem.textContent = '🚫 取消拉黑';
+            } else {
+                blockItem.textContent = '🚫 拉黑';
+            }
+
+            menu.style.top = (rect.bottom + 5) + 'px';
+            menu.style.left = Math.max(10, rect.right - 150) + 'px';
+            menu.classList.add('show');
+        }
+
+        // 隐藏联系人菜单
+        function hideContactMenu() {
+            const menu = document.getElementById('contactDropdownMenu');
+            if (menu) {
+                menu.classList.remove('show');
+            }
+            currentContactPhone = null;
+        }
+
+        // 从菜单打开聊天
+        function openChatFromMenu() {
+            if (currentContactPhone) {
+                hideContactMenu();
+                openChat(currentContactPhone);
+            }
+        }
+
+        // 从菜单删除好友
+        async function deleteFriendFromMenu() {
+            if (!currentContactPhone) return;
+            const phone = currentContactPhone;
+            hideContactMenu();
+
+            const friend = friends.find(f => f.phone === phone);
+            const name = friend?.userName || phone;
+
+            if (!confirm(`确定要删除好友 "${name}" 吗？`)) return;
+
+            if (userData.isLoggedIn && userData.phone) {
+                await apiPost('/friends/remove', {
+                    userPhone: userData.phone,
+                    friendPhone: phone
+                });
+            }
+
+            friends = friends.filter(f => f.phone !== phone);
+            saveFriends();
+
+            // 刷新联系人页面
+            await renderContactsPage();
+            showModal('✅ 已删除', `"${name}" 已从你的好友列表中移除`);
+        }
+
+        // 从菜单切换拉黑状态
+        function toggleBlockFromMenu() {
+            if (!currentContactPhone) return;
+            const phone = currentContactPhone;
+            hideContactMenu();
+
+            const list = getBlockList();
+            const friend = friends.find(f => f.phone === phone);
+            const name = friend?.userName || phone;
+
+            if (list[phone]) {
+                delete list[phone];
+                showModal('✅ 已取消拉黑', `已恢复与 "${name}" 的正常联系`);
+            } else {
+                if (!confirm(`确定要拉黑 "${name}" 吗？你将不再收到该用户的消息`)) return;
+                list[phone] = true;
+                showModal('✅ 已拉黑', `你将不再收到 "${name}" 的消息`);
+            }
+
+            saveBlockList(list);
+            renderFriendListForContacts();
+        }
+
+        // 点击页面其他地方关闭菜单
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.contact-action-btn') && !e.target.closest('.contact-dropdown-menu')) {
+                hideContactMenu();
+            }
+        });
 
         async function syncChatMessages() {
             if (!userData.isLoggedIn || !userData.phone) return;
