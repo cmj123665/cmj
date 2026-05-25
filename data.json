@@ -1,0 +1,37 @@
+{
+  "users": {
+    "15279314291": {
+      "phone": "15279314291",
+      "userName": "柒",
+      "avatar": "🦊",
+      "avatarImage": null,
+      "createdAt": 1779717771960
+    },
+    "15179314291": {
+      "phone": "15179314291",
+      "userName": "玩家",
+      "avatar": "🎮",
+      "avatarImage": null,
+      "createdAt": 1779717810862
+    },
+    "17679208092": {
+      "phone": "17679208092",
+      "userName": "玩家",
+      "avatar": "🎮",
+      "avatarImage": null,
+      "createdAt": 1779717879153
+    }
+  },
+  "friendRequests": [
+    {
+      "id": 1,
+      "from": "17679208092",
+      "to": "15179314291",
+      "fromName": "玩家",
+      "fromAvatar": "🎮",
+      "status": "pending",
+      "time": 1779717903448
+    }
+  ],
+  "messages": []
+}
