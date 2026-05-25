@@ -3050,7 +3050,22 @@
             </div>
 
             <div class="contacts-container" id="contactsContainer">
-                <!-- 动态渲染联系人内容 -->
+                <div class="add-friend-hero">
+                    <button class="add-friend-hero-btn" onclick="showAddFriendModal()">
+                        <span class="add-icon">＋</span>
+                        <span class="add-text">添加好友</span>
+                    </button>
+                </div>
+                <div class="contact-search-box">
+                    <input type="text" class="modal-input" id="friendSearchInput" placeholder="搜索昵称或手机号" maxlength="20" onkeypress="if(event.key==='Enter')searchFriend()">
+                    <button class="modal-btn" onclick="searchFriend()">搜索</button>
+                </div>
+                <div id="searchResults"></div>
+                <div class="contact-list" id="contactList">
+                    <div style="text-align:center;color:#999;padding:30px;font-size:13px;">
+                        加载中...
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -6883,6 +6898,9 @@
             updateLoginStatusBar();
             checkAchievements();
             updateMessageBadge();
+
+            // 预加载联系人页面内容
+            await loadContactsPage();
 
             // 初始化WebGL粒子背景
             const particleCanvas = document.getElementById('particleCanvas');
