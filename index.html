@@ -1250,13 +1250,13 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px 12px;
+            padding: 8px 6px;
             cursor: pointer;
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
-            flex: 0 1 auto;
+            flex: 1;
             min-height: 56px;
             border-radius: 16px;
-            margin: 0 6px;
+            margin: 0 4px;
         }
 
         /* 触摸设备上的按压效果 */
@@ -1279,15 +1279,15 @@
         }
 
         .nav-item .icon {
-            font-size: 24px;
-            margin-bottom: 3px;
+            font-size: 22px;
+            margin-bottom: 2px;
             opacity: 0.5;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             color: #94a3b8;
         }
 
         .nav-item .label {
-            font-size: 11px;
+            font-size: 10px;
             color: #64748b;
             font-weight: 500;
             transition: all 0.3s;
@@ -3033,13 +3033,24 @@
                 <div class="message-tab" data-type="reward" onclick="filterMessages('reward')">
                     奖励通知
                 </div>
-                <div class="message-tab" data-type="contact" onclick="filterMessages('contact')">
-                    联系人
-                </div>
             </div>
 
             <div class="message-list" id="messageList">
                 <div class="empty-messages">暂无消息</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 联系人 ========== -->
+    <div class="page" id="contactsPage">
+        <div class="main-container">
+            <div class="banner">
+                <h1>联系人</h1>
+                <p>好友管理和聊天</p>
+            </div>
+
+            <div class="contacts-container" id="contactsContainer">
+                <!-- 动态渲染联系人内容 -->
             </div>
         </div>
     </div>
@@ -3169,6 +3180,11 @@
             <div class="icon">📬</div>
             <div class="label">消息</div>
             <div class="red-dot" id="messageRedDot"></div>
+        </div>
+        <div class="nav-item" data-page="contacts">
+            <div class="icon">👥</div>
+            <div class="label">联系人</div>
+            <div class="red-dot" id="contactsRedDot"></div>
         </div>
         <div class="nav-item" data-page="profile">
             <div class="icon">👤</div>
@@ -5457,6 +5473,102 @@
             updateMessageBadge();
         }
 
+        // 加载联系人页面
+        async function loadContactsPage() {
+            await loadFriends();
+            loadChatMessages();
+            await syncChatMessages();
+            await renderContactsPage();
+            updateContactsBadge();
+        }
+
+        // 渲染联系人页面
+        async function renderContactsPage() {
+            const container = document.getElementById('contactsContainer');
+            const requests = await getPendingFriendRequests();
+            let requestsHtml = '';
+            if (requests.length > 0) {
+                requestsHtml = `
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 13px; color: #666; font-weight: 600; margin-bottom: 8px;">好友申请 (${requests.length})</div>
+                        ${requests.map(req => `
+                            <div class="contact-item" style="margin-bottom:8px;">
+                                <div class="contact-avatar">${req.fromAvatar || '🎮'}</div>
+                                <div class="contact-info">
+                                    <div class="contact-name">${req.fromName || '未知用户'}</div>
+                                    <div class="contact-phone">${req.from}</div>
+                                </div>
+                                <div style="display: flex; gap: 6px;">
+                                    <button class="modal-btn" onclick="acceptFriendRequest('${req.from}')" style="margin:0;padding:8px 12px;font-size:12px;">通过</button>
+                                    <button class="modal-btn secondary" onclick="rejectFriendRequest('${req.from}')" style="margin:0;padding:8px 12px;font-size:12px;">拒绝</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            container.innerHTML = `
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <button class="modal-btn" onclick="showAddFriendModal()" style="flex: 1; margin: 0;">+ 添加好友</button>
+                    <button class="modal-btn secondary" onclick="showMyFriendCode()" style="margin: 0; padding: 12px 16px; white-space: nowrap;">我的好友码</button>
+                </div>
+                ${requestsHtml}
+                <div class="contact-search-box">
+                    <input type="text" class="modal-input" id="friendSearchInput" placeholder="搜索昵称或手机号" maxlength="20" onkeypress="if(event.key==='Enter')searchFriend()">
+                    <button class="modal-btn" onclick="searchFriend()">搜索</button>
+                </div>
+                <div id="searchResults"></div>
+                <div class="contact-list" id="contactList"></div>
+            `;
+            renderFriendListForContacts();
+        }
+
+        // 为联系人页面渲染好友列表
+        function renderFriendListForContacts() {
+            const list = document.getElementById('contactList');
+            if (friends.length === 0) {
+                list.innerHTML = '<div class="empty-messages empty-contacts">还没有好友，快去搜索添加吧~</div>';
+                return;
+            }
+
+            list.innerHTML = friends.map(f => {
+                const msgs = chatMessages[f.phone] || [];
+                const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+                const unread = msgs.filter(m => m.to === userData.phone && !m.read).length;
+
+                return `
+                    <div class="contact-item" onclick="openChat('${f.phone}')">
+                        <div class="contact-avatar">${f.avatar || '🎮'}</div>
+                        <div class="contact-info">
+                            <div class="contact-name">${f.userName || f.phone}</div>
+                            <div class="contact-phone">${f.phone}</div>
+                        </div>
+                        <div class="contact-preview">
+                            ${lastMsg ? `<div class="contact-last-msg">${lastMsg.content}</div>` : ''}
+                            ${unread > 0 ? `<div class="contact-unread">${unread}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 更新联系人页面红点
+        async function updateContactsBadge() {
+            const unreadChat = getUnreadChatCount();
+            const requests = await getPendingFriendRequests();
+            const total = unreadChat + requests.length;
+
+            const redDot = document.getElementById('contactsRedDot');
+            if (redDot) {
+                if (total > 0) {
+                    redDot.style.display = 'block';
+                    redDot.textContent = total;
+                } else {
+                    redDot.style.display = 'none';
+                }
+            }
+        }
+
         async function syncChatMessages() {
             if (!userData.isLoggedIn || !userData.phone) return;
             const result = await apiGet(`/messages/all?user=${userData.phone}`);
@@ -6522,6 +6634,7 @@
 
             if (pageName === 'achievement') loadAchievementPage();
             if (pageName === 'message') await loadMessagePage();
+            if (pageName === 'contacts') await loadContactsPage();
             if (pageName === 'settings') loadSettings();
         }
 
