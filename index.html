@@ -4104,6 +4104,28 @@
             }
         }
 
+        // 同步玩家数据到后端
+        async function syncPlayerData() {
+            if (!userData.isLoggedIn || !userData.phone) {
+                return;
+            }
+
+            try {
+                const result = await apiPost('/users/sync', {
+                    phone: userData.phone,
+                    playerData: playerData
+                });
+
+                if (result.success) {
+                    console.log('✅ 玩家数据已同步到后端');
+                } else {
+                    console.warn('⚠️ 同步玩家数据失败:', result.message);
+                }
+            } catch (error) {
+                console.error('❌ 同步玩家数据时出错:', error);
+            }
+        }
+
         async function sendCode() {
             const phone = document.getElementById('phoneInput').value.trim();
 
@@ -4393,6 +4415,7 @@
                 updateSettingsAccountInfo();
                 updateProfileLoginState();
                 updateStats();
+                syncPlayerData(); // 登录后同步本地数据到后端
                 closeLoginModal();
                 showModal('🎉 登录成功', `欢迎回来，${userData.userName}！`);
 
@@ -4506,6 +4529,7 @@
                 updateSettingsAccountInfo();
                 updateProfileLoginState();
                 updateStats();
+                syncPlayerData(); // 注册后同步初始数据到后端
 
                 closeRegisterModal();
                 showModal('🎉 注册成功', `欢迎加入，${userName}！赠送您100积分`);
@@ -5223,6 +5247,7 @@
 
             savePlayerData();
             updateStats();
+            syncPlayerData(); // 同步到后端
 
             sessionStorage.removeItem('gameStartTime');
             sessionStorage.removeItem('currentGame');

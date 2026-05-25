@@ -157,6 +157,15 @@ app.post('/api/auth', (req, res) => {
             userName: userName || '玩家',
             avatar: avatar || '🎮',
             avatarImage: avatarImage || null,
+            playerData: {
+                level: 1,
+                totalScore: 0,
+                gamesPlayed: 0,
+                playTime: 0,
+                levelsCompleted: 0,
+                highScore: 0,
+                gameHistory: []
+            },
             createdAt: Date.now()
         };
     } else if (userName) {
@@ -164,6 +173,18 @@ app.post('/api/auth', (req, res) => {
         db.users[phone].userName = userName;
         db.users[phone].avatar = avatar || db.users[phone].avatar;
         if (avatarImage) db.users[phone].avatarImage = avatarImage;
+        // 确保已有 playerData 字段（兼容旧数据）
+        if (!db.users[phone].playerData) {
+            db.users[phone].playerData = {
+                level: 1,
+                totalScore: 0,
+                gamesPlayed: 0,
+                playTime: 0,
+                levelsCompleted: 0,
+                highScore: 0,
+                gameHistory: []
+            };
+        }
     }
 
     saveDb();
@@ -206,9 +227,40 @@ app.get('/api/users', (req, res) => {
             phone: u.phone,
             userName: u.userName,
             avatar: u.avatar,
-            avatarImage: u.avatarImage
+            avatarImage: u.avatarImage,
+            level: u.playerData?.level || 1,
+            totalScore: u.playerData?.totalScore || 0,
+            gamesPlayed: u.playerData?.gamesPlayed || 0
         }))
     });
+});
+
+/**
+ * 同步玩家数据到后端
+ */
+app.post('/api/users/sync', (req, res) => {
+    const { phone, playerData } = req.body;
+
+    if (!phone || !db.users[phone]) {
+        return res.json({ success: false, message: '用户不存在' });
+    }
+
+    // 更新用户的游戏数据
+    db.users[phone].playerData = {
+        level: playerData.level || 1,
+        totalScore: playerData.totalScore || 0,
+        gamesPlayed: playerData.gamesPlayed || 0,
+        playTime: playerData.playTime || 0,
+        levelsCompleted: playerData.levelsCompleted || 0,
+        highScore: playerData.highScore || 0,
+        gameHistory: playerData.gameHistory || []
+    };
+
+    saveDb();
+
+    console.log(`[数据同步] 用户 ${phone} 数据已更新: Lv.${playerData.level} | ${playerData.totalScore}积分 | ${playerData.gamesPlayed}局`);
+
+    res.json({ success: true });
 });
 
 /**
