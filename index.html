@@ -3473,6 +3473,48 @@
         .contact-dropdown-menu .dropdown-item:active {
             background: #eee;
         }
+
+        .add-friend-hero {
+            text-align: center;
+            padding: 16px 0;
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .add-friend-hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(244, 114, 182, 0.3);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .add-friend-hero-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(244, 114, 182, 0.4);
+        }
+
+        .add-friend-hero-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .add-friend-hero-btn .add-icon {
+            font-size: 20px;
+            font-weight: 300;
+        }
+
+        .add-friend-hero-btn .add-text {
+            font-size: 15px;
+        }
     </style>
 
     <script src="js/game-effects.js"></script>
@@ -5570,9 +5612,16 @@
                 `;
             }
             container.innerHTML = `
+                <!-- 醒目的添加好友按钮 -->
+                <div class="add-friend-hero">
+                    <button class="add-friend-hero-btn" onclick="showAddFriendModal()">
+                        <span class="add-icon">＋</span>
+                        <span class="add-text">添加好友</span>
+                    </button>
+                </div>
+
                 <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                    <button class="modal-btn" onclick="showAddFriendModal()" style="flex: 1; margin: 0;">+ 添加好友</button>
-                    <button class="modal-btn secondary" onclick="showMyFriendCode()" style="margin: 0; padding: 12px 16px; white-space: nowrap;">我的好友码</button>
+                    <button class="modal-btn secondary" onclick="showMyFriendCode()" style="flex: 1; margin: 0;">我的好友码</button>
                 </div>
                 ${requestsHtml}
                 <div class="contact-search-box">
