@@ -50,8 +50,6 @@
             }
             .bottom-nav {
                 max-width: 600px;
-                left: 50%;
-                transform: translateX(-50%);
                 border-radius: 20px 20px 0 0;
             }
         }
@@ -1230,8 +1228,10 @@
         .bottom-nav {
             position: fixed;
             bottom: 0;
-            left: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 100%;
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
