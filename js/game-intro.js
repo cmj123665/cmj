@@ -203,16 +203,25 @@
     // 获取当前游戏ID
     function getCurrentGameId() {
         const path = window.location.pathname;
-        const match = path.match(/\/([^\/]+)\/?$/);
+        // 移除末尾的斜杠和index.html
+        let cleanPath = path.replace(/\/$/, '').replace(/\/index\.html$/, '');
+        // 获取最后一个路径段作为游戏ID
+        const match = cleanPath.match(/\/([^\/]+)$/);
         return match ? match[1] : null;
     }
 
     // 创建游戏说明弹窗
     function createIntroModal() {
         const gameId = getCurrentGameId();
+        console.log('当前游戏ID:', gameId); // 调试信息
+
         const gameData = gameIntros[gameId];
 
-        if (!gameData) return;
+        if (!gameData) {
+            console.warn('未找到游戏说明数据:', gameId);
+            console.log('可用的游戏ID:', Object.keys(gameIntros));
+            return;
+        }
 
         const modal = document.createElement('div');
         modal.className = 'game-intro-modal';
@@ -266,8 +275,13 @@
         const button = document.createElement('button');
         button.className = 'game-help-btn';
         button.innerHTML = '📖';
-        button.onclick = () => GameIntro.showModal();
         button.setAttribute('aria-label', '游戏说明');
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('游戏说明按钮被点击');
+            GameIntro.showModal();
+        });
         document.body.appendChild(button);
         return button;
     }
@@ -291,6 +305,15 @@
         const modal = createIntroModal();
         const button = createHelpButton();
 
+        // 点击弹窗外部关闭弹窗
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    GameIntro.closeModal();
+                }
+            });
+        }
+
         // 首次访问显示说明
         if (!hasShownIntro()) {
             setTimeout(() => {
@@ -303,12 +326,22 @@
     // 导出到全局
     window.GameIntro = {
         showModal: function() {
+            console.log('显示游戏说明弹窗');
             const modal = document.querySelector('.game-intro-modal');
-            if (modal) modal.classList.add('show');
+            if (modal) {
+                modal.classList.add('show');
+                console.log('弹窗已显示');
+            } else {
+                console.error('未找到游戏说明弹窗元素');
+            }
         },
         closeModal: function() {
+            console.log('关闭游戏说明弹窗');
             const modal = document.querySelector('.game-intro-modal');
-            if (modal) modal.classList.remove('show');
+            if (modal) {
+                modal.classList.remove('show');
+                console.log('弹窗已关闭');
+            }
         }
     };
 
