@@ -4792,7 +4792,7 @@
                 item.classList.add('active');
 
                 if (pageName === 'profile') loadProfilePage();
-                if (pageName === 'rank') loadRankPage();
+                if (pageName === 'rank') await loadRankPage();
                 if (pageName === 'shop') loadShopPage();
                 if (pageName === 'achievement') loadAchievementPage();
                 if (pageName === 'message') await loadMessagePage();
@@ -4967,7 +4967,75 @@
         }
 
         // 加载排行榜页面
-        function loadRankPage() {
+        async function loadRankPage() {
+            const listEl = document.getElementById('rankList');
+            listEl.innerHTML = '<div style="text-align:center;color:#999;padding:30px;">加载中...</div>';
+
+            // 检查后端状态
+            const backendAvailable = await detectBackend();
+            console.log('后端状态:', backendAvailable ? '在线' : '离线');
+            console.log('API基础URL:', API_BASE_URL);
+
+            if (!backendAvailable) {
+                // 后端离线，加载本地排行榜
+                loadLocalLeaderboard();
+                return;
+            }
+
+            try {
+                // 获取所有用户（使用current参数排除自己）
+                const currentPhone = userData.phone || '';
+                const result = await apiGet(`/users?current=${currentPhone}`);
+
+                if (result.success && result.users) {
+                    console.log('获取到用户数量:', result.users.length);
+
+                    // 前端排序：按总积分从高到低
+                    const leaderboard = result.users
+                        .map(user => ({
+                            name: user.userName || user.phone,
+                            avatar: user.avatarImage || user.avatar || '👤',
+                            level: user.level || 1,
+                            totalScore: user.totalScore || 0,
+                            gamesPlayed: user.gamesPlayed || 0,
+                            phone: user.phone
+                        }))
+                        .sort((a, b) => b.totalScore - a.totalScore);
+
+                    if (leaderboard.length === 0) {
+                        listEl.innerHTML = '<div style="text-align:center;color:#999;padding:30px;">暂无注册用户</div>';
+                        return;
+                    }
+
+                    // 渲染排行榜
+                    listEl.innerHTML = leaderboard.map((rank, index) => {
+                        const isCurrentPlayer = currentPhone && (
+                            rank.phone === currentPhone ||
+                            rank.name === userData.userName
+                        );
+                        return `
+                            <div class="rank-item" ${isCurrentPlayer ? 'style="border-color: #fbbf24;background: rgba(251, 191, 36, 0.05);"' : ''}>
+                                <div class="rank-number">${index + 1}</div>
+                                <div class="rank-avatar">${rank.avatar}</div>
+                                <div class="rank-info">
+                                    <div class="rank-name">${rank.name}${isCurrentPlayer ? ' <span style="color:#fbbf24;font-size:12px;">(你)</span>' : ''}</div>
+                                    <div class="rank-level">Lv.${rank.level} · ${rank.gamesPlayed}局</div>
+                                </div>
+                                <div class="rank-score">${rank.totalScore.toLocaleString()}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    throw new Error('API返回失败');
+                }
+            } catch (error) {
+                console.error('获取排行榜失败:', error);
+                loadLocalLeaderboard();
+            }
+        }
+
+        // 加载本地排行榜（后端离线时的备选方案）
+        function loadLocalLeaderboard() {
             let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 
             const playerEntry = {
@@ -4992,20 +5060,21 @@
             localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
 
             const listEl = document.getElementById('rankList');
-            listEl.innerHTML = leaderboard.map((rank, index) => {
-                const isCurrentPlayer = rank.name === playerData.name;
-                return `
-                    <div class="rank-item" ${isCurrentPlayer ? 'style="border-color: #fbbf24;"' : ''}>
-                        <div class="rank-number">${index + 1}</div>
-                        <div class="rank-avatar">${rank.avatar || '👤'}</div>
-                        <div class="rank-info">
-                            <div class="rank-name">${rank.name}${isCurrentPlayer ? ' (你)' : ''}</div>
-                            <div class="rank-level">Lv.${rank.level} · ${rank.gamesPlayed}局</div>
+            listEl.innerHTML = '<div style="text-align:center;color:#f59e0b;padding:15px;font-size:13px;margin-bottom:10px;">⚠️ 后端服务器未连接，显示本地数据</div>' +
+                leaderboard.map((rank, index) => {
+                    const isCurrentPlayer = rank.name === playerData.name;
+                    return `
+                        <div class="rank-item" ${isCurrentPlayer ? 'style="border-color: #fbbf24;"' : ''}>
+                            <div class="rank-number">${index + 1}</div>
+                            <div class="rank-avatar">${rank.avatar || '👤'}</div>
+                            <div class="rank-info">
+                                <div class="rank-name">${rank.name}${isCurrentPlayer ? ' (你)' : ''}</div>
+                                <div class="rank-level">Lv.${rank.level} · ${rank.gamesPlayed}局</div>
+                            </div>
+                            <div class="rank-score">${rank.totalScore.toLocaleString()}</div>
                         </div>
-                        <div class="rank-score">${rank.totalScore.toLocaleString()}</div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
         }
 
         // 加载商店页面
@@ -6220,9 +6289,23 @@
             const currentPhone = userData.phone || '';
             resultsDiv.innerHTML = '<div style="text-align:center;color:#999;padding:16px;font-size:13px;">搜索中...</div>';
 
+            // 检查后端状态
+            const backendAvailable = await detectBackend();
+            if (!backendAvailable) {
+                resultsDiv.innerHTML = `
+                    <div style="text-align:center;color:#999;padding:16px;font-size:13px;">
+                        <div style="font-size:24px;margin-bottom:8px;">🔌</div>
+                        <div>后端服务器未启动</div>
+                        <div style="font-size:12px;margin-top:8px;">请先启动后端服务器以搜索用户</div>
+                    </div>
+                `;
+                return;
+            }
+
             const result = await apiGet(`/users?q=${encodeURIComponent(keyword)}&current=${currentPhone}`);
             if (!result.success) {
-                resultsDiv.innerHTML = '<div style="text-align:center;color:#999;padding:16px;font-size:13px;">搜索失败</div>';
+                console.error('搜索用户失败:', result);
+                resultsDiv.innerHTML = '<div style="text-align:center;color:#ef4444;padding:16px;font-size:13px;">搜索失败，请稍后重试</div>';
                 return;
             }
 
@@ -6476,9 +6559,23 @@
             const currentPhone = userData.phone || '';
             resultsDiv.innerHTML = '<div style="text-align:center;color:#999;padding:16px;font-size:13px;">搜索中...</div>';
 
+            // 检查后端状态
+            const backendAvailable = await detectBackend();
+            if (!backendAvailable) {
+                resultsDiv.innerHTML = `
+                    <div style="text-align:center;color:#999;padding:16px;font-size:13px;">
+                        <div style="font-size:24px;margin-bottom:8px;">🔌</div>
+                        <div>后端服务器未启动</div>
+                        <div style="font-size:12px;margin-top:8px;">请先启动后端服务器以搜索用户</div>
+                    </div>
+                `;
+                return;
+            }
+
             const result = await apiGet(`/users?q=${encodeURIComponent(keyword)}&current=${currentPhone}`);
             if (!result.success) {
-                resultsDiv.innerHTML = '<div style="text-align:center;color:#999;padding:16px;font-size:13px;">搜索失败</div>';
+                console.error('搜索用户失败:', result);
+                resultsDiv.innerHTML = '<div style="text-align:center;color:#ef4444;padding:16px;font-size:13px;">搜索失败，请稍后重试</div>';
                 return;
             }
 
