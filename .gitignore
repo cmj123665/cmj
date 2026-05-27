@@ -2,3 +2,10 @@ node_modules/
 memory/
 .env
 *.log
+
+# 备份文件
+*.bak
+*.backup
+
+# 运行时数据
+data.json

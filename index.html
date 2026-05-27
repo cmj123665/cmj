@@ -1533,6 +1533,43 @@
             color: #ff6b9d;
         }
 
+
+
+        /* ========== 邀请按钮 ========== */
+        .invite-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            background: rgba(59, 130, 246, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 5;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .invite-btn:active {
+            transform: scale(0.85);
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .invite-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+                background: rgba(59, 130, 246, 0.85);
+            }
+        }
+
         /* ========== 签到系统 ========== */
         .checkin-btn {
             position: relative;
@@ -3667,7 +3704,7 @@
             if (!isTouchDevice) return;
 
             // 为所有可点击元素添加触摸反馈
-            const touchElements = document.querySelectorAll('.game-card, .featured-card, .category-tab, .nav-item, .favorite-btn, .delete-game-btn, .stat-card, button');
+            const touchElements = document.querySelectorAll('.game-card, .featured-card, .category-tab, .nav-item, .favorite-btn, .delete-game-btn, .invite-btn, .stat-card, button');
 
             touchElements.forEach(el => {
                 el.addEventListener('touchstart', function(e) {
@@ -3912,21 +3949,46 @@
 
         // 离线模式检测与状态
         let isOfflineMode = false;
+
+        let backendBaseUrl = '';
+        let apiBaseUrl = '';
         const OFFLINE_CODE_KEY = 'offlineVerificationCode';
         const OFFLINE_CODE_TS_KEY = 'offlineVerificationCodeTs';
 
         async function detectBackend() {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
-                const response = await fetch('http://localhost:3000/health', { signal: controller.signal });
-                clearTimeout(timeoutId);
-                return response.ok;
-            } catch (e) {
-                return false;
-            }
-        }
+            // 尝试多个可能的后端地址
+            const candidates = [
+                window.location.origin,  // 当前访问的域名
+                'http://localhost:3000',  // 本地开发
+            ];
 
+            // 从URL参数获取API地址
+            const urlParams = new URLSearchParams(window.location.search);
+            const customApi = urlParams.get('api');
+            if (customApi) {
+                candidates.unshift(customApi);
+            }
+
+            for (const baseUrl of candidates) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                    const response = await fetch(`${baseUrl}/health`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    if (response.ok) {
+                        backendBaseUrl = baseUrl;
+                        apiBaseUrl = baseUrl;
+                        console.log(`✅ 后端已连接: ${baseUrl}`);
+                        return true;
+                    }
+                } catch (e) {
+                    continue;
+                }
+            }
+
+            console.warn('⚠️ 所有后端地址均无法连接，切换到离线模式');
+            return false;
+        }
         function getOfflineCode(phone) {
             const data = JSON.parse(sessionStorage.getItem(OFFLINE_CODE_KEY) || '{}');
             return data[phone] || null;
@@ -4077,12 +4139,12 @@
 
         // 发送验证码
         let codeTimer = null;
-        const API_BASE_URL = 'http://localhost:3000/api'; // 后端API地址
 
-        // API 辅助函数
+        // API辅助函数 - 使用动态后端地址
         async function apiGet(path) {
             try {
-                const res = await fetch(`${API_BASE_URL}${path}`);
+                const baseUrl = apiBaseUrl || 'http://localhost:3000';
+                const res = await fetch(`${baseUrl}/api${path}`);
                 return await res.json();
             } catch (e) {
                 console.error('API GET 失败:', path, e);
@@ -4092,7 +4154,8 @@
 
         async function apiPost(path, body) {
             try {
-                const res = await fetch(`${API_BASE_URL}${path}`, {
+                const baseUrl = apiBaseUrl || 'http://localhost:3000';
+                const res = await fetch(`${baseUrl}/api${path}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body)
@@ -4741,6 +4804,7 @@
         function createGameCard(game, isHot) {
             const deleteBtn = game.isCustom ? `<div class="delete-game-btn" onclick="event.preventDefault(); event.stopPropagation(); deleteCustomGame('${game.id}')">×</div>` : '';
             const favoriteBtn = `<div class="favorite-btn ${isFavorite(game.id) ? 'active' : ''}" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite('${game.id}')">${isFavorite(game.id) ? '❤️' : '🤍'}</div>`;
+            const inviteBtn = `<div class="invite-btn" onclick="event.preventDefault(); event.stopPropagation(); inviteFriendToGame('${game.id}', '${game.name}')" title="邀请好友">📨</div>`;
             const players = getGamePlayers(game.id);
 
             if (isHot) {
@@ -4750,6 +4814,7 @@
                         <div class="featured-tag">HOT</div>
                         ${deleteBtn}
                         ${favoriteBtn}
+                        ${inviteBtn}
                         <div class="featured-cover">
                             <span class="featured-icon">${game.icon}</span>
                         </div>
@@ -4766,6 +4831,7 @@
                 <a href="${game.url}" class="game-card">
                     ${deleteBtn}
                     ${favoriteBtn}
+                    ${inviteBtn}
                     <div class="game-cover">
                         <span class="game-icon">${game.icon}</span>
                     </div>
@@ -4793,6 +4859,76 @@
 
             renderGames();
             showModal('删除成功', '游戏已删除');
+        }
+
+        // 邀请好友玩游戏
+        function inviteFriendToGame(gameId, gameName) {
+            if (!userData.isLoggedIn) {
+                showModal('请先登录', '登录后才能邀请好友一起玩哦~');
+                return;
+            }
+
+            // 生成邀请链接
+            const apiUrl = apiBaseUrl || window.location.origin;
+            const inviteUrl = `${window.location.origin}${window.location.pathname}?game=${gameId}&inviter=${userData.phone}&api=${encodeURIComponent(apiUrl)}`;
+
+            // 复制到剪贴板
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(inviteUrl).then(() => {
+                    showModal('✅ 邀请链接已复制', '分享给好友，一起玩「' + gameName + '」吧！');
+                }).catch(() => {
+                    // 降级方案：显示链接让用户手动复制
+                    showModal('📋 复制邀请链接', inviteUrl);
+                });
+            } else {
+                // 降级方案
+                showModal('📋 邀请链接', inviteUrl);
+            }
+        }
+
+        // 获取游戏名称
+        function getGameName(gameId) {
+            const game = games.find(g => g.id === gameId);
+            return game ? game.name : '未知游戏';
+        }
+
+        // 启动游戏
+        function launchGame(gameId) {
+            const game = games.find(g => g.id === gameId);
+            if (game) {
+                window.location.href = game.url;
+            }
+        }
+
+        // 处理邀请链接
+        function handleInviteLink() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const game = urlParams.get('game');
+            const inviter = urlParams.get('inviter');
+
+            if (game && inviter) {
+                // 延迟显示邀请提示，等待页面加载完成
+                setTimeout(() => {
+                    const gameName = getGameName(game);
+                    showModal('🎮 收到游戏邀请', `好友邀请你玩「${gameName}」`, {
+                        confirmText: '接受邀请',
+                        cancelText: '稍后再说',
+                        onConfirm: () => {
+                            // 保存邀请信息到localStorage
+                            localStorage.setItem('pendingGameInvite', JSON.stringify({
+                                game: game,
+                                inviter: inviter,
+                                timestamp: Date.now()
+                            }));
+                            launchGame(game);
+                        },
+                        onCancel: () => {
+                            // 清除URL参数
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }
+                    });
+                }, 1500);
+            }
         }
 
         // 分类筛选
@@ -7193,6 +7329,9 @@
             updateLoginStatusBar();
             checkAchievements();
             updateMessageBadge();
+
+            // 处理邀请链接
+            handleInviteLink();
 
             // 预加载联系人页面内容
             await loadContactsPage();
