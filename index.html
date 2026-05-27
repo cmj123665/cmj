@@ -4139,6 +4139,7 @@
 
         // 发送验证码
         let codeTimer = null;
+        const API_BASE_URL = 'http://localhost:3000/api'; // 后端API地址
 
         // API辅助函数 - 使用动态后端地址
         async function apiGet(path) {
@@ -4956,6 +4957,7 @@
                 if (pageName === 'shop') loadShopPage();
                 if (pageName === 'achievement') loadAchievementPage();
                 if (pageName === 'message') await loadMessagePage();
+                if (pageName === 'contacts') await loadContactsPage();
                 if (pageName === 'settings') loadSettings();
             });
         });
